@@ -11,7 +11,7 @@
 	</main>
 
 	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+		<p>Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a>.</p>
 	</footer>
 </div>
 
@@ -39,10 +39,11 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
+		color: lightgray;
 	}
 
 	footer a {
-		font-weight: bold;
+		/* font-weight: bold; */
 	}
 
 	@media (min-width: 480px) {
