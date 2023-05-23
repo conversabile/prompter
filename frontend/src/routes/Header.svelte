@@ -35,7 +35,7 @@
 	</nav>
 
 	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
+		<a href="https://github.com/conversabile/prompter">
 			<img src={github} alt="GitHub" style="filter: invert()"/>
 		</a>
 	</div>
