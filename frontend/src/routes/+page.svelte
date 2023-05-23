@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Home</title>
+	<title>Conversabile Prompter</title>
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
