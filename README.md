@@ -23,14 +23,19 @@ A public Docker image is available for Prompter:
 # Development
 
 ## Run locally
+
+Prompter can be launched by building the frontend first, and then launching the server
+
 ```sh
 cd frontend
 npm install
 npm run build
 cd ..
 # export FRONTEND_DIR=/your/custom/frontend/dir/
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn prompter_server.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+The application is now available at `http://localhost:8000` (swagger UI: `http://localhost:8000/docs`)
 
 ## Docker Build and Publish
 
