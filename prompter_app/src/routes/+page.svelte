@@ -1,7 +1,5 @@
 <script>
 	import PromptBox from './PromptBox.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
 </script>
 
 <svelte:head>

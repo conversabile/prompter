@@ -1,17 +1,18 @@
 <script lang="ts">
-  import { apiUrl } from '$lib/api';
   import type { Prompt } from '$lib/prompts';
+  import { page } from '$app/stores';
 
   // Model
-	let promptText = "<p>Tell me a story about $$storyTopic, make it sound like $$storyTopic is the most interesting thing in the world!</p>";
-  let promptTitle = "Untitled Prompt";
+	export let promptText = "Tell me a story about $$storyTopic, make it sound like $$storyTopic is the most interesting thing in the world!";
+  export let promptTitle = "Untitled Prompt";
+  export let paramDict: Record<string, string> = {storyTopic: "time travelling"}
   const promptSchemaVersion: number = 1;
 
   // Parse prompt args
   const paramParseRegex = /\$\$(\w+)/gi
   let paramList: string[] = [];
-  let paramDict: Record<string, string> = {storyTopic: "time travelling"}
   let prompt: Prompt;
+  // $: if (! promptText.startsWith("<p>")) { promptText = '<p>'+promptText+'</p>'}
   $: prompt = {
     version: promptSchemaVersion,
     prompt_text: promptText,
@@ -30,21 +31,34 @@
   }
 
   // Render result
+  function escapeHtml(unsafe: string) {
+      return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+  }
+
   let renderedPrompt = "";
   function renderPrompt() {
     let result = promptText;
     for (const paramName of paramList) {
-      let paramValue: string = paramDict[paramName];
+      let paramValue: string = escapeHtml(paramDict[paramName] ?? ''); // TODO: move sanitization at dict level
       result = result.replaceAll('$$'+paramName, '<span class="param">'+paramValue+'</span>');
+      // result = result.replaceAll('\n', '<br>');
     }
     return result;
   }
   $: if (promptText, paramList, paramDict) renderedPrompt = renderPrompt();
 
   // Share
+  let sharedUrl: string;
+  let isSharing: boolean = false;
+  let isShared: boolean = false;
+
   async function handleShare() {
-    // const promptId = crypto.randomUUID(); // TODO: polyfill
-    // const res = await fetch(apiUrl('/v1/save/'+promptId), {
+    isSharing = true;
     const res = await fetch(`/api/prompt`, {
 			method: 'POST',
 			body: JSON.stringify(prompt)
@@ -52,7 +66,10 @@
 
 		const responseJson = await res.json()
     console.log("Saved prompt with id: " + responseJson.promptId);
-		// result = JSON.stringify(json)
+    sharedUrl = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.promptId
+    
+    isSharing = false;
+    isShared = true;
   }
 
 </script>
@@ -81,7 +98,14 @@
   </div>
 </div>
 
-<button class="button" on:click={handleShare}>Share</button>
+{#if isShared}
+  <div id="sharedUrl"><a href="{sharedUrl}">{sharedUrl}</a></div>
+  <div id="sharedDisclaimer"><p>Please note that Prompter is in early development stage, your work may become altered or unreachable at any time. Use it at your own risk!</p></div>
+{:else if isSharing}
+  <button id="shareButton" class="button">saving...</button>
+{:else}
+  <button id="shareButton" class="button" on:click={handleShare}>Share</button>
+{/if}
 
 <style>
 
@@ -104,7 +128,9 @@ h2 {
 .promptText {
   border:1px solid var(--color-theme-2);
   background:white;
-  width:100%
+  width:100%;
+  padding: 1em;
+  width: calc( 100% - 2em);
 }
 
 /* Param Table */
@@ -166,5 +192,21 @@ h2 {
     /* background-color:white;
     color: var(--color-theme-1); */
     color: var(--color-bg-alphawhite);
+}
+
+#sharedUrl {
+  background: white;
+  margin: 1em;
+  padding: 1em;
+}
+
+#sharedUrl a {
+  color: var(--color-theme-2);
+}
+
+#sharedDisclaimer p {
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--color-bg-alphawhite);
 }
 </style>

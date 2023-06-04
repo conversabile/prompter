@@ -4,7 +4,7 @@ import util from 'util';
 export interface Prompt {
   version: number;
   prompt_text: string;
-  parameters_dict: Object;
+  parameters_dict: Record<string, string>;
   title: string;
 }
 
@@ -20,7 +20,7 @@ function promptEditKeyPath(promptId: string) {
   return promptBasePath(promptId) + '/editKey'
 }
 
-export function save(promptId: string, prompt: Prompt, editKey: string) {
+export function savePrompt(promptId: string, prompt: Prompt, editKey: string) {
   // export function save({promptId: string, prompt: Prompt}) {
   console.debug(`Saving prompt "${promptId}": ` + util.inspect(prompt, {showHidden: false, depth: null, colors: true}));
 
@@ -42,6 +42,12 @@ export function save(promptId: string, prompt: Prompt, editKey: string) {
     JSON.stringify(prompt),
     'utf8'
   );
+}
+
+export function loadPrompt(promptId: string) {
+  let rawdata: Buffer = fs.readFileSync(promptDataPath(promptId));
+  let prompt = JSON.parse(rawdata.toString());
+  return prompt;
 }
 
 export class PermissionDeniedError extends Error {};
