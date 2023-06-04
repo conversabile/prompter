@@ -1,11 +1,23 @@
 <script lang="ts">
+  import { apiUrl } from '$lib/api';
+  import type { Prompt } from '$lib/prompts';
 
+  // Model
 	let promptText = "<p>Tell me a story about $$storyTopic, make it sound like $$storyTopic is the most interesting thing in the world!</p>";
+  let promptTitle = "Untitled Prompt";
+  const promptSchemaVersion: number = 1;
 
   // Parse prompt args
   const paramParseRegex = /\$\$(\w+)/gi
-  let paramList = [];
-  let paramDict = {"storyTopic": "time travelling"}
+  let paramList: string[] = [];
+  let paramDict: Record<string, string> = {storyTopic: "time travelling"}
+  let prompt: Prompt;
+  $: prompt = {
+    version: promptSchemaVersion,
+    prompt_text: promptText,
+    parameters_dict: paramDict,
+    title: promptTitle
+  }
   $: matchedParams = promptText.matchAll(paramParseRegex);
   $: if (matchedParams) {
     let newParamList = [];
@@ -15,19 +27,33 @@
       newParamList.push(paramName);
     }
     paramList = Array.from(new Set(newParamList));
-    console.log(newParamList);
   }
 
   // Render result
   let renderedPrompt = "";
   function renderPrompt() {
     let result = promptText;
-    for (let paramName of paramList) {
-      result = result.replaceAll('$$'+paramName, '<span class="param">'+paramDict[paramName]+'</span>');
+    for (const paramName of paramList) {
+      let paramValue: string = paramDict[paramName];
+      result = result.replaceAll('$$'+paramName, '<span class="param">'+paramValue+'</span>');
     }
     return result;
   }
-  $: renderedPrompt = renderPrompt(promptText, paramList, paramDict);
+  $: if (promptText, paramList, paramDict) renderedPrompt = renderPrompt();
+
+  // Share
+  async function handleShare() {
+    // const promptId = crypto.randomUUID(); // TODO: polyfill
+    // const res = await fetch(apiUrl('/v1/save/'+promptId), {
+    const res = await fetch(`/api/prompt`, {
+			method: 'POST',
+			body: JSON.stringify(prompt)
+		});
+
+		const responseJson = await res.json()
+    console.log("Saved prompt with id: " + responseJson.promptId);
+		// result = JSON.stringify(json)
+  }
 
 </script>
 
@@ -39,7 +65,7 @@
   <h2>Parameters</h2>
 
   <!-- {#if } -->
-  <table class="paramTable" border=0>
+  <table class="paramTable">
     <tr>
       <th class="min">Param Name</th> <th>Param Value</th>
     </tr>
@@ -54,6 +80,8 @@
     {@html renderedPrompt}
   </div>
 </div>
+
+<button class="button" on:click={handleShare}>Share</button>
 
 <style>
 
@@ -116,5 +144,27 @@ h2 {
 
 :global(.renderedPrompt .param) {
   color: var(--color-theme-2);
+}
+
+/* Share */
+
+.button {
+    display:inline-block;
+    /* color:var(--color-theme-2); */
+    border:1px solid var(--color-theme-1);
+    border-radius: 2px;
+    background:var(--color-theme-1);
+    cursor:pointer;
+    vertical-align:middle;
+    max-width: 100px;
+    padding: 1em;
+    margin: 1em;
+    text-align: center;
+}
+.button:hover {
+    border:1px solid var(--color-theme-1);
+    /* background-color:white;
+    color: var(--color-theme-1); */
+    color: var(--color-bg-alphawhite);
 }
 </style>

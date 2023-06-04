@@ -18,26 +18,38 @@ Planned features brainstorming:
 
 A public Docker image is available for Prompter:
 
-    docker run -p 8888:80 conversabile/prompter:latest
+    docker run -p 3333:3000 -e ORIGIN='http://localhost:3333' conversabile/prompter:latest
+
+The application is now running at http://localhost:3333. For saved prompts to be persisted, the `/data` folder should be mounted as a volume
 
 # Development
 
 ## Run locally
 
-Prompter can be launched by building the frontend first, and then launching the server
+Prompter can be launched locally as follows:
 
 ```sh
-cd frontend
+cd prompter_app
 npm install
 npm run build
-cd ..
-# export FRONTEND_DIR=/your/custom/frontend/dir/
-uvicorn prompter_server.main:app --host 0.0.0.0 --port 8000 --reload
+ORIGIN=http://localhost:3000 node build/index.js
 ```
 
-The application is now available at `http://localhost:8000` (swagger UI: `http://localhost:8000/docs`)
+The application is now available at `http://localhost:3000`
+
+For development it is useful to spawn a dev server to watch for changes and automatically rebuild. This can be done as follows:
+
+```sh
+cd prompter_app
+npm run dev
+```
+
+The app will be available at http://localhost:5173/
 
 ## Docker Build and Publish
 
     docker build . -t conversabile/prompter:latest
     docker push conversabile/prompter:latest
+
+    docker tag conversabile/prompter:latest conversabile/prompter:<VERSION>
+    docker push conversabile/prompter:<VERSION>
