@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 
 import type { Prompt } from '$lib/prompts';
-import { save } from '$lib/prompts';
+import { savePrompt } from '$lib/prompts';
 
 export const GET = (({ url }) => {
     const id = Number(url.searchParams.get('id') ?? '0');
@@ -17,6 +17,6 @@ export const POST = (async ({ url, request, params }) => {
         throw error(400, "Missing URL parameter: editKey");
     }
     console.log(`POST /api/prompt/${params.promptId}`);
-    save(params.promptId!, prompt, editKey);
+    savePrompt(params.promptId!, prompt, editKey);
     return new Response();
 }) satisfies RequestHandler;

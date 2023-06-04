@@ -11,7 +11,7 @@
 	</main>
 
 	<footer>
-		<p>Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a>.</p>
+		<p>Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a> <span>[<a href="https://github.com/conversabile/prompter/blob/main/LICENSE">license</a>]</span></p>
 	</footer>
 </div>
 
