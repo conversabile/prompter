@@ -4,15 +4,16 @@
 Available features:
 
 * Parametrized prompts
-
-Planned features brainstorming:
-
 * Prompt sharing via permalink
+
+Feature brainstorming:
+
 * LLM service connection for in-page predictions
 * Multi-prompt sequences
 * External service integrations
 * Output JSON parsing and schema validation
 * Automatic REST endpoints around prompts
+* User management with access levels and teams
 
 # Run with Docker
 
@@ -21,6 +22,24 @@ A public Docker image is available for Prompter:
     docker run -p 3333:3000 -e ORIGIN='http://localhost:3333' conversabile/prompter:latest
 
 The application is now running at http://localhost:3333. For saved prompts to be persisted, the `/data` folder should be mounted as a volume
+
+# Deploy with Docker Compose
+
+Prompter can be integrated in a docker-compose deployment as follows:
+
+```yaml
+version: '3'
+services:
+  prompter:
+    image: conversabile/prompter:latest
+    volumes:
+      - ./prompter/data:/data
+    ports:
+      - 3333:3000
+    restart: always
+```
+
+A reverse proxy can then be configured, redirecting incoming traffic on local port `3333`.
 
 # Development
 

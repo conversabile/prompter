@@ -1,6 +1,10 @@
 import fs from 'fs';
 import util from 'util';
 
+import nunjucks from 'nunjucks';
+nunjucks.configure({autoescape: false, trimBlocks: true});
+nunjucks.installJinjaCompat();
+
 export interface Prompt {
   version: number;
   prompt_text: string;
@@ -48,6 +52,11 @@ export function loadPrompt(promptId: string) {
   let rawdata: Buffer = fs.readFileSync(promptDataPath(promptId));
   let prompt = JSON.parse(rawdata.toString());
   return prompt;
+}
+
+export function renderPrompt(promptText: string, paramDict: Record<string, string>): string {
+  let result = promptText;
+  return nunjucks.renderString(promptText, paramDict);
 }
 
 export class PermissionDeniedError extends Error {};
