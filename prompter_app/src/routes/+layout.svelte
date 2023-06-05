@@ -1,6 +1,7 @@
 <script>
 	import Header from './Header.svelte';
 	import './styles.css';
+	import { version } from '$app/environment';
 </script>
 
 <div class="app">
@@ -11,7 +12,7 @@
 	</main>
 
 	<footer>
-		<p>Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a> <span>[<a href="https://github.com/conversabile/prompter/blob/main/LICENSE">license</a>]</span></p>
+		<p>Prompter v{version} • Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a> • <span><a href="https://github.com/conversabile/prompter/blob/main/LICENSE">License</a></span></p>
 	</footer>
 </div>
 

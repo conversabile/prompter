@@ -1,15 +1,18 @@
 <script lang="ts">
   import type { Prompt } from '$lib/prompts';
+  import { renderPrompt } from '$lib/prompts';
+  import { escapeHtml } from '$lib/util';
   import { page } from '$app/stores';
 
   // Model
-	export let promptText = "Tell me a story about $$storyTopic, make it sound like $$storyTopic is the most interesting thing in the world!";
+	export let promptText = "Tell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!<br>{% if anotherTopic %}<br>And another one about {{ anotherTopic | upper }}!!!<br>{% endif %}";
   export let promptTitle = "Untitled Prompt";
   export let paramDict: Record<string, string> = {storyTopic: "time travelling"}
   const promptSchemaVersion: number = 1;
 
   // Parse prompt args
-  const paramParseRegex = /\$\$(\w+)/gi
+  // const paramParseRegex = /\$\$(\w+)/gi // $$paramName
+  const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
   let paramList: string[] = [];
   let prompt: Prompt;
   // $: if (! promptText.startsWith("<p>")) { promptText = '<p>'+promptText+'</p>'}
@@ -30,27 +33,30 @@
     paramList = Array.from(new Set(newParamList));
   }
 
-  // Render result
-  function escapeHtml(unsafe: string) {
-      return unsafe
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-  }
-
+  // Render Result
   let renderedPrompt = "";
-  function renderPrompt() {
-    let result = promptText;
-    for (const paramName of paramList) {
-      let paramValue: string = escapeHtml(paramDict[paramName] ?? ''); // TODO: move sanitization at dict level
-      result = result.replaceAll('$$'+paramName, '<span class="param">'+paramValue+'</span>');
-      // result = result.replaceAll('\n', '<br>');
+  let renderError = false;
+  function renderPromptV1() {
+    let result: string;
+
+    try {
+      renderError = false;
+      // https://regex101.com/r/WhYBv9/1
+      result = promptText.replace(/(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi, '<span class="param">$1</span>');
+      // TODO: move sanitization at dict level
+      let renderedParamDict: Record<string, string> = {};
+      for (const paramName in paramDict) {
+        renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
+      }
+      result = renderPrompt(result, renderedParamDict);
+    } catch(err: any) {
+      renderError = true;
+      result = 'invalid syntax: ' + err.message;
     }
+
     return result;
   }
-  $: if (promptText, paramList, paramDict) renderedPrompt = renderPrompt();
+  $: if (promptText, paramList, paramDict) renderedPrompt = renderPromptV1();
 
   // Share
   let sharedUrl: string;
@@ -78,6 +84,7 @@
 
   <h2>Prompt</h2>
   <div class="promptText" contenteditable bind:innerHTML={promptText}></div>
+  <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
   <h2>Parameters</h2>
 
@@ -93,7 +100,7 @@
   </table>
 
   <h2>Result</h2>
-  <div class="renderedPrompt">
+  <div class="renderedPrompt" class:renderError="{renderError}">
     {@html renderedPrompt}
   </div>
 </div>
@@ -133,6 +140,21 @@ h2 {
   width: calc( 100% - 2em);
 }
 
+.reference {
+  font-size: 0.8em;
+  margin: 0;
+  padding: 0;
+  color: var(--color-theme-1);
+}
+
+.reference:hover {
+  color: inherit;
+}
+
+.reference a {
+  color: var(--color-theme-2);
+}
+
 /* Param Table */
 
 .paramTable {
@@ -163,9 +185,14 @@ h2 {
 /* Result */
 
 .renderedPrompt {
-  border: 1px solid var(--color-theme-2);
+  /* border: 1px solid var(--color-theme-2); */
   background: var(--color-bg-alphawhite);
   padding: 1em;
+}
+
+.renderError {
+  color: white;
+  background-color: darkred;
 }
 
 :global(.renderedPrompt .param) {

@@ -4,7 +4,7 @@
 
 <svelte:head>
 	<title>Conversabile Prompter</title>
-	<meta name="description" content="Svelte demo app" />
+	<meta name="description" content="A Web UI for editing and (soon) sharing LLM prompts" />
 </svelte:head>
 
 <section>
