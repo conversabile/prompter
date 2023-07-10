@@ -56,7 +56,8 @@ export function loadPrompt(promptId: string) {
 
 export function renderPrompt(promptText: string, paramDict: Record<string, string>): string {
   let result = promptText;
-  return nunjucks.renderString(promptText, paramDict);
+  result = nunjucks.renderString(promptText, paramDict);
+  return result.trim();
 }
 
 export class PermissionDeniedError extends Error {};

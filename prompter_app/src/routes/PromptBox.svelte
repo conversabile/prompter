@@ -1,21 +1,24 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { Prompt } from '$lib/prompts';
   import { renderPrompt } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
   import { page } from '$app/stores';
 
+  import '$lib/codemirror5/codemirror.css';
+
   // Model
-	export let promptText = "Tell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!<br>{% if anotherTopic %}<br>And another one about {{ anotherTopic | upper }}!!!<br>{% endif %}";
+	export let promptText = "Tell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}";
   export let promptTitle = "Untitled Prompt";
   export let paramDict: Record<string, string> = {storyTopic: "time travelling"}
-  const promptSchemaVersion: number = 1;
+  const promptSchemaVersion: number = 2; /* 2: plain text promptText */
+                                         /* 1: HTML promptText with Jinja2 template */
 
   // Parse prompt args
   // const paramParseRegex = /\$\$(\w+)/gi // $$paramName
   const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
   let paramList: string[] = [];
   let prompt: Prompt;
-  // $: if (! promptText.startsWith("<p>")) { promptText = '<p>'+promptText+'</p>'}
   $: prompt = {
     version: promptSchemaVersion,
     prompt_text: promptText,
@@ -78,12 +81,44 @@
     isShared = true;
   }
 
+  import type {
+    Editor,
+    EditorConfiguration,
+    EditorFromTextArea,
+  } from "codemirror";
+
+  // TODO: doesn't work :(
+  // export let CodeMirror: {
+  //   fromTextArea: (
+  //     element: HTMLTextAreaElement,
+  //     options?: EditorConfiguration
+  //   ) => EditorFromTextArea;
+  // };
+
+  // let cmText: string;
+  export let editor = null;
+  onMount(() => {
+    const cmTextArea: HTMLTextAreaElement = document.getElementById("codeMirrorTextarea") as HTMLTextAreaElement;
+    cmTextArea.style.height = "calc( "+ cmTextArea.scrollHeight + "px - 2em)" 
+    // TODO: fix ts(2686)
+    editor =
+		CodeMirror.fromTextArea(cmTextArea, {mode:
+		  {name: "jinja2", htmlMode: true}});
+    editor.on("change", function (eventEditor: Editor) {
+      promptText = eventEditor.doc.getValue();
+    })
+  });
 </script>
+
+<svelte:head>
+  <script src="/codemirror.js"></script>
+	<script src="/jinja2.js"></script>
+</svelte:head>
 
 <div class="promptBox">
 
   <h2>Prompt</h2>
-  <div class="promptText" contenteditable bind:innerHTML={promptText}></div>
+  <textarea id="codeMirrorTextarea" name="codeMirrorTextarea" >{promptText}</textarea>
   <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
   <h2>Parameters</h2>
@@ -132,12 +167,12 @@ h2 {
   margin:1em;
 }
 
-.promptText {
-  border:1px solid var(--color-theme-2);
-  background:white;
-  width:100%;
+#codeMirrorTextarea {
+  width: calc( 100% - 2em );
+  height: 100px; /* Height for default prompt, to limit glitch when CodeMirror loads */
   padding: 1em;
-  width: calc( 100% - 2em);
+  overflow: visible;
+  font-family: inherit;
 }
 
 .reference {
@@ -188,6 +223,7 @@ h2 {
   /* border: 1px solid var(--color-theme-2); */
   background: var(--color-bg-alphawhite);
   padding: 1em;
+  white-space: pre-line;
 }
 
 .renderError {
