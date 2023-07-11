@@ -81,13 +81,15 @@
     isShared = true;
   }
 
-  import type {
-    Editor,
-    EditorConfiguration,
-    EditorFromTextArea,
-  } from "codemirror";
-
-  // TODO: doesn't work :(
+  import type { Editor } from "codemirror";
+  
+  // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
+  // TODO: fixes ts(2686) but breaks CodeMirror reference :(
+  //   import type {
+  //   Editor,
+  //   EditorConfiguration,
+  //   EditorFromTextArea,
+  // } from "codemirror";
   // export let CodeMirror: {
   //   fromTextArea: (
   //     element: HTMLTextAreaElement,
@@ -96,16 +98,17 @@
   // };
 
   // let cmText: string;
+  let cmTextArea: HTMLTextAreaElement;
   export let editor = null;
   onMount(() => {
-    const cmTextArea: HTMLTextAreaElement = document.getElementById("codeMirrorTextarea") as HTMLTextAreaElement;
     cmTextArea.style.height = "calc( "+ cmTextArea.scrollHeight + "px - 2em)" 
+    
     // TODO: fix ts(2686)
-    editor =
-		CodeMirror.fromTextArea(cmTextArea, {mode:
-		  {name: "jinja2", htmlMode: true}});
+    editor = CodeMirror.fromTextArea(cmTextArea, {
+      mode: {name: "jinja2", htmlMode: true}
+    });
     editor.on("change", function (eventEditor: Editor) {
-      promptText = eventEditor.doc.getValue();
+      promptText = eventEditor.getDoc().getValue();
     })
   });
 </script>
@@ -118,7 +121,7 @@
 <div class="promptBox">
 
   <h2>Prompt</h2>
-  <textarea id="codeMirrorTextarea" name="codeMirrorTextarea" >{promptText}</textarea>
+  <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{promptText}</textarea>
   <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
   <h2>Parameters</h2>
@@ -167,7 +170,7 @@ h2 {
   margin:1em;
 }
 
-#codeMirrorTextarea {
+.codeMirrorTextarea {
   width: calc( 100% - 2em );
   height: 100px; /* Height for default prompt, to limit glitch when CodeMirror loads */
   padding: 1em;
