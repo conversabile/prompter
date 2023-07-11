@@ -1,6 +1,7 @@
 import fs from 'fs';
 import util from 'util';
 
+import { convert } from 'html-to-text';
 import nunjucks from 'nunjucks';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
@@ -51,6 +52,13 @@ export function savePrompt(promptId: string, prompt: Prompt, editKey: string) {
 export function loadPrompt(promptId: string) {
   let rawdata: Buffer = fs.readFileSync(promptDataPath(promptId));
   let prompt = JSON.parse(rawdata.toString());
+
+  // v1: convert HTML to plain text
+  if (prompt.version == 1) {
+    prompt.prompt_text = convert(prompt.prompt_text);
+    prompt.version = 2;
+  }
+
   return prompt;
 }
 
