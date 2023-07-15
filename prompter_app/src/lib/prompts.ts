@@ -6,6 +6,15 @@ import nunjucks from 'nunjucks';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
+export const promptSchemaVersion: number = 3; /* 2: plain text promptText */
+                                              /* 1: HTML promptText with Jinja2 template */
+
+function assert(value: unknown) {
+  if (! value) {
+    throw Error("Assertion Error (todo: find out how assertions work in typescript...");
+  }
+}
+
 export interface Prompt {
   version: number;
   prompt_text: string;
@@ -13,27 +22,33 @@ export interface Prompt {
   title: string;
 }
 
-function promptBasePath(promptId: string) {
+export interface PromptChain {
+  version: number;
+  title: string;
+  prompts: Prompt[];
+}
+
+function chainBasePath(promptId: string) {
   return `./data/${promptId[0]}/${promptId}`
 }
 
-function promptDataPath(promptId: string) {
-  return promptBasePath(promptId) + '/prompt.json'
+function chainDataPath(promptId: string) {
+  return chainBasePath(promptId) + '/prompt.json'
 }
 
-function promptEditKeyPath(promptId: string) {
-  return promptBasePath(promptId) + '/editKey'
+function chainEditKeyPath(promptId: string) {
+  return chainBasePath(promptId) + '/editKey'
 }
 
-export function savePrompt(promptId: string, prompt: Prompt, editKey: string) {
+export function saveChain(chainId: string, chain: PromptChain, editKey: string) {
   // export function save({promptId: string, prompt: Prompt}) {
-  console.debug(`Saving prompt "${promptId}": ` + util.inspect(prompt, {showHidden: false, depth: null, colors: true}));
+  console.debug(`Saving chain "${chainId}": ` + util.inspect(chain, {showHidden: false, depth: null, colors: true}));
 
-  const basePath: string = promptBasePath(promptId);
+  const basePath: string = chainBasePath(chainId);
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath, { recursive: true });
     fs.writeFileSync(
-      promptEditKeyPath(promptId),
+      chainEditKeyPath(chainId),
       editKey,
       'utf8'
     );
@@ -43,23 +58,20 @@ export function savePrompt(promptId: string, prompt: Prompt, editKey: string) {
   }
 
   fs.writeFileSync(
-    promptDataPath(promptId),
-    JSON.stringify(prompt),
+    chainDataPath(chainId),
+    JSON.stringify(chain),
     'utf8'
   );
 }
 
-export function loadPrompt(promptId: string) {
-  let rawdata: Buffer = fs.readFileSync(promptDataPath(promptId));
-  let prompt = JSON.parse(rawdata.toString());
+export function loadChain(chainId: string): PromptChain {
+  let rawdata: Buffer = fs.readFileSync(chainDataPath(chainId));
+  let chainOrPrompt: PromptChain | Prompt = JSON.parse(rawdata.toString());
 
-  // v1: convert HTML to plain text
-  if (prompt.version == 1) {
-    prompt.prompt_text = convert(prompt.prompt_text);
-    prompt.version = 2;
-  }
+  // Upgrade if legacy record
+  let chain = upgradeChainOrPrompt(chainOrPrompt)
 
-  return prompt;
+  return chain;
 }
 
 export function renderPrompt(promptText: string, paramDict: Record<string, string>): string {
@@ -69,3 +81,34 @@ export function renderPrompt(promptText: string, paramDict: Record<string, strin
 }
 
 export class PermissionDeniedError extends Error {};
+
+// Record compatibility
+
+function upgradeChainOrPrompt(chainOrPrompt: PromptChain | Prompt): PromptChain {
+  if (chainOrPrompt.version <= 2) {
+    return upgradePrompt(chainOrPrompt as Prompt)
+  }
+
+  return upgradeChain(chainOrPrompt as PromptChain);
+}
+
+function upgradePrompt(prompt: Prompt): PromptChain {
+  assert(prompt.version <= 2); // From v3 records have PromptChain type
+
+  if (prompt.version == 1) {
+    prompt.prompt_text = convert(prompt.prompt_text);
+    prompt.version = 2;
+  }
+
+  let result = {
+    version: promptSchemaVersion,
+    title: prompt.title,
+    prompts: [prompt]
+  }
+
+  return upgradeChain(result);
+}
+
+function upgradeChain(chain: PromptChain): PromptChain {
+  return chain;
+}

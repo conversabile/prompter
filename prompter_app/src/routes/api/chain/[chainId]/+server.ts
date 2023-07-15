@@ -1,22 +1,22 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 
-import type { Prompt } from '$lib/prompts';
-import { savePrompt } from '$lib/prompts';
+import type { PromptChain } from '$lib/prompts';
+import { saveChain } from '$lib/prompts';
 
 export const GET = (({ url }) => {
     const id = Number(url.searchParams.get('id') ?? '0');
-    console.log(`GET /api/prompt. id: ${id}`);
-    return new Response(`I'm a prompt with id ${id}`);
+    console.log(`GET /api/chain. id: ${id}`);
+    return new Response(`I'm a chain with id ${id}`);
 }) satisfies RequestHandler;
 
 export const POST = (async ({ url, request, params }) => {
-    const prompt: Prompt = await request.json();
+    const chain: PromptChain = await request.json();
     const editKey = url.searchParams.get('id') ?? undefined;
     if (editKey === undefined) {
         throw error(400, "Missing URL parameter: editKey");
     }
-    console.log(`POST /api/prompt/${params.promptId}`);
-    savePrompt(params.promptId!, prompt, editKey);
+    console.log(`POST /api/chain/${params.chainId}`);
+    saveChain(params.chainId!, chain, editKey);
     return new Response();
 }) satisfies RequestHandler;

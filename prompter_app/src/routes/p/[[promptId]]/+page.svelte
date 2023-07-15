@@ -1,7 +1,7 @@
 <script>
-	import PromptBox from '../../PromptBox.svelte';
+	import PromptChainEditor from '../../PromptChainEditor.svelte';
 	export let data;
-	const title = data.promptRecord ? data.promptRecord.title : "New Prompt";
+	const title = data.promptChain ? data.promptChain.title : "New Prompt";
 </script>
 
 <svelte:head>
@@ -10,14 +10,12 @@
 </svelte:head>
 
 <section>
-	{#if data.promptRecord }
-		<PromptBox
-			promptTitle = {data.promptRecord.title}
-			promptText = {data.promptRecord.prompt_text}
-			paramDict = {data.promptRecord.parameters_dict}
+	{#if data.promptChain }
+		<PromptChainEditor
+			promptChain = {data.promptChain}
 		/>
 	{:else}
-		<PromptBox />
+		<PromptChainEditor />
 	{/if}
 </section>
 

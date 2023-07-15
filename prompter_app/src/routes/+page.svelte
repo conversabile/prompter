@@ -1,5 +1,5 @@
 <script>
-	import PromptBox from './PromptBox.svelte';
+	import PromptChainEditor from './PromptChainEditor.svelte';
 </script>
 
 <svelte:head>
@@ -8,7 +8,7 @@
 </svelte:head>
 
 <section>
-	<PromptBox />
+	<PromptChainEditor />
 </section>
 
 <style>

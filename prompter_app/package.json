@@ -1,6 +1,6 @@
 {
 	"name": "conversabile-prompter",
-	"version": "0.0.3-dev",
+	"version": "0.0.4-dev",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
