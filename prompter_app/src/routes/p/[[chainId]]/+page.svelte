@@ -12,6 +12,9 @@
 <section>
 	{#if data.promptChain }
 		<PromptChainEditor
+			chainId = {data.chainId}
+			editKey = {data.editKey}
+			isShared = {data.isShared}
 			promptChain = {data.promptChain}
 		/>
 	{:else}

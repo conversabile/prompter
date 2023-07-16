@@ -52,9 +52,8 @@ export function saveChain(chainId: string, chain: PromptChain, editKey: string) 
       editKey,
       'utf8'
     );
-  } else {
-    // TODO: implement editKey check
-    throw new PermissionDeniedError(`Cannot overwrite existing data in folder: ${basePath}`)
+  } else if (! isValidEditKey(chainId, editKey)) {
+    throw new PermissionDeniedError(`Incorrect editKey for prompt record at: ${basePath}`)
   }
 
   fs.writeFileSync(
@@ -62,6 +61,11 @@ export function saveChain(chainId: string, chain: PromptChain, editKey: string) 
     JSON.stringify(chain),
     'utf8'
   );
+}
+
+function isValidEditKey(chainId: string, editKey: string): boolean {
+  let expected: string = fs.readFileSync(chainEditKeyPath(chainId)).toString();
+  return expected == editKey;
 }
 
 export function loadChain(chainId: string): PromptChain {

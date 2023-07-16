@@ -2,7 +2,9 @@
 
 ## v0.0.4 (in development)
 
+* Add editable permalinks
 * Update data model to support prompt chains
+* Change prompt record version to 3 (record is now a prompt chain)
 
 ## v0.0.3
 

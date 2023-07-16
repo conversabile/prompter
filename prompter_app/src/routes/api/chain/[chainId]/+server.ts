@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 
-import type { PromptChain } from '$lib/prompts';
+import { type PromptChain, PermissionDeniedError } from '$lib/prompts';
 import { saveChain } from '$lib/prompts';
 
 export const GET = (({ url }) => {
@@ -12,11 +12,19 @@ export const GET = (({ url }) => {
 
 export const POST = (async ({ url, request, params }) => {
     const chain: PromptChain = await request.json();
-    const editKey = url.searchParams.get('id') ?? undefined;
+    const editKey = url.searchParams.get('editKey') ?? undefined;
     if (editKey === undefined) {
         throw error(400, "Missing URL parameter: editKey");
     }
     console.log(`POST /api/chain/${params.chainId}`);
-    saveChain(params.chainId!, chain, editKey);
+    try {
+        saveChain(params.chainId!, chain, editKey);
+    } catch (e) {
+        if (e instanceof PermissionDeniedError) {
+            throw error(403, "Invalid editKey");
+        }
+        throw(e);
+    }
+    
     return new Response();
 }) satisfies RequestHandler;
