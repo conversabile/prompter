@@ -89,6 +89,20 @@
       promptText = eventEditor.getDoc().getValue();
     })
   });
+
+  /**
+   * Pressing "Enter" while editing title should de-focus the input element
+   */
+  function handleTitleKeydown(e: KeyboardEvent) {
+    if (e.key == "Enter") {
+      e.preventDefault();
+      try {
+        if (e.target) (e.target as HTMLElement).blur();
+      } catch (e) {
+        throw(e);
+      }
+    }
+  }
 </script>
 
 <svelte:head>
@@ -98,7 +112,7 @@
 
 <div class="promptBox">
 
-  <h2>Prompt</h2>
+  <h2 class="promptTitle" contenteditable bind:innerText={promptTitle} on:keydown={handleTitleKeydown}>{promptTitle}</h2>
   <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{promptText}</textarea>
   <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
@@ -126,6 +140,32 @@
 h2 {
   text-transform: uppercase;
   font-weight:bold;
+}
+
+.promptTitle {
+  text-transform: none;
+  font-weight: normal;
+  font-size: 1.3em;
+  display: inline-block;
+  padding: 0.5em 0;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  margin: 0 auto 0.5em auto;
+}
+
+.promptTitle:focus {
+  background-color: white;
+  border: 0;
+  cursor: inherit;
+}
+
+.promptTitle span {
+  display: inline-block;
+}
+
+.promptTitle .pencilIcon {
+  color: #444;
 }
 
 .promptBox {

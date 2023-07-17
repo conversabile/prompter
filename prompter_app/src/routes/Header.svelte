@@ -6,7 +6,7 @@
 
 <header>
 	<div class="corner">
-		<a href="https://www.converssabile.com">
+		<a href="https://www.conversabile.com" target="_blank">
 			<img src={logo} alt="Conversabile" />
 		</a>
 	</div>
@@ -35,7 +35,7 @@
 	</nav>
 
 	<div class="corner">
-		<a href="https://github.com/conversabile/prompter">
+		<a href="https://github.com/conversabile/prompter" target="_blank">
 			<img src={github} alt="GitHub" style="filter: invert()"/>
 		</a>
 	</div>

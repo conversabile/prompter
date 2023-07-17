@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { promptSchemaVersion, type Prompt, type PromptChain, saveChain } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
@@ -44,13 +43,15 @@
     console.log("Saved prompt chain with id: " + responseJson.chainId);
     chainId = responseJson.chainId;
     editKey = responseJson.editKey;
-    sharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
-    sharedUrlEditable = sharedUrlReadOnly + '?editKey=' + responseJson.editKey;
+    let newSharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
+    let newSharedUrlEditable = newSharedUrlReadOnly + '?editKey=' + responseJson.editKey;
 
-    isSharing = false;
-    isShared = true;
+    // isSharing = false;
+    // isShared = true;
 
-    goto(sharedUrlEditable + '&isShared=true');
+    window.location.href = newSharedUrlEditable + '&isShared=true';
+    // goto(newSharedUrlEditable + '&isShared=true');
+    // ^ this messes up the state (+page.server.ts is skipped)
   }
 
   async function handleUpdate() {
@@ -117,7 +118,7 @@
     <a href="{sharedUrlUser}">{sharedUrlUser}</a>
     {#if editKey}
       <span class="shareEditableContainer">
-        <input type="checkbox" name="shareEditable" id="shareEditable" bind:checked={isSharedEditable}><label for="shareEditable">Editable Link</label>
+        <input type="checkbox" name="shareEditable" id="shareEditable" bind:checked={isSharedEditable}><label for="shareEditable" title="People you share your link with will be able to make changes to your prompt">Editable Link</label>
       </span>
     {/if}
   </div>
