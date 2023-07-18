@@ -1,10 +1,12 @@
 # Changelog
 
-## v0.0.4 (in development)
+## v0.0.4
 
 * Add editable permalinks
+* Add editable prompt titles
 * Update data model to support prompt chains
 * Change prompt record version to 3 (record is now a prompt chain)
+* Fix invalid prompt id handling with 404 page
 
 ## v0.0.3
 

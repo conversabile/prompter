@@ -69,7 +69,18 @@ function isValidEditKey(chainId: string, editKey: string): boolean {
 }
 
 export function loadChain(chainId: string): PromptChain {
-  let rawdata: Buffer = fs.readFileSync(chainDataPath(chainId));
+  let rawdata: Buffer;
+
+  try {
+    rawdata = fs.readFileSync(chainDataPath(chainId));
+  } catch (error: any) {
+    const nodeError: NodeJS.ErrnoException = error;
+    if (nodeError.code == "ENOENT") {
+      throw new ChainNotFoundError("Chain not found");
+    } 
+    throw error;
+  }
+
   let chainOrPrompt: PromptChain | Prompt = JSON.parse(rawdata.toString());
 
   // Upgrade if legacy record
@@ -84,6 +95,7 @@ export function renderPrompt(promptText: string, paramDict: Record<string, strin
   return result.trim();
 }
 
+export class ChainNotFoundError extends Error {};
 export class PermissionDeniedError extends Error {};
 
 // Record compatibility

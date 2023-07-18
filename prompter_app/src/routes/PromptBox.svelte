@@ -106,8 +106,10 @@
 </script>
 
 <svelte:head>
-  <script src="/codemirror.js"></script>
-	<script src="/jinja2.js"></script>
+  <!-- CodeMirror stuff is imported in app.html because PromptBox may be loaded after 
+    head is already processed (e.g. svelte internal routing for browser back or link 
+    from error/static pages) -->
+  <!-- TODO: refactor with proper imports -->
 </svelte:head>
 
 <div class="promptBox">
