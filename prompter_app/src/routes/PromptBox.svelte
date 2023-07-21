@@ -10,6 +10,7 @@
 	export let promptText: string;
   export let promptTitle: string;
   export let paramDict: Record<string, string>;
+  export let renderedPromptText: string = ""; // Will be read from outside to make predictions
 
   // Parse prompt args
   // const paramParseRegex = /\$\$(\w+)/gi // $$paramName
@@ -36,27 +37,33 @@
   // Render Result
   let renderedPrompt = "";
   let renderError = false;
+
   function renderPromptV1() {
-    let result: string;
+    let resultHtml: string;
+    let resultText: string;
 
     try {
       renderError = false;
       // https://regex101.com/r/WhYBv9/1
-      result = promptText.replace(/(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi, '<span class="param">$1</span>');
+      const jinjaRegex = /(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
+      resultHtml = promptText.replace(jinjaRegex, '<span class="param">$1</span>');
       // TODO: move sanitization at dict level
       let renderedParamDict: Record<string, string> = {};
       for (const paramName in paramDict) {
         renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
       }
-      result = renderPrompt(result, renderedParamDict);
+      resultText = renderPrompt(promptText, renderedParamDict);
+      resultHtml = renderPrompt(resultHtml, renderedParamDict);
     } catch(err: any) {
       renderError = true;
-      result = 'invalid syntax: ' + err.message;
+      resultHtml = 'invalid syntax: ' + err.message;
+      resultText = '';
     }
 
-    return result;
+    renderedPrompt = resultHtml;
+    renderedPromptText = resultText;
   }
-  $: if (promptText, paramList, paramDict) renderedPrompt = renderPromptV1();
+  $: if (promptText, paramList, paramDict) renderPromptV1();
 
   import type { Editor } from "codemirror";
   
@@ -162,17 +169,9 @@ h2 {
   cursor: inherit;
 }
 
-.promptTitle span {
-  display: inline-block;
-}
-
-.promptTitle .pencilIcon {
-  color: #444;
-}
-
 .promptBox {
   width:100%;
-  background: var(--color-theme-1);
+  background: var(--color-theme-orange);
   margin:0;
   padding:1em;
 }
@@ -193,7 +192,7 @@ h2 {
   font-size: 0.8em;
   margin: 0;
   padding: 0;
-  color: var(--color-theme-1);
+  color: var(--color-theme-orange);
 }
 
 .reference:hover {
@@ -201,7 +200,7 @@ h2 {
 }
 
 .reference a {
-  color: var(--color-theme-2);
+  color: var(--color-theme-blue);
 }
 
 /* Param Table */
@@ -234,7 +233,7 @@ h2 {
 /* Result */
 
 .renderedPrompt {
-  /* border: 1px solid var(--color-theme-2); */
+  /* border: 1px solid var(--color-theme-blue); */
   background: var(--color-bg-alphawhite);
   padding: 1em;
   white-space: pre-wrap;
@@ -246,7 +245,7 @@ h2 {
 }
 
 :global(.renderedPrompt .param) {
-  color: var(--color-theme-2);
+  color: var(--color-theme-blue);
 }
 
 </style>

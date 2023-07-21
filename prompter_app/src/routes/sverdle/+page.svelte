@@ -277,16 +277,16 @@
 	}
 
 	.letter.exact {
-		background: var(--color-theme-2);
+		background: var(--color-theme-blue);
 		color: white;
 	}
 
 	.letter.close {
-		border: 2px solid var(--color-theme-2);
+		border: 2px solid var(--color-theme-blue);
 	}
 
 	.selected {
-		outline: 2px solid var(--color-theme-1);
+		outline: 2px solid var(--color-theme-orange);
 	}
 
 	.controls {
@@ -324,7 +324,7 @@
 	}
 
 	.keyboard button.exact {
-		background: var(--color-theme-2);
+		background: var(--color-theme-blue);
 		color: white;
 	}
 
@@ -333,11 +333,11 @@
 	}
 
 	.keyboard button.close {
-		border: 2px solid var(--color-theme-2);
+		border: 2px solid var(--color-theme-blue);
 	}
 
 	.keyboard button:focus {
-		background: var(--color-theme-1);
+		background: var(--color-theme-orange);
 		color: white;
 		outline: none;
 	}
@@ -375,7 +375,7 @@
 
 	.restart:focus,
 	.restart:hover {
-		background: var(--color-theme-1);
+		background: var(--color-theme-orange);
 		color: white;
 		outline: none;
 	}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { promptSchemaVersion, type Prompt, type PromptChain, saveChain } from '$lib/prompts';
+  import { promptSchemaVersion, type PromptChain } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
 
   export let chainId: string | null = null;
@@ -78,13 +78,119 @@
   function dismissError() {
     error = "";
   }
+
+  // Predict
+  /* 
+  * TODO:
+  *  - persist predictions in saved prompts
+  *  - persist api key in local storage
+  *  - syntax highlighting
+  *  - DONE prediction box is hidden initially
+  *  - DONE handle openapi errors
+  *  - sanitize uuid params in /p/<UUID>
+  */
+  import Fa from 'svelte-fa'
+  import { faPlay, faSave, faClone, faShare } from '@fortawesome/free-solid-svg-icons'
+  import { Clock } from 'svelte-loading-spinners';
+
+  import { Configuration, OpenAIApi } from "openai";
+
+  let showPredictionResult: boolean = false;
+  let renderedPromptText: string;
+  let openaiApiKey: string = "";
+  let isPredicting: boolean = false;
+  let predictionResult: string = "";
+  let predictionError: string = "";
+
+  async function handlePredict() {
+    showPredictionResult = true;
+
+    if (! openaiApiKey) {
+      isPredicting = false;
+      predictionResult = "";
+      predictionError = "";
+      return;
+    }
+
+    if (! renderedPromptText) {
+      isPredicting = false;
+      predictionResult = "";
+      predictionError = "No prompt to predict";
+      return;
+    }
+
+    isPredicting = true;
+    predictionResult = "";
+    predictionError = "";
+
+    console.debug("predicting prompt: ", renderedPromptText);
+
+    try {
+    
+      const configuration = new Configuration({
+        apiKey: openaiApiKey,
+      });
+      const openai = new OpenAIApi(configuration);
+      const response = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {"role": "user", "content": renderedPromptText}
+        ]
+      });
+      // const response = await openai.listModels();
+      console.log("openai: ", response);
+
+      if (!response.status || !response.data || !response.data.choices) {
+          predictionError = "No prediction found in OpenAI reponse";
+      } else {
+        predictionResult = response.data.choices[0].message?.content ?? "";
+      }
+    } catch (err: any) {
+      console.log("openai error: ", err);
+      if (err.response) {
+        predictionError = "OpenAI prediction request failed with status code " + err.response.status + " (" + err.response.statusText + ")";
+      } else {
+        predictionError = "OpenAI prediction request failed (" + err + ")";
+      }
+    }
+    
+    isPredicting = false;
+
+  }
 </script>
 
 <PromptBox
     bind:promptTitle = {promptChain.prompts[0].title}
     bind:promptText = {promptChain.prompts[0].prompt_text}
     bind:paramDict = {promptChain.prompts[0].parameters_dict}
+    bind:renderedPromptText = {renderedPromptText}
 />
+
+{#if showPredictionResult}
+  <div class="predictionResultBox">
+    <div>
+      <form class="openaiKeyContainer" on:submit|preventDefault={handlePredict}>
+        <label for="openaiApiKey">OpenAI API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
+      </form>
+    </div> 
+      {#if isPredicting}
+        <div class="predictionPlaceholderMessage">
+          <div style="display:inline-block;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
+        </div>
+      {:else if predictionResult}
+        <div class="predictionResult">{predictionResult}</div>
+      {:else if predictionError}
+        <div class="predictionResult predictionError">{predictionError}</div>
+      {:else if ! openaiApiKey}
+        <div class="missingOpenaiKey">
+          <p>An OpenAI key must be provided for predictions</p>
+          <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to Prompter server</small></p>
+        </div>
+      {:else}
+        <div class="predictionPlaceholderMessage">Click "Predict" or press Enter to send the prediction request</div>  
+      {/if}
+  </div>
+{/if}
 
 <div>
   {#if isSharing}
@@ -93,20 +199,23 @@
 
     <!-- Homepage: unsaved prompt with no id -->
     {#if (! chainId)}
-      <button id="shareButton" class="button" title="Generate a permalink for this prompt" on:click={handleShare}>Share</button>
+      <button id="shareButton" class="button" title="Generate a permalink for this prompt" on:click={handleShare}><Fa icon={faShare} /> Share</button>
     {/if}
 
     <!-- Saved prompt with edit key -->
     {#if editKey}
-      <button id="updateButton" class="button" title="Save all the edits you made to this prompt" on:click={handleUpdate}>Update</button>
+      <button id="updateButton" class="button" title="Save all the edits you made to this prompt" on:click={handleUpdate}><Fa icon={faSave} /> Update</button>
     {/if}
 
     <!-- Saved prompt, either with or without edit key -->
     {#if chainId}
-      <button id="shareCopyButton" class="button" title="Save all the edits you made to this prompt as a new permalink" on:click={handleShare}>Share Copy</button>
+      <button id="shareCopyButton" class="button" title="Save all the edits you made to this prompt as a new permalink" on:click={handleShare}><Fa icon={faClone} /> Clone</button>
     {/if}
-  {/if}
 
+    <button id="predictButton" class="button" title="Predict prompt on OpenAI" on:click={handlePredict}>
+      <Fa icon={faPlay} /> Predict
+    </button>
+  {/if}
 </div>
 
 {#if error}
@@ -128,10 +237,10 @@
 <style>
 .button {
     display:inline-block;
-    /* color:var(--color-theme-2); */
-    border:1px solid var(--color-theme-1);
+    /* color:var(--color-theme-blue); */
+    border:1px solid var(--color-theme-orange);
     border-radius: 2px;
-    background:var(--color-theme-1);
+    background:var(--color-theme-orange);
     cursor:pointer;
     vertical-align:middle;
     /* max-width: 100px; */
@@ -143,7 +252,7 @@
 .button:hover {
     border:1px solid var(--color-bg-alphawhite);
     /* background-color:white;
-    color: var(--color-theme-1); */
+    color: var(--color-theme-orange); */
     color: white;
 }
 
@@ -160,7 +269,7 @@
 
 .isSharing {
   display: inline-block;
-  border: 1px transparent var(--color-theme-1);
+  border: 1px transparent var(--color-theme-orange);
   border-radius: 2px;
   vertical-align: middle;
   max-width: 100px;
@@ -179,7 +288,7 @@
 }
 
 #sharedUrl a {
-  color: var(--color-theme-2);
+  color: var(--color-theme-blue);
 }
 
 #sharedDisclaimer p {
@@ -208,4 +317,73 @@
   font-size: 1em;
   cursor: pointer;
 }
+
+#predictButton {
+  color: white;
+  background: var(--color-theme-darkgray);
+  border: 1px solid var(--color-theme-darkgray);
+}
+
+#predictButton:hover {
+  border: 1px solid white;
+}
+
+.predictionResultBox {
+  background: var(--color-theme-darkgray);
+  padding: 1em;
+  width: 100%;
+  color: #DDD;
+}
+
+.openaiKeyContainer {
+  display: flex;
+  align-items: center;
+}
+
+.openaiKeyContainer label {
+  margin-right: 1em;
+}
+
+.openaiKeyContainer input {
+  width: auto;
+  flex-grow: 1;
+  vertical-align: middle;
+  border: 1px solid;
+  padding: 0.5em;
+}
+
+.missingOpenaiKey {
+  text-align: center;
+  color: var(--color-theme-orange);
+  margin-top: 1em;
+}
+
+.missingOpenaiKey p {
+  margin: 0;
+}
+
+.predictionPlaceholderMessage {
+  padding: 1em;
+  text-align: center;
+  font-style: oblique;
+  margin-top: 1em;
+}
+
+.predictionResult {
+  white-space: pre-wrap;
+  text-align: justify;
+  font-weight: lighter;
+  /* letter-spacing: 0.05em; */
+  /* font-size: 1.1em; */
+  /* border: 1px solid #888; */
+  margin-top: 1em;
+  padding: 1em;
+  background: var(--color-theme-lightgray);
+}
+
+.predictionError {
+  color: #f55;
+  text-align: center;
+}
+
 </style>

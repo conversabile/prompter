@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.5 (in development)
+
+* Integrated prediction with OpenAI service
+
 ## v0.0.4
 
 * Add editable permalinks
