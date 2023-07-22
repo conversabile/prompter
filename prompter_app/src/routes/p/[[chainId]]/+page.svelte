@@ -1,7 +1,7 @@
 <script>
 	import PromptChainEditor from '../../PromptChainEditor.svelte';
 	export let data;
-	const title = data.promptChain ? data.promptChain.title : "New Prompt";
+	const title = data.promptChain ? data.promptChain.prompts[0].title : "New Prompt";
 </script>
 
 <svelte:head>

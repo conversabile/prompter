@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { promptSchemaVersion, type PromptChain } from '$lib/prompts';
+  import { promptSchemaVersion, type PromptChain, type PromptPrediction } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
 
   export let chainId: string | null = null;
@@ -13,7 +13,8 @@
       version: promptSchemaVersion,
       prompt_text: "Tell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
       parameters_dict: {storyTopic: "time travelling"},
-      title:  chainTitle
+      title:  chainTitle,
+      predictions: null
     }]
   }
   export let isShared: boolean = false;   // Show box with permalink
@@ -82,12 +83,12 @@
   // Predict
   /* 
   * TODO:
-  *  - persist predictions in saved prompts
+  *  - DONE persist predictions in saved prompts
   *  - persist api key in local storage
   *  - syntax highlighting
   *  - DONE prediction box is hidden initially
   *  - DONE handle openapi errors
-  *  - sanitize uuid params in /p/<UUID>
+  *  - DONE sanitize uuid params in /p/<UUID>
   */
   import Fa from 'svelte-fa'
   import { faPlay, faSave, faClone, faShare } from '@fortawesome/free-solid-svg-icons'
@@ -95,32 +96,29 @@
 
   import { Configuration, OpenAIApi } from "openai";
 
-  let showPredictionResult: boolean = false;
+  let userRequestedPrediction: boolean = false;
   let renderedPromptText: string;
   let openaiApiKey: string = "";
   let isPredicting: boolean = false;
-  let predictionResult: string = "";
   let predictionError: string = "";
 
   async function handlePredict() {
-    showPredictionResult = true;
+    userRequestedPrediction = true;
 
     if (! openaiApiKey) {
       isPredicting = false;
-      predictionResult = "";
       predictionError = "";
       return;
     }
 
     if (! renderedPromptText) {
       isPredicting = false;
-      predictionResult = "";
       predictionError = "No prompt to predict";
       return;
     }
 
     isPredicting = true;
-    predictionResult = "";
+    promptChain.prompts[0].predictions = null;
     predictionError = "";
 
     console.debug("predicting prompt: ", renderedPromptText);
@@ -137,13 +135,18 @@
           {"role": "user", "content": renderedPromptText}
         ]
       });
-      // const response = await openai.listModels();
       console.log("openai: ", response);
 
       if (!response.status || !response.data || !response.data.choices) {
           predictionError = "No prediction found in OpenAI reponse";
       } else {
-        predictionResult = response.data.choices[0].message?.content ?? "";
+        let rawPredictionResult = response.data.choices[0].message?.content ?? "";
+        promptChain.prompts[0].predictions = [{
+          "datetime": new Date(),
+          "renderedPrompt":  renderedPromptText,
+          "predictionRaw": rawPredictionResult,
+          "model": "openai-gpt-3.5-turbo"
+        }]
       }
     } catch (err: any) {
       console.log("openai error: ", err);
@@ -160,34 +163,43 @@
 </script>
 
 <PromptBox
-    bind:promptTitle = {promptChain.prompts[0].title}
-    bind:promptText = {promptChain.prompts[0].prompt_text}
+    bind:prompt = {promptChain.prompts[0]}
     bind:paramDict = {promptChain.prompts[0].parameters_dict}
     bind:renderedPromptText = {renderedPromptText}
 />
 
-{#if showPredictionResult}
+{#if userRequestedPrediction || promptChain.prompts[0].predictions}
   <div class="predictionResultBox">
-    <div>
-      <form class="openaiKeyContainer" on:submit|preventDefault={handlePredict}>
-        <label for="openaiApiKey">OpenAI API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
-      </form>
-    </div> 
-      {#if isPredicting}
-        <div class="predictionPlaceholderMessage">
-          <div style="display:inline-block;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
-        </div>
-      {:else if predictionResult}
-        <div class="predictionResult">{predictionResult}</div>
-      {:else if predictionError}
-        <div class="predictionResult predictionError">{predictionError}</div>
-      {:else if ! openaiApiKey}
-        <div class="missingOpenaiKey">
-          <p>An OpenAI key must be provided for predictions</p>
-          <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to Prompter server</small></p>
-        </div>
-      {:else}
-        <div class="predictionPlaceholderMessage">Click "Predict" or press Enter to send the prediction request</div>  
+
+    {#if userRequestedPrediction}
+      <div style="margin-bottom:1em;">
+        <form class="openaiKeyContainer" on:submit|preventDefault={handlePredict}>
+          <label for="openaiApiKey">OpenAI API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
+        </form>
+      </div> 
+        {#if isPredicting}
+          <div class="predictionPlaceholderMessage">
+            <div style="display:inline-block;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
+          </div>
+        {:else if predictionError}
+          <div class="predictionResult predictionError">{predictionError}</div>
+        {:else if ! openaiApiKey}
+          <div class="predictionWarningMessage">
+            <p>An OpenAI key must be provided for predictions</p>
+            <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to Prompter server</small></p>
+          </div>
+        {:else}
+          <div class="predictionPlaceholderMessage">Click "Predict" or press Enter to send the prediction request</div>  
+        {/if}
+      {/if}
+
+      {#if promptChain && promptChain.prompts[0].predictions}
+        <div class="predictionResult">{promptChain.prompts[0].predictions[0].predictionRaw}</div>
+        
+        <!-- TODO: renderedPromptText is empty when page is loading, this way earning is hidden for empty prompts -->
+        {#if renderedPromptText && promptChain.prompts[0].predictions[0].renderedPrompt != renderedPromptText}
+          <div class="predictionWarningMessage">This prediction was made using a different version of the prompt</div>
+        {/if}
       {/if}
   </div>
 {/if}
@@ -319,18 +331,19 @@
 }
 
 #predictButton {
-  color: white;
+  color: #DDD;
   background: var(--color-theme-darkgray);
   border: 1px solid var(--color-theme-darkgray);
 }
 
 #predictButton:hover {
   border: 1px solid white;
+  color: white;
 }
 
 .predictionResultBox {
   background: var(--color-theme-darkgray);
-  padding: 1em;
+  padding: 1em 1em 0 1em;
   width: 100%;
   color: #DDD;
 }
@@ -352,13 +365,13 @@
   padding: 0.5em;
 }
 
-.missingOpenaiKey {
+.predictionWarningMessage {
   text-align: center;
   color: var(--color-theme-orange);
-  margin-top: 1em;
+  margin: 1em 0;
 }
 
-.missingOpenaiKey p {
+.predictionWarningMessage p {
   margin: 0;
 }
 
@@ -366,7 +379,7 @@
   padding: 1em;
   text-align: center;
   font-style: oblique;
-  margin-top: 1em;
+  margin: 1em 0;
 }
 
 .predictionResult {
@@ -376,9 +389,9 @@
   /* letter-spacing: 0.05em; */
   /* font-size: 1.1em; */
   /* border: 1px solid #888; */
-  margin-top: 1em;
   padding: 1em;
   background: var(--color-theme-lightgray);
+  margin-bottom: 1em;
 }
 
 .predictionError {

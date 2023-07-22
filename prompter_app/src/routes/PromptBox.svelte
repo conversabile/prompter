@@ -1,14 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { promptSchemaVersion, type Prompt } from '$lib/prompts';
-  import { renderPrompt } from '$lib/prompts';
+  import { renderPrompt, type Prompt } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
 
   // Model
-	export let promptText: string;
-  export let promptTitle: string;
+  export let prompt: Prompt;
   export let paramDict: Record<string, string>;
   export let renderedPromptText: string = ""; // Will be read from outside to make predictions
 
@@ -16,14 +14,7 @@
   // const paramParseRegex = /\$\$(\w+)/gi // $$paramName
   const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
   let paramList: string[] = [];
-  let prompt: Prompt;
-  $: prompt = {
-    version: promptSchemaVersion,
-    prompt_text: promptText,
-    parameters_dict: paramDict,
-    title: promptTitle
-  }
-  $: matchedParams = promptText.matchAll(paramParseRegex);
+  $: matchedParams = prompt.prompt_text.matchAll(paramParseRegex);
   $: if (matchedParams) {
     let newParamList = [];
     for (let param of matchedParams) {
@@ -46,13 +37,13 @@
       renderError = false;
       // https://regex101.com/r/WhYBv9/1
       const jinjaRegex = /(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
-      resultHtml = promptText.replace(jinjaRegex, '<span class="param">$1</span>');
+      resultHtml = prompt.prompt_text.replace(jinjaRegex, '<span class="param">$1</span>');
       // TODO: move sanitization at dict level
       let renderedParamDict: Record<string, string> = {};
       for (const paramName in paramDict) {
         renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
       }
-      resultText = renderPrompt(promptText, renderedParamDict);
+      resultText = renderPrompt(prompt.prompt_text, renderedParamDict);
       resultHtml = renderPrompt(resultHtml, renderedParamDict);
     } catch(err: any) {
       renderError = true;
@@ -63,7 +54,7 @@
     renderedPrompt = resultHtml;
     renderedPromptText = resultText;
   }
-  $: if (promptText, paramList, paramDict) renderPromptV1();
+  $: if (prompt.prompt_text, paramList, paramDict) renderPromptV1();
 
   import type { Editor } from "codemirror";
   
@@ -93,7 +84,7 @@
       mode: {name: "jinja2", htmlMode: true}
     });
     editor.on("change", function (eventEditor: Editor) {
-      promptText = eventEditor.getDoc().getValue();
+      prompt.prompt_text = eventEditor.getDoc().getValue();
     })
   });
 
@@ -121,8 +112,11 @@
 
 <div class="promptBox">
 
-  <h2 class="promptTitle" contenteditable bind:innerText={promptTitle} on:keydown={handleTitleKeydown}>{promptTitle}</h2>
-  <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{promptText}</textarea>
+  <h2 class="promptTitle" contenteditable bind:innerText={prompt.title} on:keydown={handleTitleKeydown}>{prompt.title}</h2>
+  <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.prompt_text}</textarea>
+  <div class="renderedPrompt" class:renderError="{renderError}">
+    {@html renderedPrompt}
+  </div>
   <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
   <h2>Parameters</h2>
@@ -138,10 +132,8 @@
 
   </table>
 
-  <h2>Result</h2>
-  <div class="renderedPrompt" class:renderError="{renderError}">
-    {@html renderedPrompt}
-  </div>
+  <!-- <h2>Result</h2> -->
+
 </div>
 
 <style>
@@ -237,6 +229,7 @@ h2 {
   background: var(--color-bg-alphawhite);
   padding: 1em;
   white-space: pre-wrap;
+  font-size: 0.8em;
 }
 
 .renderError {

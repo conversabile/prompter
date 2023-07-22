@@ -3,9 +3,14 @@ import { ChainNotFoundError, loadChain } from '$lib/prompts';
 import { error } from '@sveltejs/kit';
 
 export function load({ url, params }) {
+	if (params.chainId && ! /^[A-Za-z0-9\-]*$/.test(params.chainId)) {
+		throw error(400, "Invalid Chain ID")
+	}
+
 	let promptChain: PromptChain | null;
 	try {
 		promptChain = params.chainId ? loadChain(params.chainId) : null;
+		// console.debug("[server] loaded chain: ", promptChain);
 	} catch (err) {
 		if (err instanceof ChainNotFoundError) {
 			throw error(404, 'Couldn\'t find any prompt in database with ID "' + params.chainId + '"');

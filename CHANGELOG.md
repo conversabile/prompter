@@ -3,6 +3,7 @@
 ## v0.0.5 (in development)
 
 * Integrated prediction with OpenAI service
+* Fix input chain ID parameter sanitization
 
 ## v0.0.4
 

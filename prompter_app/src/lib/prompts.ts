@@ -6,7 +6,8 @@ import nunjucks from 'nunjucks';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
-export const promptSchemaVersion: number = 3; /* 2: plain text promptText */
+export const promptSchemaVersion: number = 3; /* 3: records are prompt chains */
+                                              /* 2: plain text promptText */
                                               /* 1: HTML promptText with Jinja2 template */
 
 function assert(value: unknown) {
@@ -15,11 +16,19 @@ function assert(value: unknown) {
   }
 }
 
+export interface PromptPrediction {
+  datetime: Date,
+  renderedPrompt: string,
+  predictionRaw: string,
+  model: string
+}
+
 export interface Prompt {
   version: number;
   prompt_text: string;
   parameters_dict: Record<string, string>;
   title: string;
+  predictions?: PromptPrediction[] | null;
 }
 
 export interface PromptChain {

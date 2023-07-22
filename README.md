@@ -19,7 +19,7 @@ Feature brainstorming:
 
 A public Docker image is available for Prompter:
 
-    docker run -p 3333:3000 -e ORIGIN='http://localhost:3333' conversabile/prompter:latest
+    docker run --name prompter -p 3333:3000 -e ORIGIN='http://localhost:3333' conversabile/prompter:latest
 
 The application is now running at http://localhost:3333. For saved prompts to be persisted, the `/data` folder should be mounted as a volume
 
