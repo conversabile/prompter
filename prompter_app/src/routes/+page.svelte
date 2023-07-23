@@ -1,9 +1,10 @@
 <script>
 	import PromptChainEditor from './PromptChainEditor.svelte';
+	import { env } from '$env/dynamic/public';
 </script>
 
 <svelte:head>
-	<title>Conversabile Prompter</title>
+	<title>{env.PUBLIC_SITE_NAME}</title>
 	<meta name="description" content="A Web UI for editing and sharing LLM prompts" />
 </svelte:head>
 

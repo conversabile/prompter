@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { env } from '$env/dynamic/public';
   import { page } from '$app/stores';
   import { promptSchemaVersion, type PromptChain, type PromptPrediction } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
@@ -11,8 +12,8 @@
     title: chainTitle,
     prompts: [{
       version: promptSchemaVersion,
-      prompt_text: "Tell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
-      parameters_dict: {storyTopic: "time travelling"},
+      prompt_text: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
+      parameters_dict: {storyTopic: "time travelling", maxWords: "100"},
       title:  chainTitle,
       predictions: null
     }]
@@ -186,7 +187,7 @@
         {:else if ! openaiApiKey}
           <div class="predictionWarningMessage">
             <p>An OpenAI key must be provided for predictions</p>
-            <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to Prompter server</small></p>
+            <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to {env.PUBLIC_SITE_NAME} server</small></p>
           </div>
         {:else}
           <div class="predictionPlaceholderMessage">Click "Predict" or press Enter to send the prediction request</div>  

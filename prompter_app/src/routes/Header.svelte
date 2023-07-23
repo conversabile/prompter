@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import logo from '$lib/images/logofa-comment-dots-solid.png';
 	import github from '$lib/images/github.svg';
+	import { env } from '$env/dynamic/public';
 </script>
 
 <header>
@@ -17,7 +18,7 @@
 		</svg>
 		<ul>
 			<li>
-				<a href="/">Prompter</a>
+				<a href="/">{env.PUBLIC_SITE_NAME}</a>
 			</li>
 			<!-- <li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
 				<a href="/">Home</a>

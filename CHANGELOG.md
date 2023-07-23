@@ -2,7 +2,8 @@
 
 ## v0.0.5 (in development)
 
-* Integrated prediction with OpenAI service
+* Add OpenAI integration for in page predictions
+* Add parametrized site name
 * Fix input chain ID parameter sanitization
 
 ## v0.0.4

@@ -1,11 +1,13 @@
 <script>
+	import { env } from '$env/dynamic/public';
+
 	import Counter from '../Counter.svelte';
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcome_fallback from '$lib/images/svelte-welcome.png';
 </script>
 
 <svelte:head>
-	<title>Conversabile Prompter</title>
+	<title>{env.PUBLIC_SITE_NAME}</title>
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 

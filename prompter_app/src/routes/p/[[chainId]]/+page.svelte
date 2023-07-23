@@ -1,11 +1,13 @@
 <script>
+	import { env } from '$env/dynamic/public';
+
 	import PromptChainEditor from '../../PromptChainEditor.svelte';
 	export let data;
 	const title = data.promptChain ? data.promptChain.prompts[0].title : "New Prompt";
 </script>
 
 <svelte:head>
-	<title>Conversabile Prompter - {title}</title>
+	<title>{title} - {env.PUBLIC_SITE_NAME}</title>
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
