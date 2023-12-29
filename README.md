@@ -5,10 +5,10 @@ Available features:
 
 * Parametrized prompts
 * Prompt sharing via permalink
+* LLM service connection for in-page predictions
 
 Feature brainstorming:
 
-* LLM service connection for in-page predictions
 * Multi-prompt sequences
 * External service integrations
 * Output JSON parsing and schema validation
@@ -62,6 +62,7 @@ For development it is useful to spawn a dev server to watch for changes and auto
 
 ```sh
 cd prompter_app
+export PUBLIC_SITE_NAME="Prompter (dev)"
 npm run dev
 ```
 

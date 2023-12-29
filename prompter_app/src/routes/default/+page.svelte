@@ -8,7 +8,7 @@
 
 <svelte:head>
 	<title>{env.PUBLIC_SITE_NAME}</title>
-	<meta name="description" content="Svelte demo app" />
+	<meta name="description" content="A web UI to edit and share LLM prompts" />
 </svelte:head>
 
 <section>

@@ -13,7 +13,7 @@
     prompts: [{
       version: promptSchemaVersion,
       prompt_text: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
-      parameters_dict: {storyTopic: "time travelling", maxWords: "100"},
+      parameters_dict: {storyTopic: "time travelling", maxWords: "50"},
       title:  chainTitle,
       predictions: null
     }]
@@ -95,11 +95,12 @@
   import { faPlay, faSave, faClone, faShare } from '@fortawesome/free-solid-svg-icons'
   import { Clock } from 'svelte-loading-spinners';
 
-  import { Configuration, OpenAIApi } from "openai";
+  import { OpenAI } from "openai";
 
   let userRequestedPrediction: boolean = false;
   let renderedPromptText: string;
   let openaiApiKey: string = "";
+  let openaiApiModel: string;
   let isPredicting: boolean = false;
   let predictionError: string = "";
 
@@ -126,29 +127,34 @@
 
     try {
     
-      const configuration = new Configuration({
+      const openai = new OpenAI({
         apiKey: openaiApiKey,
+        dangerouslyAllowBrowser: true, // We don't store the user's API key
       });
-      const openai = new OpenAIApi(configuration);
-      const response = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
+      const response = await openai.chat.completions.create({
+        model: openaiApiModel,
         messages: [
           {"role": "user", "content": renderedPromptText}
-        ]
+        ],
+        stream: true,
       });
-      console.log("openai: ", response);
-
-      if (!response.status || !response.data || !response.data.choices) {
-          predictionError = "No prediction found in OpenAI reponse";
-      } else {
-        let rawPredictionResult = response.data.choices[0].message?.content ?? "";
+      
+      // Init prediction object
+      if (! promptChain.prompts[0].predictions) {
         promptChain.prompts[0].predictions = [{
           "datetime": new Date(),
           "renderedPrompt":  renderedPromptText,
-          "predictionRaw": rawPredictionResult,
+          "predictionRaw": "",
           "model": "openai-gpt-3.5-turbo"
         }]
       }
+
+      // Append chunks to prediction objects
+      for await (const chunk of response) {
+        let chunkStr = chunk.choices[0].delta.content ?? "";
+        promptChain.prompts[0].predictions[0].predictionRaw = promptChain.prompts[0].predictions[0].predictionRaw.concat(chunkStr);
+      }
+
     } catch (err: any) {
       console.log("openai error: ", err);
       if (err.response) {
@@ -174,11 +180,17 @@
 
     {#if userRequestedPrediction}
       <div style="margin-bottom:1em;">
-        <form class="openaiKeyContainer" on:submit|preventDefault={handlePredict}>
+        <form class="openaiParamsContainer" on:submit|preventDefault={handlePredict}>
+          <label for="openaiModel">OpenAI Model</label>
+          <select name="openaiModel" id="openaiModel" bind:value={openaiApiModel}>
+            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+            <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
+            <option value="gpt-4">gpt-4</option>
+          </select>
           <label for="openaiApiKey">OpenAI API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
         </form>
       </div> 
-        {#if isPredicting}
+        {#if isPredicting && ! promptChain.prompts[0].predictions}
           <div class="predictionPlaceholderMessage">
             <div style="display:inline-block;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
           </div>
@@ -349,21 +361,29 @@
   color: #DDD;
 }
 
-.openaiKeyContainer {
+.openaiParamsContainer {
   display: flex;
   align-items: center;
 }
 
-.openaiKeyContainer label {
+.openaiParamsContainer label {
   margin-right: 1em;
 }
 
-.openaiKeyContainer input {
+.openaiParamsContainer input {
   width: auto;
   flex-grow: 1;
   vertical-align: middle;
   border: 1px solid;
   padding: 0.5em;
+}
+
+.openaiParamsContainer select {
+  vertical-align: middle;
+  border: 1px solid;
+  padding: 0.5em;
+  margin-right: 1em;
+  font-size: 1em;
 }
 
 .predictionWarningMessage {

@@ -1,8 +1,8 @@
 import type { PromptChain } from '$lib/prompts';
 import { ChainNotFoundError, loadChain } from '$lib/prompts';
-import { error } from '@sveltejs/kit';
+import { error, type ServerLoadEvent } from '@sveltejs/kit';
 
-export function load({ url, params }) {
+export function load({ url, params }: ServerLoadEvent) {
 	if (params.chainId && ! /^[A-Za-z0-9\-]*$/.test(params.chainId)) {
 		throw error(400, "Invalid Chain ID")
 	}

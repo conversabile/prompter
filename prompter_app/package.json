@@ -1,6 +1,6 @@
 {
 	"name": "conversabile-prompter",
-	"version": "0.0.5-dev",
+	"version": "0.0.6-dev",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -41,7 +41,7 @@
 		"codemirror": "^5.65.13",
 		"html-to-text": "^9.0.5",
 		"nunjucks": "^3.2.4",
-		"openai": "^3.3.0",
+		"openai": "^4.24.1",
 		"svelte-fa": "^3.0.4"
 	}
 }

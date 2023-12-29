@@ -1,6 +1,11 @@
 # Changelog
 
-## v0.0.5 (in development)
+## v0.0.6 (in development)
+
+* Add support for streaming OpenAI predictions
+* Make OpenAI model configurable
+
+## v0.0.5
 
 * Add OpenAI integration for in page predictions
 * Add parametrized site name
