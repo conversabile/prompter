@@ -101,3 +101,20 @@ button:focus:not(:focus-visible) {
 	width: 1px;
 	white-space: nowrap;
 }
+
+.button {
+    display:inline-block;
+    border:1px solid var(--color-theme-orange);
+    border-radius: 2px;
+    background:var(--color-theme-orange);
+    cursor:pointer;
+    vertical-align:middle;
+    padding: 1em;
+    margin: 1em;
+    text-align: center;
+}
+
+.button:hover {
+    border:1px solid var(--color-bg-alphawhite);
+    color: white;
+}

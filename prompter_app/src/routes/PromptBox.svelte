@@ -119,20 +119,6 @@
   </div>
   <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
-  <h2>Parameters</h2>
-
-  <!-- {#if } -->
-  <table class="paramTable">
-    <tr>
-      <th class="min">Param Name</th> <th>Param Value</th>
-    </tr>
-    {#each paramList as paramName}
-      <tr><td class="min"><span class="paramName">{paramName}</span></td><td> <input type="text" bind:value={paramDict[paramName]}> </td></tr>
-    {/each}
-
-  </table>
-
-  <!-- <h2>Result</h2> -->
 
 </div>
 
@@ -193,33 +179,6 @@ h2 {
 
 .reference a {
   color: var(--color-theme-blue);
-}
-
-/* Param Table */
-
-.paramTable {
-  width:100%;
-  padding:1em;
-  background: var(--color-bg-alphawhite);
-}
-
-.paramTable th {
-  text-align:left;
-}
-
-.paramTable input {
-  width: calc(100% - 1em);
-  padding:0.5em;
-}
-
-.paramTable .min {
-  width: 15%;
-  white-space: nowrap;
-}
-
-.paramName {
-  font-family: monospace;
-  font-weight: bold;
 }
 
 /* Result */

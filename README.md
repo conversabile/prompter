@@ -53,6 +53,7 @@ Prompter can be launched locally as follows:
 cd prompter_app
 npm install
 npm run build
+export PUBLIC_SITE_NAME="Prompter (dev)"
 ORIGIN=http://localhost:3000 node build/index.js
 ```
 
