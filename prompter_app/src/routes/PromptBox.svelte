@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { renderPrompt, type Prompt } from '$lib/prompts';
+  import { renderPrompt, type Prompt, parameterNameList, parameterDict, piledParameterDict } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
@@ -9,21 +9,8 @@
   export let prompt: Prompt;
   export let paramDict: Record<string, string>;
   export let renderedPromptText: string = ""; // Will be read from outside to make predictions
-
-  // Parse prompt args
-  // const paramParseRegex = /\$\$(\w+)/gi // $$paramName
-  const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
-  let paramList: string[] = [];
-  $: matchedParams = prompt.prompt_text.matchAll(paramParseRegex);
-  $: if (matchedParams) {
-    let newParamList = [];
-    for (let param of matchedParams) {
-      let paramName = param[1];
-      // if (paramDict[paramName] == undefined) { paramDict[paramName] = ""; }
-      newParamList.push(paramName);
-    }
-    paramList = Array.from(new Set(newParamList));
-  }
+  
+  $: paramDict = piledParameterDict(prompt);
 
   // Render Result
   let renderedPrompt = "";
@@ -54,7 +41,7 @@
     renderedPrompt = resultHtml;
     renderedPromptText = resultText;
   }
-  $: if (prompt.prompt_text, paramList, paramDict) renderPromptV1();
+  $: if (prompt.prompt_text, paramDict) renderPromptV1();
 
   import type { Editor } from "codemirror";
   

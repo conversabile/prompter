@@ -29,7 +29,6 @@
 	import ShareBox from './ShareBox.svelte';
   
 </script>
-{isShared}
 
 <PromptBox
     bind:prompt = {promptChain.prompts[0]}
@@ -70,6 +69,8 @@
 .tabLabels {
   margin: 1em 0 0 0;
   border: 0;
+  text-align: left;
+  width: 100%;
 }
 
 .tabLabels button {
@@ -79,9 +80,9 @@
   border-radius: 2px 2px 0 0;
   background:var(--color-theme-orange);
   cursor:pointer;
-  vertical-align:middle;
+  vertical-align: baseline;
   /* max-width: 100px; */
-  padding: 1em;
+  padding: .5em 1em;
   margin: 0;
   text-align: center;
 }
@@ -92,19 +93,8 @@
 }
 
 .tabLabels .active {
-  border-top: 2px solid;
+  border-top: 3px solid;
 }
-
-/* #predictButton {
-  color: #DDD;
-  background: var(--color-theme-darkgray);
-  border: 1px solid var(--color-theme-darkgray);
-}
-
-#predictButton:hover {
-  border: 1px solid white;
-  color: white;
-} */
 
 .tabContent {
   padding: 1em;

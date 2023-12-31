@@ -3,6 +3,7 @@ import { page } from "$app/stores";
 import type { PromptChain } from "$lib/prompts";
 import { faClone, faSave, faShare } from "@fortawesome/free-solid-svg-icons";
 import Fa from "svelte-fa";
+	import { Clock } from "svelte-loading-spinners";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
@@ -72,12 +73,16 @@ function dismissError() {
 
 <div>
     {#if isSharing}
-      <p class="isSharing">saving...</p>
+      <div style="text-align: center;">
+        <p class="isSharing"><Clock size="30" color="#000" unit="px" duration="10s" /></p>
+      </div>
     {:else}
   
       <!-- Homepage: unsaved prompt with no id -->
       {#if (! chainId)}
-        <button id="shareButton" class="button" title="Generate a permalink for this prompt" on:click={handleShare}><Fa icon={faShare} /> Share</button>
+        <div class="singleButtonContainer">
+            <button id="shareButton" class="button" title="Generate a permalink for this prompt" on:click={handleShare}><Fa icon={faShare} /> Generate link</button>
+        </div>
       {/if}
   
       <!-- Saved prompt with edit key -->
@@ -97,28 +102,74 @@ function dismissError() {
     <div class="error"> <span class="closeIcon" on:click={dismissError} on:keypress={dismissError}>✖</span> [<strong style="color: #c60000;">ERROR</strong>] {error}</div>
   {/if}
   
-  {#if isShared}
+  {#if sharedUrlReadOnly}
     <div id="sharedUrl">
-      <a href="{sharedUrlUser}">{sharedUrlUser}</a>
-      {#if editKey}
-        <span class="shareEditableContainer">
-          <input type="checkbox" name="shareEditable" id="shareEditable" bind:checked={isSharedEditable}><label for="shareEditable" title="People you share your link with will be able to make changes to your prompt">Editable Link</label>
-        </span>
-      {/if}
+
+        <table class="sharedLinksTable">
+                <tr>
+                    <th class="min">Read-only</th>
+                    <td> <span class="sharedLink"><a href="{sharedUrlReadOnly}" target="_blank">{sharedUrlReadOnly}</a></span> </td>
+                </tr>
+                <tr>
+                    <th class="min">Read + Edit</th>
+                    <td>
+                        {#if editKey}
+                            <span class="sharedLink"><a href="{sharedUrlEditable}" target="_blank">{sharedUrlEditable}</a></span>
+                        {:else}
+                            <p>You don't have edit access to this prompt. Clone it to a new one to make Edits.</p>
+                        {/if}
+                    </td>
+                </tr>
+        </table>
+
     </div>
     <div id="sharedDisclaimer"><p>Please note that Prompter is in early development stage, your work may change format or become unreachable at any time. Use it at your own risk!</p></div>
   {/if}
 
 <style>
-.shareEditableContainer {
-  display: block;
-  margin-top: 0.5em;
+.singleButtonContainer {
+    padding: 2em 0;
+    text-align: center;    
 }
 
-.shareEditableContainer label {
-  line-height: 1em;
-  display: inline-block;
-  vertical-align: middle;
+.button {
+    margin: 0 0 0 1em;
+    background-color: var(--color-theme-darkgray);
+    color: #DDD;
+    border: 0;
+}
+
+.button:hover {
+    color: white;
+}
+
+.sharedLinksTable {
+    width: 100%;
+}
+
+.sharedLinksTable td, .sharedLinksTable th {
+    text-align: left;
+}
+
+.sharedLinksTable th {
+    width:0.1%;
+    white-space: nowrap;
+    padding-right: 1em;
+}
+
+.sharedLinksTable .sharedLink {
+    padding: 0.5em;
+    width: calc(100% - 1em);
+    background-color: white;
+    border: 1px solid;
+    display: inline-block;
+    font-size: .9em;
+}
+
+.sharedLinksTable p {
+    padding: 0.5em;
+    margin: 0;
+    font-style: italic;
 }
 
 .isSharing {
@@ -130,12 +181,12 @@ function dismissError() {
   padding: 1em;
   margin: 1em;
   text-align: center;
-  color: var(--color-bg-alphawhite);
+  /* color: var(--color-bg-alphawhite); */
   font-style: oblique;
 }
 
 #sharedUrl {
-  background: white;
+  background: var(--color-bg-alphawhite);
   margin: 1em 1em 0.5em 1em;
   padding: 1em;
   text-align: center;
@@ -148,18 +199,20 @@ function dismissError() {
 #sharedDisclaimer p {
   font-style: italic;
   font-size: 0.9em;
-  color: var(--color-bg-alphawhite);
+  /* color: var(--color-bg-alphawhite); */
   margin-top: 0;
+  text-align: center;
 }
 
 .error {
   color: black;
   border: 1x solid #c60000;
   background: rgba(255, 255, 255, 0.75);
-  padding: 0.5em;
+  padding: 0.5em 1em;
   font-family: monospace;
-  width: 100%;
+  width: calc(100% - 4em);
   text-align: center;
+  margin: 1em;
 }
 
 .closeIcon {

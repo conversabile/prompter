@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { PromptChain } from "$lib/prompts";
+import { parameterNameList, type PromptChain } from "$lib/prompts";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
@@ -95,14 +95,15 @@ async function handlePredict() {
 
 
 <div class="grid">
+
+    <!-- Parameter value table -->
     <div class="paramTableCell">
-        <!-- Parameter value input -->
         <table class="paramTable">
             <tr>
                 <th class="min">Param Name</th> <th>Param Value</th>
             </tr>
             {#each promptChain.prompts as prompt}
-                {#each Object.keys(prompt.parameters_dict) as paramName}
+                {#each parameterNameList(prompt) as paramName}
                     <tr>
                         <td class="min"><span class="paramName">{paramName}</span></td>
                         <td> <input type="text" bind:value={prompt.parameters_dict[paramName]}> </td>
@@ -112,6 +113,7 @@ async function handlePredict() {
         </table>
     </div>
 
+    <!-- Predict Button -->
     <div class="predictButtonCell">
         {#if ! isPredicting}
             <button id="predictButton" class="button" title="Predict prompt on OpenAI" on:click={handlePredict}>
@@ -186,6 +188,7 @@ async function handlePredict() {
 
 .paramTable th {
   text-align:left;
+  padding-bottom: 1em;
 }
 
 .paramTable input {
@@ -232,7 +235,7 @@ async function handlePredict() {
 .predictionWarningMessage {
   text-align: center;
   color: var(--color-theme-orange);
-  margin: 1em 0;
+  margin: 1em 0 0 0;
 }
 
 .predictionWarningMessage p {
@@ -243,7 +246,7 @@ async function handlePredict() {
   padding: 1em;
   text-align: center;
   font-style: oblique;
-  margin: 1em 0;
+  margin: 1em 0 0 0;
 }
 
 .predictionResult {

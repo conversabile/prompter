@@ -16,6 +16,10 @@ function assert(value: unknown) {
   }
 }
 
+/*
+ * Interfaces
+ */
+
 export interface PromptPrediction {
   datetime: Date,
   renderedPrompt: string,
@@ -36,6 +40,11 @@ export interface PromptChain {
   title: string;
   prompts: Prompt[];
 }
+
+
+/*
+ * Input/Output
+ */
 
 function chainBasePath(promptId: string) {
   return `./data/${promptId[0]}/${promptId}`
@@ -107,7 +116,11 @@ export function renderPrompt(promptText: string, paramDict: Record<string, strin
 export class ChainNotFoundError extends Error {};
 export class PermissionDeniedError extends Error {};
 
-// Record compatibility
+
+
+/*
+ * Record Compatibility
+ */
 
 function upgradeChainOrPrompt(chainOrPrompt: PromptChain | Prompt): PromptChain {
   if (chainOrPrompt.version <= 2) {
@@ -136,4 +149,51 @@ function upgradePrompt(prompt: Prompt): PromptChain {
 
 function upgradeChain(chain: PromptChain): PromptChain {
   return chain;
+}
+
+
+/*
+ * Util
+ */
+
+const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
+
+
+export function parameterNameList(prompt: Prompt) : Array<string> {
+  let paramList: string[] = [];
+
+  let matchedParams = prompt.prompt_text.matchAll(paramParseRegex);
+  if (matchedParams) {
+    let newParamList = [];
+    for (let param of matchedParams) {
+      let paramName = param[1];
+      // if (paramDict[paramName] == undefined) { paramDict[paramName] = ""; }
+      newParamList.push(paramName);
+    }
+    paramList = Array.from(new Set(newParamList));
+  }
+
+  return paramList;
+}
+
+export function parameterDict(prompt: Prompt) : Record<string, string> {
+  let result: Record<string, string> = {};
+
+  const paramList = parameterNameList(prompt);
+  paramList.forEach((paramName) => {
+    result[paramName] = prompt.parameters_dict[paramName] ?? '';
+  });
+
+  return result;
+}
+
+export function piledParameterDict(prompt: Prompt) : Record<string, string> {
+  let result: Record<string, string> = prompt.parameters_dict;
+
+  const paramList = parameterNameList(prompt);
+  paramList.forEach((paramName) => {
+    result[paramName] = prompt.parameters_dict[paramName] ?? '';
+  });
+
+  return result;
 }

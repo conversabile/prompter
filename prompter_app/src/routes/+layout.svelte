@@ -20,14 +20,14 @@
 	.app {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
+		/* min-height: 100vh; */
 	}
 
 	main {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
+		padding: 4rem 1rem 1rem 1rem;
 		width: 100%;
 		max-width: 64rem;
 		margin: 0 auto;
@@ -41,10 +41,6 @@
 		align-items: center;
 		padding: 12px;
 		color: lightgray;
-	}
-
-	footer a {
-		/* font-weight: bold; */
 	}
 
 	@media (min-width: 480px) {
