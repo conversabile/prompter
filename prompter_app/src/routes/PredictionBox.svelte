@@ -1,6 +1,7 @@
 <script lang="ts">
 import { parameterNameList, type PromptChain } from "$lib/prompts";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
+// import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
@@ -22,12 +23,17 @@ import Fa from "svelte-fa";
 import { Clock } from "svelte-loading-spinners";
 
 let userRequestedPrediction: boolean = false;
+let predictionService: string | null = '';
 let openaiApiKey: string = "";
 let openaiApiModel: string;
+let ollamaModel: string = "llama2";
+let ollamaServer: string = "http://localhost:11434"
 let isPredicting: boolean = false;
 let predictionError: string = "";
 
-async function handlePredict() {
+async function handleOpenaiPredict() {
+  if (isPredicting) return;
+
   userRequestedPrediction = true;
 
   if (! openaiApiKey) {
@@ -46,7 +52,7 @@ async function handlePredict() {
   promptChain.prompts[0].predictions = null;
   predictionError = "";
 
-  console.debug("predicting prompt: ", renderedPromptText);
+  // console.debug("predicting prompt with OpenAI: ", renderedPromptText);
 
   try {
   
@@ -90,8 +96,61 @@ async function handlePredict() {
   isPredicting = false;
 
 }
-</script>
 
+async function handleOllamaPredict() {
+  if (isPredicting) return;
+
+  isPredicting = true;
+  promptChain.prompts[0].predictions = null;
+  predictionError = "";
+
+  try {
+    ollamaServer = ollamaServer.replace(/\/+$/, '');
+    const response = await fetch(`${ollamaServer.replace(/\/+$/, '')}/api/generate`, {
+			method: 'POST',
+			body: JSON.stringify({
+        "model": "llama2",
+        "prompt": renderedPromptText
+      })
+		})
+
+    if (response.body) {
+      // Init prediction object
+      if (! promptChain.prompts[0].predictions) {
+        promptChain.prompts[0].predictions = [{
+          "datetime": new Date(),
+          "renderedPrompt":  renderedPromptText,
+          "predictionRaw": "",
+          "model": "ollama-" + ollamaModel
+        }]
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done, value;
+      while (!done) {
+        ({ value, done } = await reader.read());
+        const chunk = decoder.decode(value);
+        if (chunk) {
+          const token = JSON.parse(chunk)["response"] ?? "";
+          if (token.trim() || promptChain.prompts[0].predictions[0].predictionRaw) { // First token is \n...
+            promptChain.prompts[0].predictions[0].predictionRaw = promptChain.prompts[0].predictions[0].predictionRaw.concat(token);
+          }
+        }
+      }
+    }
+
+  } catch (err: any) {
+    console.log("ollama error: ", err);
+    if (err.response) {
+      predictionError = "Ollama prediction request failed with status code " + err.response.status + " (" + err.response.statusText + ")";
+    } else {
+      predictionError = "Ollama prediction request failed (" + err + ")";
+    }
+  }
+
+  isPredicting = false;
+}
+</script>
 
 
 <div class="grid">
@@ -116,9 +175,19 @@ async function handlePredict() {
     <!-- Predict Button -->
     <div class="predictButtonCell">
         {#if ! isPredicting}
-            <button id="predictButton" class="button" title="Predict prompt on OpenAI" on:click={handlePredict}>
-                <Fa icon={faPlay} /> Predict
-            </button>
+            <button
+              class="button serviceButton"
+              class:selected={predictionService == "openai"}
+              title="Predict prompt on OpenAI. An API key is required"
+              on:click={() => {predictionService = 'openai'}}
+            >Run on OpenAI</button>
+            <br>
+            <button
+              class="button serviceButton"
+              class:selected={predictionService == "ollama"}
+              title="Predict prompt on Ollama. A running Ollama service is required"
+              on:click={() => {predictionService = 'ollama'}}
+            >Run on Ollama</button>
         {:else}
             <div style="display:inline-block;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
         {/if}
@@ -126,42 +195,59 @@ async function handlePredict() {
 </div>
 
 
+{#if predictionService}
 
-{#if userRequestedPrediction || promptChain.prompts[0].predictions}
+  <div style="margin-bottom:1em;">
 
-    {#if userRequestedPrediction}
-      <div style="margin-bottom:1em;">
-        <form class="openaiParamsContainer" on:submit|preventDefault={handlePredict}>
-          <label for="openaiModel">OpenAI Model</label>
-          <select name="openaiModel" id="openaiModel" bind:value={openaiApiModel}>
-            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-            <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
-            <option value="gpt-4">gpt-4</option>
-          </select>
-          <label for="openaiApiKey">OpenAI API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
-        </form>
-      </div> 
-        {#if predictionError}
-          <div class="predictionResult predictionError">{predictionError}</div>
-        {:else if ! openaiApiKey}
-          <div class="predictionWarningMessage">
-            <p>An OpenAI key must be provided for predictions</p>
-            <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to {env.PUBLIC_SITE_NAME} server</small></p>
-          </div>
-        {:else if ! promptChain.prompts[0].predictions || userRequestedPrediction}
-          <div class="predictionPlaceholderMessage">Click "Predict" or press Enter to send the prediction request</div>  
-        {/if}
+    {#if predictionService == "openai"}
+      <form class="serviceParamsContainer" on:submit|preventDefault={handleOpenaiPredict}>
+        <label for="openaiModel">Model</label>
+        <select name="openaiModel" id="openaiModel" bind:value={openaiApiModel}>
+          <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+          <option value="gpt-3.5-turbo-16k">gpt-3.5-turbo-16k</option>
+          <option value="gpt-4">gpt-4</option>
+        </select>
+        <label for="openaiApiKey">API Key</label> <input type="text" name="openaiApiKey" bind:value={openaiApiKey}>
+        <button class="button predictButton" disabled={isPredicting} title="Predict prompt on OpenAI" on:click={handleOpenaiPredict}>
+          <Fa icon={faPlay} /> Predict
+      </button>
+      </form>
+
+      {#if ! openaiApiKey}
+        <div class="predictionWarningMessage">
+          <p>An OpenAI key must be provided for predictions</p>
+          <p><small style="font-style: oblique;">Prediction requests are sent directly from your browser. Your key won't be sent to {env.PUBLIC_SITE_NAME} server</small></p>
+        </div>
       {/if}
+    {/if}
 
-      {#if promptChain && promptChain.prompts[0].predictions}
-        <div class="predictionResult">{promptChain.prompts[0].predictions[0].predictionRaw}</div>
-        
-        <!-- TODO: renderedPromptText is empty when page is loading, this way earning is hidden for empty prompts -->
-        {#if renderedPromptText && promptChain.prompts[0].predictions[0].renderedPrompt != renderedPromptText}
-          <div class="predictionWarningMessage">This prediction was made using a different version of the prompt</div>
-        {/if}
-      {/if}
+    {#if predictionService == "ollama"}
+      <form class="serviceParamsContainer" on:submit|preventDefault={handleOllamaPredict}>
+        <label for="ollamaServer">Server</label> <input type="text" name="ollamaServer" bind:value={ollamaServer}>
+        <label for="ollamaModel">Model</label> <input type="text" name="ollamaModel" bind:value={ollamaModel}>
+        <button class="button predictButton" disabled={isPredicting} title="Predict prompt on OpenAI" on:click={handleOllamaPredict}>
+          <Fa icon={faPlay} /> Predict
+      </button>
+      </form>
+      <div class="predictionInfoMessage">Prediction requests are sent from your browser, make sure you have a working <a href="https://ollama.ai/" target="_blank">Ollama</a> server running!</div>
+    {/if}
+
+  </div> 
+    {#if predictionError}
+      <div class="predictionResult predictionError">{predictionError}</div>
+    {/if}
+    
+
+{/if}
+
+{#if promptChain && promptChain.prompts[0].predictions}
+  <div class="predictionResult">{promptChain.prompts[0].predictions[0].predictionRaw}</div>
+  
+  <!-- TODO: renderedPromptText is empty when page is loading, this way earning is hidden for empty prompts -->
+  {#if renderedPromptText && promptChain.prompts[0].predictions[0].renderedPrompt != renderedPromptText}
+    <div class="predictionWarningMessage">This prediction was made using a different version of the prompt</div>
   {/if}
+{/if}
 
 <style>
 .grid {
@@ -206,25 +292,43 @@ async function handlePredict() {
   font-weight: bold;
 }
 
-.openaiParamsContainer {
+.serviceButton {
+  color: white;
+  background: var(--color-theme-lightgray);
+  border: 1px solid;
+}
+
+.serviceButton.selected {
+  border: 1px solid var(--color-theme-orange);
+  background-color: var(--color-theme-orange);
+  color: black;
+}
+
+.predictButton {
+  padding: 0.5em 1em;
+  margin-left: 0;
+}
+
+.serviceParamsContainer {
   display: flex;
   align-items: center;
   margin-top:1em;
 }
 
-.openaiParamsContainer label {
+.serviceParamsContainer label {
   margin-right: 1em;
 }
 
-.openaiParamsContainer input {
+.serviceParamsContainer input {
   width: auto;
   flex-grow: 1;
   vertical-align: middle;
   border: 1px solid;
   padding: 0.5em;
+  margin-right: 1em;
 }
 
-.openaiParamsContainer select {
+.serviceParamsContainer select {
   vertical-align: middle;
   border: 1px solid;
   padding: 0.5em;
@@ -232,10 +336,16 @@ async function handlePredict() {
   font-size: 1em;
 }
 
+.predictionInfoMessage {
+  font-size: 0.9em;
+  text-align: center;
+  font-style: italic;
+}
+
 .predictionWarningMessage {
   text-align: center;
   color: var(--color-theme-orange);
-  margin: 1em 0 0 0;
+  margin: 0;
 }
 
 .predictionWarningMessage p {

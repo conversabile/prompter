@@ -114,7 +114,11 @@ button:focus:not(:focus-visible) {
     text-align: center;
 }
 
-.button:hover {
+.button:active:hover:not([disabled]) {
     border:1px solid var(--color-bg-alphawhite);
     color: white;
+}
+
+.button:disabled {
+	cursor: default;
 }

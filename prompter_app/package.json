@@ -37,6 +37,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@fortawesome/free-brands-svg-icons": "^6.5.1",
 		"@fortawesome/free-solid-svg-icons": "^6.4.0",
 		"codemirror": "^5.65.13",
 		"html-to-text": "^9.0.5",

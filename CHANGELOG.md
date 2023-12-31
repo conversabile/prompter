@@ -4,6 +4,7 @@
 
 * Add support for streaming OpenAI predictions
 * Make OpenAI model configurable
+* Add Ollama integration for predictions
 
 ## v0.0.5
 

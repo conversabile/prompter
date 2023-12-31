@@ -5,7 +5,8 @@ Available features:
 
 * Parametrized prompts
 * Prompt sharing via permalink
-* LLM service connection for in-page predictions
+* In-page predictions
+* Integration with OpenAI and Ollama prediction services 
 
 Feature brainstorming:
 
