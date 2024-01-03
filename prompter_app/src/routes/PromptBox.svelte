@@ -4,11 +4,15 @@
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
+	import PromptBoxLLMMenu from './PromptBoxLLMMenu.svelte';
+
 
   // Model
   export let prompt: Prompt;
   export let paramDict: Record<string, string>;
   export let renderedPromptText: string = ""; // Will be read from outside to make predictions
+  export let serviceSettings: ServiceSettings;
+  export let serviceSettingsPanelOpen: boolean; // Can be opened by PredictionBox to ask for parameters
   
   $: paramDict = piledParameterDict(prompt);
 
@@ -24,13 +28,13 @@
       renderError = false;
       // https://regex101.com/r/WhYBv9/1
       const jinjaRegex = /(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
-      resultHtml = prompt.prompt_text.replace(jinjaRegex, '<span class="param">$1</span>');
+      resultHtml = prompt.promptText.replace(jinjaRegex, '<span class="param">$1</span>');
       // TODO: move sanitization at dict level
       let renderedParamDict: Record<string, string> = {};
       for (const paramName in paramDict) {
         renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
       }
-      resultText = renderPrompt(prompt.prompt_text, renderedParamDict);
+      resultText = renderPrompt(prompt.promptText, renderedParamDict);
       resultHtml = renderPrompt(resultHtml, renderedParamDict);
     } catch(err: any) {
       renderError = true;
@@ -41,9 +45,12 @@
     renderedPrompt = resultHtml;
     renderedPromptText = resultText;
   }
-  $: if (prompt.prompt_text, paramDict) renderPromptV1();
+  $: if (prompt.promptText, paramDict) renderPromptV1();
 
   import type { Editor } from "codemirror";
+	import Fa from 'svelte-fa';
+	import { faAngleDown, faAngleUp, faRobot } from '@fortawesome/free-solid-svg-icons';
+	import { LLM_SERVICE_NAMES, type ServiceSettings } from '$lib/services';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
   // TODO: fixes ts(2686) but breaks CodeMirror reference :(
@@ -71,7 +78,7 @@
       mode: {name: "jinja2", htmlMode: true}
     });
     editor.on("change", function (eventEditor: Editor) {
-      prompt.prompt_text = eventEditor.getDoc().getValue();
+      prompt.promptText = eventEditor.getDoc().getValue();
     })
   });
 
@@ -98,15 +105,35 @@
 </svelte:head>
 
 <div class="promptBox">
+  <header>
+    <a href="javascript:void(0)" class="llmService" on:click={() => {serviceSettingsPanelOpen = ! serviceSettingsPanelOpen;}}>
+      <span class="serviceName"><Fa icon={faRobot} />
+        {LLM_SERVICE_NAMES[prompt.predictionService]}
+        ({prompt.predictionSettings[prompt.predictionService].modelName})
+      </span>
+      <span class="expandButton">{#if serviceSettingsPanelOpen}<Fa icon={faAngleUp} />{:else}<Fa icon={faAngleDown} />{/if}</span>
+    </a>
+    <h2 class="promptTitle" contenteditable bind:innerText={prompt.title} on:keydown={handleTitleKeydown}>{prompt.title}</h2>
+  </header>
 
-  <h2 class="promptTitle" contenteditable bind:innerText={prompt.title} on:keydown={handleTitleKeydown}>{prompt.title}</h2>
-  <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.prompt_text}</textarea>
-  <div class="renderedPrompt" class:renderError="{renderError}">
-    {@html renderedPrompt}
+  <PromptBoxLLMMenu
+    bind:open={serviceSettingsPanelOpen}
+    bind:model={prompt.predictionService}
+    bind:service={prompt.predictionService}
+    bind:settings={prompt.predictionSettings}
+    bind:serviceSettings={serviceSettings}
+  />
+
+  <div class="promptDefinition">
+    <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.promptText}</textarea>
+    <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
   </div>
-  <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
 
-
+  <footer>
+    <div class="renderedPrompt" class:renderError="{renderError}">
+      {@html renderedPrompt}
+    </div>
+  </footer>
 </div>
 
 <style>
@@ -116,33 +143,78 @@ h2 {
   font-weight:bold;
 }
 
-.promptTitle {
-  text-transform: none;
-  font-weight: normal;
-  font-size: 1.3em;
-  display: inline-block;
-  padding: 0.5em 0;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  margin: 0 auto 0.5em auto;
-}
-
-.promptTitle:focus {
-  background-color: white;
-  border: 0;
-  cursor: inherit;
-}
-
 .promptBox {
   width:100%;
   background: var(--color-theme-orange);
   margin:0;
-  padding:1em;
+  padding:0;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+.promptBox header {
+  background-color: var(--color-bg-alphawhite25);
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  border-radius: 5px 5px 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.2);
+}
+
+.promptBox header .llmService {
+  background: var(--color-theme-darkgray);
+  color: white;
+  height: 100%;
+  display: inline-block;
+  line-height: 1.5em;
+  font-size: .8em;
+  padding: .5em;
+  font-family: monospace;
+  z-index: 2;
+}
+
+.promptBox header .llmService:hover {
+  background-color: var(--color-theme-lightgray);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.promptBox header .promptTitle {
+  display: inline-block;
+  flex: 1;
+  line-height: 1rem;
+  margin: 0;
+  padding: .3em;
+
+  text-transform: none;
+  font-size: 0.9em;
+  font-weight: normal;
+  display: inline;
+  cursor: pointer;
+  margin: 0;
+}
+
+.promptBox header .promptTitle:focus {
+  background-color: white;
+  border: 0;
+  cursor: inherit;
+  font-weight: normal;
+}
+
+.promptBox .promptDefinition {
+  padding: 1em 1em 0.5em 1em;
 }
 
 :global(.promptBox p) {
   margin:1em;
+}
+
+:global(.CodeMirror) {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  z-index: 0;
 }
 
 .codeMirrorTextarea {
@@ -172,10 +244,12 @@ h2 {
 
 .renderedPrompt {
   /* border: 1px solid var(--color-theme-blue); */
-  background: var(--color-bg-alphawhite);
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--color-bg-alphawhite25);
   padding: 1em;
   white-space: pre-wrap;
   font-size: 0.8em;
+  border-radius: 0 0 5px 5px;
 }
 
 .renderError {

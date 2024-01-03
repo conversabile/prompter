@@ -3,10 +3,12 @@ import util from 'util';
 
 import { convert } from 'html-to-text';
 import nunjucks from 'nunjucks';
+import { defaultPredictionSettings, type PredictionService, type PredictionSettings } from './services';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
-export const promptSchemaVersion: number = 3; /* 3: records are prompt chains */
+export const promptSchemaVersion: number = 4; /* 4: camelCase; add predictionService, predictionSettings */
+                                              /* 3: records are prompt chains */
                                               /* 2: plain text promptText */
                                               /* 1: HTML promptText with Jinja2 template */
 
@@ -29,10 +31,12 @@ export interface PromptPrediction {
 
 export interface Prompt {
   version: number;
-  prompt_text: string;
-  parameters_dict: Record<string, string>;
+  promptText: string;
+  parametersDict: Record<string, string>;
   title: string;
   predictions?: PromptPrediction[] | null;
+  predictionService: PredictionService,
+  predictionSettings: PredictionSettings;
 }
 
 export interface PromptChain {
@@ -99,7 +103,7 @@ export function loadChain(chainId: string): PromptChain {
     throw error;
   }
 
-  let chainOrPrompt: PromptChain | Prompt = JSON.parse(rawdata.toString());
+  let chainOrPrompt: object = JSON.parse(rawdata.toString());
 
   // Upgrade if legacy record
   let chain = upgradeChainOrPrompt(chainOrPrompt)
@@ -122,7 +126,7 @@ export class PermissionDeniedError extends Error {};
  * Record Compatibility
  */
 
-function upgradeChainOrPrompt(chainOrPrompt: PromptChain | Prompt): PromptChain {
+function upgradeChainOrPrompt(chainOrPrompt: any): PromptChain {
   if (chainOrPrompt.version <= 2) {
     return upgradePrompt(chainOrPrompt as Prompt)
   }
@@ -130,7 +134,7 @@ function upgradeChainOrPrompt(chainOrPrompt: PromptChain | Prompt): PromptChain 
   return upgradeChain(chainOrPrompt as PromptChain);
 }
 
-function upgradePrompt(prompt: Prompt): PromptChain {
+function upgradePrompt(prompt: any): PromptChain {
   assert(prompt.version <= 2); // From v3 records have PromptChain type
 
   if (prompt.version == 1) {
@@ -139,7 +143,7 @@ function upgradePrompt(prompt: Prompt): PromptChain {
   }
 
   let result = {
-    version: promptSchemaVersion,
+    version: 3,
     title: prompt.title,
     prompts: [prompt]
   }
@@ -147,8 +151,24 @@ function upgradePrompt(prompt: Prompt): PromptChain {
   return upgradeChain(result);
 }
 
-function upgradeChain(chain: PromptChain): PromptChain {
-  return chain;
+function upgradeChain(chain: any): PromptChain {
+  if (chain.version < 4) {
+    chain = {
+      version: promptSchemaVersion,
+      title: chain.title,
+      prompts: [{
+        version: promptSchemaVersion,
+        promptText: chain.prompts[0].prompt_text,
+        parametersDict: chain.prompts[0].parameters_dict,
+        title: chain.prompts[0].title,
+        predictions: chain.prompts[0].predictions,
+        predictionService: "openai",
+        predictionSettings: defaultPredictionSettings(),
+      }]
+    }
+  }
+
+  return chain as PromptChain;
 }
 
 
@@ -162,7 +182,7 @@ const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
 export function parameterNameList(prompt: Prompt) : Array<string> {
   let paramList: string[] = [];
 
-  let matchedParams = prompt.prompt_text.matchAll(paramParseRegex);
+  let matchedParams = prompt.promptText.matchAll(paramParseRegex);
   if (matchedParams) {
     let newParamList = [];
     for (let param of matchedParams) {
@@ -181,18 +201,18 @@ export function parameterDict(prompt: Prompt) : Record<string, string> {
 
   const paramList = parameterNameList(prompt);
   paramList.forEach((paramName) => {
-    result[paramName] = prompt.parameters_dict[paramName] ?? '';
+    result[paramName] = prompt.parametersDict[paramName] ?? '';
   });
 
   return result;
 }
 
 export function piledParameterDict(prompt: Prompt) : Record<string, string> {
-  let result: Record<string, string> = prompt.parameters_dict;
+  let result: Record<string, string> = prompt.parametersDict;
 
   const paramList = parameterNameList(prompt);
   paramList.forEach((paramName) => {
-    result[paramName] = prompt.parameters_dict[paramName] ?? '';
+    result[paramName] = prompt.parametersDict[paramName] ?? '';
   });
 
   return result;

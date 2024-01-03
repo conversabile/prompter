@@ -8,8 +8,9 @@
 	--color-bg-1: hsl(209, 36%, 86%);
 	--color-bg-2: hsl(224, 44%, 95%);
 	--color-bg-alphawhite: rgba(255, 255, 255, 0.5);
-	--color-theme-orange: #ffa700;
-	--color-theme-blue: #4c5c96;
+	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
+	--color-theme-orange: #ffa700;  /* sand: c1baac */
+	--color-theme-blue: #4c5c96;    /* sand: e8e8e8 */
 	--color-theme-darkgray: #343541;
 	--color-theme-lightgray: #444654;
 	--color-text: rgba(0, 0, 0, 0.7);

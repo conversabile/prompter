@@ -10,12 +10,19 @@
     title: chainTitle,
     prompts: [{
       version: promptSchemaVersion,
-      prompt_text: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
-      parameters_dict: {storyTopic: "time travelling", maxWords: "50"},
+      promptText: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
+      parametersDict: {storyTopic: "time travelling", maxWords: "50"},
       title:  chainTitle,
-      predictions: null
+      predictions: null,
+      predictionService: PredictionService.openai,
+      predictionSettings: defaultPredictionSettings()
     }]
   }
+  let serviceSettings: ServiceSettings = {
+    openai: {apiKey: ""},
+    ollama: {server: "http://localhost:11434"}
+  }
+  let serviceSettingsPanelOpen: boolean = false;
   let renderedPromptText: string;
   export let isShared: boolean = false;   // Show "Share" tab with permalink
   export let chainId: string | null = null;
@@ -27,13 +34,16 @@
   import { faPlay, faSave, faClone, faShare } from '@fortawesome/free-solid-svg-icons'
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
+	import { PredictionService, defaultPredictionSettings, type ServiceSettings } from '$lib/services';
   
 </script>
 
 <PromptBox
     bind:prompt = {promptChain.prompts[0]}
-    bind:paramDict = {promptChain.prompts[0].parameters_dict}
+    bind:paramDict = {promptChain.prompts[0].parametersDict}
     bind:renderedPromptText = {renderedPromptText}
+    bind:serviceSettings = {serviceSettings}
+    bind:serviceSettingsPanelOpen = {serviceSettingsPanelOpen}
 />
 
 <div class="tabLabels">
@@ -49,6 +59,8 @@
   <PredictionBox
     bind:promptChain={promptChain}
     bind:renderedPromptText={renderedPromptText}
+    bind:serviceSettings={serviceSettings}
+    bind:serviceSettingsPanelOpen={serviceSettingsPanelOpen}
   />
 </div>
 {/if}
@@ -97,7 +109,7 @@
 }
 
 .tabContent {
-  padding: 1em;
+  padding: 0;
   width: 100%;
 }
 

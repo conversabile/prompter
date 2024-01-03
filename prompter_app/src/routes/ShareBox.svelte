@@ -71,7 +71,7 @@ function dismissError() {
 }
 </script>
 
-<div>
+<div style="margin-top:1em;">
     {#if isSharing}
       <div style="text-align: center;">
         <p class="isSharing"><Clock size="30" color="#000" unit="px" duration="10s" /></p>
