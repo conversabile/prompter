@@ -5,6 +5,7 @@
 * Add support for streaming OpenAI predictions
 * Make OpenAI model configurable
 * Add Ollama integration for predictions
+* Shorten generated chain IDs to 11 characters
 
 ## v0.0.5
 

@@ -62,6 +62,10 @@ function chainEditKeyPath(promptId: string) {
   return chainBasePath(promptId) + '/editKey'
 }
 
+export function chainExists(chainId: string) {
+  return fs.existsSync(chainBasePath(chainId));
+}
+
 export function saveChain(chainId: string, chain: PromptChain, editKey: string) {
   // export function save({promptId: string, prompt: Prompt}) {
   console.debug(`Saving chain "${chainId}": ` + util.inspect(chain, {showHidden: false, depth: null, colors: true}));

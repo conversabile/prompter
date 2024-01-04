@@ -267,6 +267,12 @@ async function handleOllamaPredict() {
   margin: 1em 0 0 0;
 }
 
+.predictionWarningMessage {
+  text-align: center;
+  font-size: .8em;
+  margin: .5em;
+}
+
 .predictionResult {
   white-space: pre-wrap;
   text-align: justify;

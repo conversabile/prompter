@@ -81,7 +81,7 @@
                 </td>
             </tr>
             <tr>
-                <td colspan="2" class="userSettingsInfo"><small>Prediction requests are sent from your browser, make sure you have a working <a href="https://ollama.ai/" target="_blank">Ollama</a> server running, and that <tt>{$page.url.protocol + '//' + $page.url.hostname}</tt> is an <a href="https://github.com/jmorganca/ollama/blob/main/docs/faq.md#how-can-i-allow-additional-web-origins-to-access-ollama">allowed origin</a>!</small></td>
+                <td colspan="2" class="userSettingsInfo"><small>Prediction requests are sent from your browser, make sure you have a working <a href="https://ollama.ai/" target="_blank">Ollama</a> server running, and that <tt>{$page.url.protocol + '//' + $page.url.hostname}</tt> is an <a href="https://github.com/jmorganca/ollama/blob/main/docs/faq.md#how-can-i-allow-additional-web-origins-to-access-ollama" target="_blank">allowed origin</a>!</small></td>
             </tr>
         {/if}
     </table>

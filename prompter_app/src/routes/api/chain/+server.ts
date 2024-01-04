@@ -1,8 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
+import { nanoid } from 'nanoid';
 
 import type { PromptChain } from '$lib/prompts';
-import { saveChain } from '$lib/prompts';
+import { chainExists, saveChain } from '$lib/prompts';
 
 export const GET = (({ url }) => {
     return new Response(`Error`);
@@ -13,7 +14,11 @@ export const GET = (({ url }) => {
  */
 export const POST = (async ({ request }) => {
     const chain: PromptChain = await request.json();
-    const chainId = crypto.randomUUID(); // TODO: polyfill
+    let chainId = nanoid(11);
+    while (chainExists(chainId)) {
+        console.warn("Chain id collision!", chainId);
+        chainId = nanoid(11);
+    }
     const editKey = crypto.randomUUID(); // TODO: polyfill
     console.log(`POST /api/chain. Generated chainId: ${chainId}`);
     saveChain(chainId, chain, editKey);
