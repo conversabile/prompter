@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { copy } from 'svelte-copy';
   import { renderPrompt, type Prompt, parameterNameList, parameterDict, piledParameterDict } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
@@ -19,6 +20,7 @@
   // Render Result
   let renderedPrompt = "";
   let renderError = false;
+  let isCopied = false;
 
   function renderPromptV1() {
     let resultHtml: string;
@@ -49,7 +51,7 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faRobot } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faCheck, faClipboard, faClone, faCopy, faRobot } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES, type ServiceSettings } from '$lib/services';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
@@ -131,7 +133,14 @@
 
   <footer>
     <div class="renderedPrompt" class:renderError="{renderError}">
-      {@html renderedPrompt}
+      <div class="renderedPromptText">{@html renderedPrompt}</div>
+      <span class="copiedConfirmation" class:hidden={!isCopied}><Fa icon={faCheck} /></span>
+      <button
+        class="copyPrompt"
+        title="Copy prompt to clipboard"
+        use:copy={renderedPromptText}
+        on:svelte-copy={() => {isCopied = true; setTimeout(() => {isCopied = false;}, 500)}}
+      ><Fa icon={faClone} /></button>
     </div>
   </footer>
 </div>
@@ -250,6 +259,52 @@ h2 {
   white-space: pre-wrap;
   font-size: 0.8em;
   border-radius: 0 0 5px 5px;
+  display: flex;
+}
+
+.renderedPromptText {
+  flex-grow: 1;
+}
+
+.copyPrompt {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  height: 1rem;
+
+  cursor: pointer;
+  opacity: 0.5;
+}
+.copyPrompt:hover {
+  opacity: 1;  
+}
+
+.copiedConfirmation {
+  background: #81b36a;
+  color: white;
+  width: 1rem;
+  height: 1rem;
+  text-align: center;
+  border-radius: 9px;
+  margin-right: -0.9rem;
+  flex-shrink: 0;
+  z-index: 2;
+  cursor: default;
+  font-size: 0.6rem;
+  line-height: 1rem;
+  font-weight: bold;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s 2s, opacity 0.5s linear;
+}
+
+.transparent {
+  opacity: 0;
 }
 
 .renderError {

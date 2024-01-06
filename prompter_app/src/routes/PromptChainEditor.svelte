@@ -50,9 +50,9 @@
 />
 
 <div class="tabLabels">
-  <button class="predictTab" class:active={activeTab == "prediction"} title="Predict prompt on OpenAI" on:click={() => activeTab = "prediction"}>
+  <button class="predictTab" class:active={activeTab == "prediction"} title="Predict prompt on its configured LLM service" on:click={() => activeTab = "prediction"}>
     <Fa icon={faPlay} /> Predict
-  </button><button title="Share your prompt" class:active={activeTab == "share"} on:click={() => activeTab = "share"}>
+  </button><button title="Generate permalinks to your prompt" class:active={activeTab == "share"} on:click={() => activeTab = "share"}>
     <Fa icon={faShare} /> Share {#if userEditedChain}<span class="editedCircle"><Fa icon={faCircle} /></span>{/if}
   </button>
 </div>

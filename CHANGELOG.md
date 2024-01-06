@@ -6,6 +6,8 @@
 * Make OpenAI model configurable
 * Add Ollama integration for predictions
 * Shorten generated chain IDs to 11 characters
+* Add badge to chains with unsaved edits
+* Add "Copy to clipboard" button to rendered prompts
 
 ## v0.0.5
 
