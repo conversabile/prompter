@@ -4,6 +4,7 @@ import util from 'util';
 import { convert } from 'html-to-text';
 import nunjucks from 'nunjucks';
 import { defaultPredictionSettings, type PredictionService, type PredictionSettings } from './services';
+import { isEqual } from './util';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
@@ -220,4 +221,21 @@ export function piledParameterDict(prompt: Prompt) : Record<string, string> {
   });
 
   return result;
+}
+
+export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptChain): boolean {
+  // console.log(aChain, anotherChain);
+  if (aChain.title != anotherChain.title) return false;
+
+  const aPrompt: Prompt = aChain.prompts[0];
+  const anotherPrompt: Prompt = anotherChain.prompts[0];
+  // console.log(aPrompt, anotherPrompt);
+  if (aPrompt.title != anotherPrompt.title) return false;
+  if (aPrompt.promptText != anotherPrompt.promptText) return false;
+  if (! isEqual(parameterDict(aPrompt), parameterDict(anotherPrompt))) return false;
+  if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
+  if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
+  if (! isEqual(aPrompt.predictions, anotherPrompt.predictions)) return false;
+
+  return true;
 }

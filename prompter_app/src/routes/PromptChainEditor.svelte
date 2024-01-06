@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
   import { page } from '$app/stores';
-  import { promptSchemaVersion, type PromptChain, type PromptPrediction } from '$lib/prompts';
+  import { promptSchemaVersion, type PromptChain, type PromptPrediction, areChainsEquivalent } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
 
   export let chainTitle: string = "Untitled Prompt";
@@ -18,6 +18,9 @@
       predictionSettings: defaultPredictionSettings()
     }]
   }
+  let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
+  let userEditedChain: boolean;
+  $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
   let serviceSettings: ServiceSettings = {
     openai: {apiKey: ""},
     ollama: {server: "http://localhost:11434"}
@@ -31,7 +34,7 @@
   let activeTab = (isShared) ? "share" : "prediction";
 
   import Fa from 'svelte-fa'
-  import { faPlay, faSave, faClone, faShare } from '@fortawesome/free-solid-svg-icons'
+  import { faPlay, faShare, faCircle } from '@fortawesome/free-solid-svg-icons'
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
 	import { PredictionService, defaultPredictionSettings, type ServiceSettings } from '$lib/services';
@@ -50,12 +53,11 @@
   <button class="predictTab" class:active={activeTab == "prediction"} title="Predict prompt on OpenAI" on:click={() => activeTab = "prediction"}>
     <Fa icon={faPlay} /> Predict
   </button><button title="Share your prompt" class:active={activeTab == "share"} on:click={() => activeTab = "share"}>
-    <Fa icon={faShare} /> Share
+    <Fa icon={faShare} /> Share {#if userEditedChain}<span class="editedCircle"><Fa icon={faCircle} /></span>{/if}
   </button>
 </div>
 
-{#if activeTab == "prediction"}
-<div class="predictionTab tabContent">
+<div class="predictionTab tabContent" class:hidden={activeTab != "prediction"}>
   <PredictionBox
     bind:promptChain={promptChain}
     bind:renderedPromptText={renderedPromptText}
@@ -63,20 +65,22 @@
     bind:serviceSettingsPanelOpen={serviceSettingsPanelOpen}
   />
 </div>
-{/if}
 
-{#if activeTab == "share"}
-<div class="shareTab tabContent">
+<div class="shareTab tabContent" class:hidden={activeTab != "share"}>
   <ShareBox
     bind:promptChain={promptChain}
+    bind:lastSavedPromptChain={lastSavedPromptChain}
     bind:isShared={isShared}
     bind:chainId={chainId}
     bind:editKey={editKey}
   />
 </div>
-{/if}
 
 <style>
+
+.hidden {
+  display: none;
+}
 
 .tabLabels {
   margin: 1em 0 0 0;
@@ -120,6 +124,11 @@
 
 .shareTab {
   background: var(--color-theme-orange);
+}
+
+.editedCircle {
+  font-size: 0.4em;
+  vertical-align: top;
 }
 
 </style>

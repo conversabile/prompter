@@ -7,6 +7,7 @@ import Fa from "svelte-fa";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
+export let lastSavedPromptChain: PromptChain;
 export let isShared: boolean;         // will be populate by the page server module, through PromptChainEditor
 export let chainId: string | null;
 export let editKey: string | null;
@@ -34,6 +35,7 @@ async function handleShare() {
     console.log("Saved prompt chain with id: " + responseJson.chainId);
     chainId = responseJson.chainId;
     editKey = responseJson.editKey;
+    lastSavedPromptChain = JSON.parse(JSON.stringify(promptChain));
     let newSharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
     let newSharedUrlEditable = newSharedUrlReadOnly + '?editKey=' + responseJson.editKey;
 
@@ -59,7 +61,7 @@ async function handleUpdate() {
         error = response.status + " " + response.statusText + ": " + responseText;
       } else {
         console.log(`Updated prompt chain with id: ${chainId}`);
-        // let responseJson = await response.json();
+        lastSavedPromptChain = JSON.parse(JSON.stringify(promptChain));
         isShared = true;
       }
       isSharing = false;
