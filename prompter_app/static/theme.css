@@ -1,0 +1,38 @@
+:root {
+	--font-body: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+		Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	--font-mono: 'Fira Mono', monospace;
+
+	--column-width: 42rem;
+	--column-margin-top: 4rem;
+	font-family: var(--font-body);
+	color: var(--color-text);
+
+    /* Default */
+    --color-bg-0: #4c5c96;
+	--color-text: #d3d3d3;
+	--color-text-highlight: #ffa700;
+	--color-bg-alphawhite: rgba(255, 255, 255, 0.5);
+	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
+	--color-A-bg: #ffa700; 
+	--color-A-text-standard: rgba(0, 0, 0, 0.7);
+	--color-A-text-highlight: #4c5c96;
+	--color-B-bg: #343541;
+	--color-B-lightbg: #444654;
+    --color-B-text-standard: #DDD;
+    --color-B-text-highlight: white;
+
+    /* Sand */
+    /* --color-bg-0: #e8e8e8;
+	--color-text: rgba(0, 0, 0, 0.7);
+	--color-text-highlight: black;
+	--color-bg-alphawhite: rgba(255, 255, 255, 0.5);
+	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
+	--color-A-bg: #c1baac;
+	--color-A-text: rgba(0, 0, 0, 0.7);
+	--color-A-text-highlight: black;
+	--color-B-bg: #343541;
+	--color-B-lightbg: #444654;
+    --color-B-text-standard: #DDD;
+    --color-B-text-highlight: white;     */
+}

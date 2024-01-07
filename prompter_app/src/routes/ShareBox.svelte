@@ -129,6 +129,7 @@ function dismissError() {
   {/if}
 
 <style>
+
 .singleButtonContainer {
     padding: 2em 0;
     text-align: center;    
@@ -136,8 +137,8 @@ function dismissError() {
 
 .button {
     margin: 0 0 0 1em;
-    background-color: var(--color-theme-darkgray);
-    color: #DDD;
+    background-color: var(--color-B-bg);
+    color: var(--color-B-text-standard);
     border: 0;
 }
 
@@ -176,7 +177,7 @@ function dismissError() {
 
 .isSharing {
   display: inline-block;
-  border: 1px transparent var(--color-theme-orange);
+  border: 1px transparent var(--color-A-bg);
   border-radius: 2px;
   vertical-align: middle;
   max-width: 100px;
@@ -195,7 +196,7 @@ function dismissError() {
 }
 
 #sharedUrl a {
-  color: var(--color-theme-blue);
+  color: var(--color-A-text-highlight);
 }
 
 #sharedDisclaimer p {

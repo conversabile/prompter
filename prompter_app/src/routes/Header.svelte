@@ -13,9 +13,9 @@
 	</div>
 
 	<nav>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
+		<!-- <svg viewBox="0 0 2 3" aria-hidden="true">
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
-		</svg>
+		</svg> -->
 		<ul>
 			<li>
 				<a href="/">{env.PUBLIC_SITE_NAME}</a>
@@ -30,9 +30,9 @@
 				<a href="/sverdle">Sverdle</a>
 			</li> -->
 		</ul>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
+		<!-- <svg viewBox="0 0 2 3" aria-hidden="true">
 			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
-		</svg>
+		</svg> -->
 	</nav>
 
 	<div class="corner">
@@ -46,6 +46,9 @@
 	header {
 		display: flex;
 		justify-content: space-between;
+		background: var(--color-B-bg);
+		/* background: rgba(53, 56, 73, 0.95); */
+		box-shadow: 0 0 10px #00000021;
 	}
 
 	.corner {
@@ -70,17 +73,6 @@
 	nav {
 		display: flex;
 		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
-	}
-
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
-
-	path {
-		fill: var(--background);
 	}
 
 	ul {
@@ -92,7 +84,6 @@
 		justify-content: center;
 		align-items: center;
 		list-style: none;
-		background: var(--background);
 		background-size: contain;
 	}
 
@@ -110,7 +101,7 @@
 		top: 0;
 		left: calc(50% - var(--size));
 		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-theme-orange);
+		border-top: var(--size) solid var(--color-A-bg);
 	}
 
 	nav a {
@@ -118,7 +109,7 @@
 		height: 100%;
 		align-items: center;
 		padding: 0 0.5rem;
-		color: var(--color-text);
+		color: var(--color-B-text-standard);
 		font-weight: 700;
 		font-size: 0.8rem;
 		text-transform: uppercase;
@@ -128,6 +119,6 @@
 	}
 
 	a:hover {
-		color: var(--color-theme-orange);
+		color: var(--color-B-text-highlight);
 	}
 </style>

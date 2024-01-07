@@ -91,10 +91,10 @@
 
 .tabLabels button {
   display:inline-block;
-  /* color:var(--color-theme-blue); */
+  /* color:var(--color-A-text-highlight); */
   border:0;
   border-radius: 2px 2px 0 0;
-  background:var(--color-theme-orange);
+  background:var(--color-A-bg);
   cursor:pointer;
   vertical-align: baseline;
   /* max-width: 100px; */
@@ -104,7 +104,7 @@
 }
 
 .tabLabels .predictTab {
-  background: var(--color-theme-darkgray);
+  background: var(--color-B-bg);
   color: white;
 }
 
@@ -115,15 +115,17 @@
 .tabContent {
   padding: 0;
   width: 100%;
+  border-radius: 0 5px 5px 5px;
 }
 
 .predictionTab {
-  background: var(--color-theme-darkgray);
-  color: #DDD;
+  background: var(--color-B-bg);
+  color: var(--color-B-text-standard);
 }
 
 .shareTab {
-  background: var(--color-theme-orange);
+  background: var(--color-A-bg);
+  color: var(--color-A-text-standard)
 }
 
 .editedCircle {

@@ -149,12 +149,13 @@
 
 h2 {
   text-transform: uppercase;
-  font-weight:bold;
+  font-weight:bold;  
 }
 
 .promptBox {
   width:100%;
-  background: var(--color-theme-orange);
+  background: var(--color-A-bg);
+  color: var(--color-A-text-standard);
   margin:0;
   padding:0;
   border-radius: 5px;
@@ -174,8 +175,8 @@ h2 {
 }
 
 .promptBox header .llmService {
-  background: var(--color-theme-darkgray);
-  color: white;
+  background: var(--color-B-bg);
+  color: var(--color-B-text-standard);
   height: 100%;
   display: inline-block;
   line-height: 1.5em;
@@ -186,7 +187,8 @@ h2 {
 }
 
 .promptBox header .llmService:hover {
-  background-color: var(--color-theme-lightgray);
+  background-color: var(--color-B-lightbg);
+  color: var(--color-B-text-highlight);
   cursor: pointer;
   text-decoration: none;
 }
@@ -238,7 +240,7 @@ h2 {
   font-size: 0.8em;
   margin: 0;
   padding: 0;
-  color: var(--color-theme-orange);
+  color: var(--color-A-bg);
 }
 
 .reference:hover {
@@ -246,13 +248,13 @@ h2 {
 }
 
 .reference a {
-  color: var(--color-theme-blue);
+  color: var(--color-A-text-highlight);
 }
 
 /* Result */
 
 .renderedPrompt {
-  /* border: 1px solid var(--color-theme-blue); */
+  /* border: 1px solid var(--color-A-text-highlight); */
   border-top: 1px solid rgba(0, 0, 0, 0.25);
   background: var(--color-bg-alphawhite25);
   padding: 1em;
@@ -313,7 +315,7 @@ h2 {
 }
 
 :global(.renderedPrompt .param) {
-  color: var(--color-theme-blue);
+  color: var(--color-A-text-highlight);
 }
 
 </style>

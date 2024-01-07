@@ -181,7 +181,7 @@ async function handleOllamaPredict() {
               on:click={handlePredict}
             ><Fa icon={faPlay}/> Run</button>
         {:else}
-            <div style="display:inline-block; margin: 1em 0 0 0;"><Clock size="30" color="#DDD" unit="px" duration="10s" /></div>
+            <div style="display:inline-block; margin: 1em 0 0 0;"><Clock size="30" color="var(--color-B-text-standard)" unit="px" duration="10s" /></div>
         {/if}
     </div>
 </div>
@@ -226,7 +226,7 @@ async function handleOllamaPredict() {
 .paramTable {
   width:100%;
   padding:1em;
-  background: var(--color-theme-lightgray);
+  background: var(--color-B-lightbg);
 }
 
 .paramTable th {
@@ -251,7 +251,7 @@ async function handleOllamaPredict() {
 
 .configureButton {
   color: white;
-  background: var(--color-theme-lightgray);
+  background: var(--color-B-lightbg);
   border: 1px solid;
   margin: 0;
 }
@@ -261,8 +261,8 @@ async function handleOllamaPredict() {
 }
 
 .runButton {
-  border: 1px solid var(--color-theme-orange);
-  background-color: var(--color-theme-orange);
+  border: 1px solid var(--color-A-bg);
+  background-color: var(--color-A-bg);
   color: black;
   margin: 1em 0 0 0;
 }
@@ -281,7 +281,7 @@ async function handleOllamaPredict() {
   /* font-size: 1.1em; */
   /* border: 1px solid #888; */
   padding: 1em;
-  background: var(--color-theme-lightgray);
+  background: var(--color-B-lightbg);
   margin: 0;
   border-top: 1px solid var(--color-bg-alphawhite25);
 }

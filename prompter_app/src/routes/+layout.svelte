@@ -3,6 +3,9 @@
 	import './styles.css';
 	import { version } from '$app/environment';
 </script>
+<svelte:head>
+	<link rel="stylesheet" href="/theme.css" />
+</svelte:head>
 
 <div class="app">
 	<Header />
@@ -12,7 +15,7 @@
 	</main>
 
 	<footer>
-		<p>Prompter v{version} • Made with <a href="https://kit.svelte.dev">SvelteKit</a> by <a href="https://www.conversabile.com">Conversabile</a> • <span><a href="https://github.com/conversabile/prompter/blob/main/LICENSE">License</a></span></p>
+		<p>Prompter v{version} • Made with <a href="https://kit.svelte.dev" target="_blank">SvelteKit</a> by <a href="https://www.conversabile.com" target="_blank">Conversabile</a> • <span><a href="https://github.com/conversabile/prompter/" target="_blank">GitHub</a></span> • <span><a href="https://github.com/conversabile/prompter/blob/main/LICENSE" target="_blank">License</a></span></p>
 	</footer>
 </div>
 
@@ -40,7 +43,6 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
-		color: lightgray;
 	}
 
 	@media (min-width: 480px) {

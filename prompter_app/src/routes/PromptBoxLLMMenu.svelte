@@ -104,8 +104,8 @@
 
 .llmServiceMenu {
     position: absolute;
-    background: var(--color-theme-darkgray);
-    color: white;
+    background: var(--color-B-bg);
+    color: var(--color-B-text-standard);
     padding: 1em;
     max-width: 30rem;
     border: 1px solid #ffffff36;
@@ -114,10 +114,16 @@
     z-index: 2;
 }
 
+a {
+    color: var(--color-B-text-highlight);
+    text-decoration: underline;
+}
+
 h2 {
     font-size: 0.8em;
     font-weight: bold;
     text-transform: uppercase;
+    color: var(--color-B-text-highlight);
 }
 
 .closeContainer {
