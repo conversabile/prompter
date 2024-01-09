@@ -21,10 +21,6 @@
   let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
   let userEditedChain: boolean;
   $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
-  let serviceSettings: ServiceSettings = {
-    openai: {apiKey: ""},
-    ollama: {server: "http://localhost:11434"}
-  }
   let serviceSettingsPanelOpen: boolean = false;
   let renderedPromptText: string;
   export let isShared: boolean = false;   // Show "Share" tab with permalink
@@ -45,7 +41,6 @@
     bind:prompt = {promptChain.prompts[0]}
     bind:paramDict = {promptChain.prompts[0].parametersDict}
     bind:renderedPromptText = {renderedPromptText}
-    bind:serviceSettings = {serviceSettings}
     bind:serviceSettingsPanelOpen = {serviceSettingsPanelOpen}
 />
 
@@ -61,7 +56,6 @@
   <PredictionBox
     bind:promptChain={promptChain}
     bind:renderedPromptText={renderedPromptText}
-    bind:serviceSettings={serviceSettings}
     bind:serviceSettingsPanelOpen={serviceSettingsPanelOpen}
   />
 </div>

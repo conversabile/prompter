@@ -6,7 +6,6 @@ import { faGear, faPlay } from "@fortawesome/free-solid-svg-icons";
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
 export let renderedPromptText: string;
-export let serviceSettings: ServiceSettings;
 export let serviceSettingsPanelOpen: boolean;
 
 /* 
@@ -23,6 +22,7 @@ import { OpenAI } from "openai";
 import Fa from "svelte-fa";
 import { Clock } from "svelte-loading-spinners";
 import { PredictionService, type ServiceSettings } from "$lib/services";
+import { userSettings } from "$lib/userSettings";
 
 let userRequestedPrediction: boolean = false;
 let isPredicting: boolean = false;
@@ -32,13 +32,13 @@ async function handlePredict() {
   if (isPredicting) return;
   userRequestedPrediction = true;
 
-  if (promptChain.prompts[0].predictionService == PredictionService.openai && ! serviceSettings.openai.apiKey) {
+  if (promptChain.prompts[0].predictionService == PredictionService.openai && ! $userSettings.predictionService.openai.apiKey) {
     isPredicting = false;
     predictionError = "An OpenAI API key is needed to run the prediction request";
     return;
   }
 
-  if (promptChain.prompts[0].predictionService == PredictionService.ollama && ! serviceSettings.ollama.server) {
+  if (promptChain.prompts[0].predictionService == PredictionService.ollama && ! $userSettings.predictionService.ollama.server) {
     isPredicting = false;
     predictionError = "An Ollama server needs to be configured to run the prediction request";
     return;
@@ -70,7 +70,7 @@ async function handleOpenaiPredict() {
   // console.debug("predicting prompt with OpenAI: ", renderedPromptText);
   try {
     const openai = new OpenAI({
-      apiKey: serviceSettings.openai.apiKey,
+      apiKey: $userSettings.predictionService.openai.apiKey,
       dangerouslyAllowBrowser: true, // We don't store the user's API key
     });
     const response = await openai.chat.completions.create({
@@ -104,8 +104,8 @@ async function handleOpenaiPredict() {
 
 async function handleOllamaPredict() {
   try {
-    serviceSettings.ollama.server = serviceSettings.ollama.server.replace(/\/+$/, '');
-    const response = await fetch(`${serviceSettings.ollama.server.replace(/\/+$/, '')}/api/generate`, {
+    $userSettings.predictionService.ollama.server = $userSettings.predictionService.ollama.server.replace(/\/+$/, '');
+    const response = await fetch(`${$userSettings.predictionService.ollama.server.replace(/\/+$/, '')}/api/generate`, {
 			method: 'POST',
 			body: JSON.stringify({
         "model": promptChain.prompts[0].predictionSettings.ollama.modelName,

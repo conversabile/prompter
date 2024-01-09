@@ -1,15 +1,45 @@
 <script lang="ts">
 	import { page } from '$app/stores';
     import { env } from '$env/dynamic/public';
-	import { PredictionService, LLM_SERVICE_NAMES, OPENAI_MODELS, type PredictionSettings, ENABLED_SERVICES, type ServiceSettings } from "$lib/services";
+	import { PredictionService, LLM_SERVICE_NAMES, OPENAI_MODELS, type PredictionSettings, ENABLED_SERVICES } from "$lib/services";
+	import { readLocalSettings, readLocalSettingsDict, setLocalSettings, userSettings } from '$lib/userSettings';
 	import { faXmark } from "@fortawesome/free-solid-svg-icons";
 	import Fa from "svelte-fa";
 
     export let open: boolean = false;
-    export let model: string;
     export let service: PredictionService;
     export let settings: PredictionSettings;
-    export let serviceSettings: ServiceSettings;
+
+    let persistenceSettings = {
+        openai: readLocalSettingsDict().predictionService?.openai != null,
+        ollama: readLocalSettingsDict().predictionService?.ollama != null,
+    }
+
+    // Check/uncheck "save locally" checkbox
+    function handlePersistOpenaiChange() { handlePersistChange(PredictionService.openai); }
+    function handlePersistOllamaChange() { handlePersistChange(PredictionService.ollama); }
+    function handlePersistChange(service: PredictionService) {
+        let localSettings = readLocalSettingsDict() as any;
+        if (! persistenceSettings[service]) {
+            delete localSettings.predictionService[service];
+        } else {
+            if (!localSettings.predictionService) localSettings['predictionService'] = {}; 
+            localSettings['predictionService'][service] = $userSettings.predictionService[service];
+        }
+        setLocalSettings(localSettings);
+
+    }
+
+    // Blur service settings input (OpenAI key / Ollama server)
+    function handlePersistOpenai() { handlePersist(PredictionService.openai); }
+    function handlePersistOllama() { handlePersist(PredictionService.ollama); }
+    function handlePersist(service: PredictionService) {
+        if (persistenceSettings[service]) {
+            let localSettings = readLocalSettingsDict();
+            localSettings.predictionService[service] = $userSettings.predictionService[service];
+            setLocalSettings(localSettings);
+        }
+    }
 </script>
 
 {#if open}
@@ -65,7 +95,14 @@
             <tr>
                 <th><label for="openaiApiKey">API Key</label></th>
                 <td>
-                    <input type="text" name="openaiApiKey" bind:value={serviceSettings.openai.apiKey}>
+                    <input type="text" name="openaiApiKey" bind:value={$userSettings.predictionService.openai.apiKey} on:blur={handlePersistOpenai}>
+                </td>
+            </tr>
+            <tr>
+                <td> </td>
+                <td class="persistSettingsSelector">
+                    <input type="checkbox" name="persistOpenai" id="persistOpenai" bind:checked={persistenceSettings.openai} on:change={handlePersistOpenaiChange}>
+                    <label for="persistOpenai">Save OpenAI key locally</label>
                 </td>
             </tr>
             <tr>
@@ -77,7 +114,14 @@
             <tr class:highlightRequired={false}>
                 <th><label for="ollamaServer">Ollama Server</label></th>
                 <td>
-                    <input type="text" name="ollamaServer" bind:value={serviceSettings.ollama.server}>
+                    <input type="text" name="ollamaServer" bind:value={$userSettings.predictionService.ollama.server} on:blur={handlePersistOllama}>
+                </td>
+            </tr>
+            <tr>
+                <td> </td>
+                <td class="persistSettingsSelector">
+                    <input type="checkbox" name="persistOllama" id="persistOllama" bind:checked={persistenceSettings.ollama} on:change={handlePersistOllamaChange}>
+                    <label for="persistOllama">Save Ollama server settings locally</label>
                 </td>
             </tr>
             <tr>
@@ -130,7 +174,7 @@ h2 {
     text-align: right;
 }
 
-select, input {
+select, input[type=text] {
     background: white;
     border: 1px solid;
     width: 100%;
@@ -157,5 +201,14 @@ th {
     font-style: italic;
     text-align: center;
     padding-top: 1em;
+}
+
+.persistSettingsSelector {
+    font-size: .9em;
+    padding: .5em;
+}
+
+.persistSettingsSelector input[type=checkbox] {
+    margin: 0 .5em 0 0;
 }
 </style>

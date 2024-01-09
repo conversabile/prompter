@@ -12,7 +12,6 @@
   export let prompt: Prompt;
   export let paramDict: Record<string, string>;
   export let renderedPromptText: string = ""; // Will be read from outside to make predictions
-  export let serviceSettings: ServiceSettings;
   export let serviceSettingsPanelOpen: boolean; // Can be opened by PredictionBox to ask for parameters
   
   $: paramDict = piledParameterDict(prompt);
@@ -120,10 +119,8 @@
 
   <PromptBoxLLMMenu
     bind:open={serviceSettingsPanelOpen}
-    bind:model={prompt.predictionService}
     bind:service={prompt.predictionService}
     bind:settings={prompt.predictionSettings}
-    bind:serviceSettings={serviceSettings}
   />
 
   <div class="promptDefinition">

@@ -8,6 +8,7 @@
 * Shorten generated chain IDs to 11 characters
 * Add badge to chains with unsaved edits
 * Add "Copy to clipboard" button to rendered prompts
+* Add option to save prediction service settings locally
 
 ## v0.0.5
 

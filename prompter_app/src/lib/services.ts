@@ -44,3 +44,10 @@ export function defaultPredictionSettings(): PredictionSettings {
         ollama: {modelName: "llama2"}
     }
 }
+
+export function defaultServiceSettings(): ServiceSettings {
+    return {
+        openai: {apiKey: ""},
+        ollama: {server: "http://localhost:11434"}
+      }
+}
