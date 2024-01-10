@@ -223,12 +223,13 @@ h2 {
 :global(.CodeMirror) {
   border: 1px solid rgba(0, 0, 0, 0.25);
   z-index: 0;
+  padding: 0.5em;
 }
 
 .codeMirrorTextarea {
-  width: calc( 100% - 2em );
+  width: calc( 100% - 1em );
   height: 100px; /* Height for default prompt, to limit glitch when CodeMirror loads */
-  padding: 1em;
+  padding: 0.5em;
   overflow: visible;
   font-family: inherit;
 }

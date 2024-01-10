@@ -102,7 +102,7 @@
                 <td> </td>
                 <td class="persistSettingsSelector">
                     <input type="checkbox" name="persistOpenai" id="persistOpenai" bind:checked={persistenceSettings.openai} on:change={handlePersistOpenaiChange}>
-                    <label for="persistOpenai">Save OpenAI key locally</label>
+                    <label for="persistOpenai" title="Your API key will be stored locally in your browser and used as default. Uncheck to remove from local storage.">Save OpenAI key locally</label>
                 </td>
             </tr>
             <tr>

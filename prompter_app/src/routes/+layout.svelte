@@ -23,15 +23,15 @@
 	.app {
 		display: flex;
 		flex-direction: column;
-		/* min-height: 100vh; */
+		min-height: 100vh;
 	}
 
 	main {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 4rem 1rem 1rem 1rem;
-		width: 100%;
+		padding: 2rem 0;
+		width: calc(100% - 2px); /* <section> borders... */
 		max-width: 64rem;
 		margin: 0 auto;
 		box-sizing: border-box;
@@ -43,6 +43,7 @@
 		justify-content: center;
 		align-items: center;
 		padding: 12px;
+		text-align: center;
 	}
 
 	@media (min-width: 480px) {

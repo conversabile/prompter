@@ -211,20 +211,22 @@ async function handleOllamaPredict() {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  margin: 1em 0 1em 1em;
+  margin: 1em 0;
 }
 
 .grid .paramTableCell {
-  flex: 1 0 80%;
+  flex: 1 0 75%;
+  padding: 0 1em;
 }
 
 .grid .predictButtonCell {
-  flex: 0 0 10em;
+  flex: 1 0 15%;
   text-align: center;
+  padding-right: 1em;
 }
 
 .paramTable {
-  width:100%;
+  width: 100%;
   padding:1em;
   background: var(--color-B-lightbg);
 }

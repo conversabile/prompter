@@ -6,11 +6,6 @@
 	const title = data.promptChain ? data.promptChain.prompts[0].title : "New Prompt";
 </script>
 
-<svelte:head>
-	<title>{title} - {env.PUBLIC_SITE_NAME}</title>
-	<meta name="description" content="A web UI to edit and share LLM prompts" />
-</svelte:head>
-
 <section>
 	{#if data.promptChain }
 		<PromptChainEditor
@@ -30,6 +25,6 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		flex: 0.6;
+		/* flex: 0.6; */
 	}
 </style>

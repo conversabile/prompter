@@ -35,7 +35,14 @@
 	import ShareBox from './ShareBox.svelte';
 	import { PredictionService, defaultPredictionSettings, type ServiceSettings } from '$lib/services';
   
+  let titleAsterisk: string;
+  $: titleAsterisk = (userEditedChain) ? "* " : "";
 </script>
+
+<svelte:head>
+	<title>{titleAsterisk}{chainTitle} - {env.PUBLIC_SITE_NAME}</title>
+	<meta name="description" content="A web UI to edit and share LLM prompts" />
+</svelte:head>
 
 <PromptBox
     bind:prompt = {promptChain.prompts[0]}
@@ -48,7 +55,7 @@
   <button class="predictTab" class:active={activeTab == "prediction"} title="Predict prompt on its configured LLM service" on:click={() => activeTab = "prediction"}>
     <Fa icon={faPlay} /> Predict
   </button><button title="Generate permalinks to your prompt" class:active={activeTab == "share"} on:click={() => activeTab = "share"}>
-    <Fa icon={faShare} /> Share {#if userEditedChain}<span class="editedCircle"><Fa icon={faCircle} /></span>{/if}
+    <Fa icon={faShare} /> Share{#if userEditedChain}<span class="editedCircle" title="Prompt has unsaved edits">&nbsp;&nbsp;<Fa icon={faCircle} /> </span>{/if}
   </button>
 </div>
 
