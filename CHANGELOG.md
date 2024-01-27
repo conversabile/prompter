@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.0.6 (in development)
+## v0.0.7 (in development)
+
+## v0.0.6
 
 * Add support for streaming OpenAI predictions
 * Make OpenAI model configurable

@@ -24,6 +24,9 @@ import { Clock } from "svelte-loading-spinners";
 import { PredictionService, type ServiceSettings } from "$lib/services";
 import { userSettings } from "$lib/userSettings";
 
+let chainParameters: string[];
+$: chainParameters = parameterNameList(promptChain.prompts[0]);
+
 let userRequestedPrediction: boolean = false;
 let isPredicting: boolean = false;
 let predictionError: string = "";
@@ -155,21 +158,21 @@ async function handleOllamaPredict() {
 <div class="grid">
 
     <!-- Parameter value table -->
-    <div class="paramTableCell">
-        <table class="paramTable">
+    {#if chainParameters.length > 0}
+      <div class="paramTableCell">
+          <table class="paramTable">
             <tr>
                 <th class="min">Param Name</th> <th>Param Value</th>
             </tr>
-            {#each promptChain.prompts as prompt}
-                {#each parameterNameList(prompt) as paramName}
+            {#each chainParameters as paramName}
                     <tr>
                         <td class="min"><span class="paramName">{paramName}</span></td>
-                        <td> <input type="text" bind:value={prompt.parametersDict[paramName]}> </td>
+                        <td> <input type="text" bind:value={promptChain.prompts[0].parametersDict[paramName]}> </td>
                     </tr>
-                {/each}
             {/each}
         </table>
-    </div>
+      </div>
+    {/if}
 
     <!-- Predict Button -->
     <div class="predictButtonCell">
