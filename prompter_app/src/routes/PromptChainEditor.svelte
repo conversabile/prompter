@@ -1,28 +1,30 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
   import { page } from '$app/stores';
-  import { promptSchemaVersion, type PromptChain, type PromptPrediction, areChainsEquivalent } from '$lib/prompts';
+  import { promptSchemaVersion, type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
 
   export let chainTitle: string = "Untitled Prompt";
   export let promptChain: PromptChain = {
     version: promptSchemaVersion,
     title: chainTitle,
-    prompts: [{
-      version: promptSchemaVersion,
+    parametersDict: {storyTopic: "time travelling", maxWords: "50"},
+    steps: [{
+      stepType: StepType.prompt,
       promptText: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
-      parametersDict: {storyTopic: "time travelling", maxWords: "50"},
       title:  chainTitle,
-      predictions: null,
+      resultKey: "result_0",
+      results: null,
       predictionService: PredictionService.openai,
       predictionSettings: defaultPredictionSettings()
     }]
   }
+  $: promptChain.parametersDict = piledParameterDict(promptChain);
   let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
   let userEditedChain: boolean;
   $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
   let serviceSettingsPanelOpen: boolean = false;
-  let renderedPromptText: string;
+  let renderedPrompts: Record<string, string> = {}; // Step resultKey -> rendered prompt text
   export let isShared: boolean = false;   // Show "Share" tab with permalink
   export let chainId: string | null = null;
   export let editKey: string | null = null;
@@ -44,12 +46,17 @@
 	<meta name="description" content="A web UI to edit and share LLM prompts" />
 </svelte:head>
 
+{#each promptChain.steps as step}
+
 <PromptBox
-    bind:prompt = {promptChain.prompts[0]}
-    bind:paramDict = {promptChain.prompts[0].parametersDict}
-    bind:renderedPromptText = {renderedPromptText}
+    bind:prompt = {step}
+    bind:paramDict = {promptChain.parametersDict}
+    bind:renderedPrompts = {renderedPrompts}
     bind:serviceSettingsPanelOpen = {serviceSettingsPanelOpen}
 />
+  
+{/each}
+
 
 <div class="tabLabels">
   <button class="predictTab" class:active={activeTab == "prediction"} title="Predict prompt on its configured LLM service" on:click={() => activeTab = "prediction"}>
@@ -62,7 +69,7 @@
 <div class="predictionTab tabContent" class:hidden={activeTab != "prediction"}>
   <PredictionBox
     bind:promptChain={promptChain}
-    bind:renderedPromptText={renderedPromptText}
+    bind:renderedPrompts={renderedPrompts}
     bind:serviceSettingsPanelOpen={serviceSettingsPanelOpen}
   />
 </div>

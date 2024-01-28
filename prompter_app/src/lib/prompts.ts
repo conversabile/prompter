@@ -3,12 +3,13 @@ import util from 'util';
 
 import { convert } from 'html-to-text';
 import nunjucks from 'nunjucks';
-import { defaultPredictionSettings, type PredictionService, type PredictionSettings } from './services';
+import { defaultPredictionSettings, PredictionService, type PredictionSettings } from './services';
 import { isEqual } from './util';
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
-export const promptSchemaVersion: number = 4; /* 4: camelCase; add predictionService, predictionSettings */
+export const promptSchemaVersion: number = 5; /* 5: prompts -> steps */
+                                              /* 4: camelCase; add predictionService, predictionSettings */
                                               /* 3: records are prompt chains */
                                               /* 2: plain text promptText */
                                               /* 1: HTML promptText with Jinja2 template */
@@ -23,29 +24,41 @@ function assert(value: unknown) {
  * Interfaces
  */
 
-export interface PromptPrediction {
-  datetime: Date,
-  renderedPrompt: string,
-  predictionRaw: string,
-  model: string
-}
-
-export interface Prompt {
-  version: number;
-  promptText: string;
-  parametersDict: Record<string, string>;
-  title: string;
-  predictions?: PromptPrediction[] | null;
-  predictionService: PredictionService,
-  predictionSettings: PredictionSettings;
+export enum StepType {
+  prompt = "prompt",
+  rest = "rest"
 }
 
 export interface PromptChain {
   version: number;
   title: string;
-  prompts: Prompt[];
+  steps: PromptStep[];
+  parametersDict: Record<string, string>;
 }
 
+export interface Step {
+  title: string;
+  stepType: StepType,
+  resultKey: string;
+  results?: StepResult[] | null;
+}
+
+export interface StepResult {
+  datetime: Date,
+  resultRaw: string,
+}
+
+export interface PromptStep extends Step {
+  promptText: string;
+  results?: PromptStepResult[] | null;
+  predictionService: PredictionService,
+  predictionSettings: PredictionSettings;
+}
+
+export interface PromptStepResult extends StepResult {
+  renderedPrompt: string,
+  model: string
+}
 
 /*
  * Input/Output
@@ -133,7 +146,7 @@ export class PermissionDeniedError extends Error {};
 
 function upgradeChainOrPrompt(chainOrPrompt: any): PromptChain {
   if (chainOrPrompt.version <= 2) {
-    return upgradePrompt(chainOrPrompt as Prompt)
+    return upgradePrompt(chainOrPrompt as PromptStep)
   }
 
   return upgradeChain(chainOrPrompt as PromptChain);
@@ -159,21 +172,38 @@ function upgradePrompt(prompt: any): PromptChain {
 function upgradeChain(chain: any): PromptChain {
   if (chain.version < 4) {
     chain = {
-      version: promptSchemaVersion,
+      version: 4,
       title: chain.title,
       prompts: [{
-        version: promptSchemaVersion,
+        version: 4,
         promptText: chain.prompts[0].prompt_text,
         parametersDict: chain.prompts[0].parameters_dict,
         title: chain.prompts[0].title,
-        predictions: chain.prompts[0].predictions,
+        predictions: chain.prompts[0].predictions ?? null,
         predictionService: "openai",
         predictionSettings: defaultPredictionSettings(),
       }]
     }
   }
 
-  return chain as PromptChain;
+  if (chain.version < 5) {
+    chain = {
+      version: 5,
+      title: chain.title,
+      parametersDict: chain.prompts[0].parametersDict,
+      steps: chain.prompts.map((prompt: any) => ({
+        stepType: "prompt",
+        title: prompt.title,
+        resultKey: "result_0",
+        results: prompt.predictions,
+        promptText: prompt.promptText,
+        predictionService: prompt.predictionService,
+        predictionSettings: prompt.predictionSettings
+      }))
+    }
+  }
+  // console.log("Loading chain", chain as PromptChain);
+  return chain;
 }
 
 
@@ -183,9 +213,13 @@ function upgradeChain(chain: any): PromptChain {
 
 const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
 
-
-export function parameterNameList(prompt: Prompt) : Array<string> {
-  let paramList: string[] = [];
+/**
+ * Matches and return parameter names in a prompt template
+ * @param prompt A Prompt step in a Chain
+ * @returns The list of parameter names that are matched in the prompt template message
+ */
+export function promptParameterNameList(prompt: PromptStep) : Array<string> {
+  let result: string[] = [];
 
   let matchedParams = prompt.promptText.matchAll(paramParseRegex);
   if (matchedParams) {
@@ -195,47 +229,66 @@ export function parameterNameList(prompt: Prompt) : Array<string> {
       // if (paramDict[paramName] == undefined) { paramDict[paramName] = ""; }
       newParamList.push(paramName);
     }
-    paramList = Array.from(new Set(newParamList));
+    result = Array.from(new Set(newParamList));
   }
 
-  return paramList;
+  return result;
 }
 
-export function parameterDict(prompt: Prompt) : Record<string, string> {
+export function parameterNameList(promptChain: PromptChain) : Array<string> {
+  let result: string[] = [];
+  promptChain.steps.forEach(step => {result.push(...promptParameterNameList(step))});
+  return [...new Set(result)];
+}
+
+export function parameterDict(promptChain: PromptChain) : Record<string, string> {
   let result: Record<string, string> = {};
 
-  const paramList = parameterNameList(prompt);
-  paramList.forEach((paramName) => {
-    result[paramName] = prompt.parametersDict[paramName] ?? '';
+  promptChain.steps.forEach(step => {
+    const paramList = promptParameterNameList(step);
+    paramList.forEach((paramName) => {
+      result[paramName] = promptChain.parametersDict[paramName] ?? '';
+    });
   });
 
   return result;
 }
 
-export function piledParameterDict(prompt: Prompt) : Record<string, string> {
-  let result: Record<string, string> = prompt.parametersDict;
+export function piledParameterDict(promptChain: PromptChain) : Record<string, string> {
+  let result: Record<string, string> = promptChain.parametersDict;
 
-  const paramList = parameterNameList(prompt);
-  paramList.forEach((paramName) => {
-    result[paramName] = prompt.parametersDict[paramName] ?? '';
+  promptChain.steps.forEach(step => {
+    const paramList = promptParameterNameList(step);
+    paramList.forEach((paramName) => {
+      result[paramName] = promptChain.parametersDict[paramName] ?? '';
+    });
   });
-
+  
   return result;
 }
 
 export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptChain): boolean {
   // console.log(aChain, anotherChain);
   if (aChain.title != anotherChain.title) return false;
+  if (aChain.steps.length != anotherChain.steps.length) return false;
+  if (! isEqual(parameterDict(aChain), parameterDict(anotherChain))) return false;
 
-  const aPrompt: Prompt = aChain.prompts[0];
-  const anotherPrompt: Prompt = anotherChain.prompts[0];
-  // console.log(aPrompt, anotherPrompt);
-  if (aPrompt.title != anotherPrompt.title) return false;
-  if (aPrompt.promptText != anotherPrompt.promptText) return false;
-  if (! isEqual(parameterDict(aPrompt), parameterDict(anotherPrompt))) return false;
-  if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
-  if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
-  if (! isEqual(aPrompt.predictions, anotherPrompt.predictions)) return false;
+  let i = 0;
+  aChain.steps.forEach(step => {
+    if (step.stepType != StepType.prompt) throw Error("Not implemented");
+    if (step.stepType != anotherChain.steps[i].stepType) return false;
+
+    const aPrompt: PromptStep = step;
+    const anotherPrompt: PromptStep = anotherChain.steps[i];
+    // console.log(aPrompt, anotherPrompt);
+    if (aPrompt.title != anotherPrompt.title) return false;
+    if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
+    if (aPrompt.promptText != anotherPrompt.promptText) return false;
+    if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
+    if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
+    if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
+  })
+  
 
   return true;
 }

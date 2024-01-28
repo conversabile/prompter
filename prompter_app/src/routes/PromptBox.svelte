@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { copy } from 'svelte-copy';
-  import { renderPrompt, type Prompt, parameterNameList, parameterDict, piledParameterDict } from '$lib/prompts';
+  import { renderPrompt, type PromptStep, piledParameterDict } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
@@ -9,13 +9,11 @@
 
 
   // Model
-  export let prompt: Prompt;
+  export let prompt: PromptStep;
   export let paramDict: Record<string, string>;
-  export let renderedPromptText: string = ""; // Will be read from outside to make predictions
+  export let renderedPrompts: Record<string, string>; // Will be read from outside to make predictions
   export let serviceSettingsPanelOpen: boolean; // Can be opened by PredictionBox to ask for parameters
   
-  $: paramDict = piledParameterDict(prompt);
-
   // Render Result
   let renderedPrompt = "";
   let renderError = false;
@@ -44,7 +42,7 @@
     }
 
     renderedPrompt = resultHtml;
-    renderedPromptText = resultText;
+    renderedPrompts[prompt.resultKey] = resultText;
   }
   $: if (prompt.promptText, paramDict) renderPromptV1();
 
@@ -135,7 +133,7 @@
       <button
         class="copyPrompt"
         title="Copy prompt to clipboard"
-        use:copy={renderedPromptText}
+        use:copy={renderedPrompts[prompt.resultKey]}
         on:svelte-copy={() => {isCopied = true; setTimeout(() => {isCopied = false;}, 500)}}
       ><Fa icon={faClone} /></button>
     </div>
@@ -153,7 +151,7 @@ h2 {
   width:100%;
   background: var(--color-A-bg);
   color: var(--color-A-text-standard);
-  margin:0;
+  margin:1em 0 0 0;
   padding:0;
   border-radius: 5px;
   border: 1px solid;

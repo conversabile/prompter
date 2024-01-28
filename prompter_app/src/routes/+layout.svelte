@@ -30,7 +30,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		padding: 2rem 0;
+		padding: 1rem 0;
 		width: calc(100% - 2px); /* <section> borders... */
 		max-width: 64rem;
 		margin: 0 auto;

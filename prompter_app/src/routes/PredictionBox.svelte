@@ -1,17 +1,17 @@
 <script lang="ts">
-import { parameterNameList, type PromptChain } from "$lib/prompts";
+import { parameterNameList, StepType, type PromptChain, type PromptStep, type StepResult, type Step, type PromptStepResult } from "$lib/prompts";
 import { faGear, faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
-export let renderedPromptText: string;
+export let renderedPrompts: Record<string, string>; // -> PromptChainEditor
 export let serviceSettingsPanelOpen: boolean;
 
 /* 
 * TODO:
 *  - DONE persist predictions in saved prompts
-*  - persist api key in local storage
+*  - DONE persist api key in local storage
 *  - syntax highlighting
 *  - DONE prediction box is hidden initially
 *  - DONE handle openapi errors
@@ -21,75 +21,89 @@ import { OpenAI } from "openai";
 
 import Fa from "svelte-fa";
 import { Clock } from "svelte-loading-spinners";
-import { PredictionService, type ServiceSettings } from "$lib/services";
+import { PredictionService } from "$lib/services";
 import { userSettings } from "$lib/userSettings";
 
 let chainParameters: string[];
-$: chainParameters = parameterNameList(promptChain.prompts[0]);
+$: chainParameters = parameterNameList(promptChain);
 
 let userRequestedPrediction: boolean = false;
 let isPredicting: boolean = false;
 let predictionError: string = "";
 
 async function handlePredict() {
+  for (let step of promptChain.steps) {
+    if (step.stepType == StepType.prompt) {
+      console.log("Predicting ", step.resultKey);
+      await predictPrompt(step);
+      console.log(promptChain);
+    } else {
+      throw Error("Not implemented");
+    }
+  }
+}
+
+async function predictPrompt(prompt: PromptStep) {
   if (isPredicting) return;
   userRequestedPrediction = true;
 
-  if (promptChain.prompts[0].predictionService == PredictionService.openai && ! $userSettings.predictionService.openai.apiKey) {
+  if (prompt.predictionService == PredictionService.openai && ! $userSettings.predictionService.openai.apiKey) {
     isPredicting = false;
     predictionError = "An OpenAI API key is needed to run the prediction request";
     return;
   }
 
-  if (promptChain.prompts[0].predictionService == PredictionService.ollama && ! $userSettings.predictionService.ollama.server) {
+  if (prompt.predictionService == PredictionService.ollama && ! $userSettings.predictionService.ollama.server) {
     isPredicting = false;
     predictionError = "An Ollama server needs to be configured to run the prediction request";
     return;
   }
 
-  if (! renderedPromptText) {
+  if (! renderedPrompts[prompt.resultKey]) {
     isPredicting = false;
     predictionError = "No prompt to predict";
     return;
   }
 
   isPredicting = true;
-  promptChain.prompts[0].predictions = null;
+  prompt.results = null;
   predictionError = "";
+  promptChain = promptChain; /* Triggers re-render (TODO: refactor) */
 
-  if (promptChain.prompts[0].predictionService == PredictionService.openai) {
-    await handleOpenaiPredict();
+
+  if (prompt.predictionService == PredictionService.openai) {
+    await predictPromptOpenai(prompt);
   }
 
-  if (promptChain.prompts[0].predictionService == PredictionService.ollama) {
-    await handleOllamaPredict();
+  if (prompt.predictionService == PredictionService.ollama) {
+    await predictPromptOllama(prompt);
   }
 
   isPredicting = false;
 
 }
 
-async function handleOpenaiPredict() {
-  // console.debug("predicting prompt with OpenAI: ", renderedPromptText);
+async function predictPromptOpenai(prompt: PromptStep) {
+  // console.debug("predicting prompt with OpenAI: ", renderedPrompts[prompt.resultKey]);
   try {
     const openai = new OpenAI({
       apiKey: $userSettings.predictionService.openai.apiKey,
       dangerouslyAllowBrowser: true, // We don't store the user's API key
     });
     const response = await openai.chat.completions.create({
-      model: promptChain.prompts[0].predictionSettings.openai.modelName,
+      model: prompt.predictionSettings.openai.modelName,
       messages: [
-        {"role": "user", "content": renderedPromptText}
+        {"role": "user", "content": renderedPrompts[prompt.resultKey]}
       ],
       stream: true,
     });
     
     // Init prediction object
-    if (! promptChain.prompts[0].predictions) {
-      promptChain.prompts[0].predictions = [{
+    if (! prompt.results) {
+      prompt.results = [{
         "datetime": new Date(),
-        "renderedPrompt":  renderedPromptText,
-        "predictionRaw": "",
+        "renderedPrompt":  renderedPrompts[prompt.resultKey],
+        "resultRaw": "",
         "model": "openai-gpt-3.5-turbo"
       }]
     }
@@ -97,7 +111,8 @@ async function handleOpenaiPredict() {
     // Append chunks to prediction objects
     for await (const chunk of response) {
       let chunkStr = chunk.choices[0].delta.content ?? "";
-      promptChain.prompts[0].predictions[0].predictionRaw = promptChain.prompts[0].predictions[0].predictionRaw.concat(chunkStr);
+      prompt.results[0].resultRaw = prompt.results[0].resultRaw.concat(chunkStr);
+      promptChain = promptChain; /* Triggers re-render (TODO: refactor) */
     }
 
   } catch (err: any) {
@@ -105,25 +120,25 @@ async function handleOpenaiPredict() {
   }
 }
 
-async function handleOllamaPredict() {
+async function predictPromptOllama(prompt: PromptStep) {
   try {
     $userSettings.predictionService.ollama.server = $userSettings.predictionService.ollama.server.replace(/\/+$/, '');
     const response = await fetch(`${$userSettings.predictionService.ollama.server.replace(/\/+$/, '')}/api/generate`, {
 			method: 'POST',
 			body: JSON.stringify({
-        "model": promptChain.prompts[0].predictionSettings.ollama.modelName,
-        "prompt": renderedPromptText
+        "model": prompt.predictionSettings.ollama.modelName,
+        "prompt": renderedPrompts[prompt.resultKey]
       })
 		})
 
     if (response.body) {
       // Init prediction object
-      if (! promptChain.prompts[0].predictions) {
-        promptChain.prompts[0].predictions = [{
+      if (! prompt.results) {
+        prompt.results = [{
           "datetime": new Date(),
-          "renderedPrompt":  renderedPromptText,
-          "predictionRaw": "",
-          "model": "ollama-" + promptChain.prompts[0].predictionSettings.ollama.modelName
+          "renderedPrompt":  renderedPrompts[prompt.resultKey],
+          "resultRaw": "",
+          "model": "ollama-" + prompt.predictionSettings.ollama.modelName
         }]
       }
       if (response.status != 200) {
@@ -137,8 +152,9 @@ async function handleOllamaPredict() {
         const chunk = decoder.decode(value);
         if (chunk) {
           const token = JSON.parse(chunk)["response"] ?? "";
-          if (token.trim() || promptChain.prompts[0].predictions[0].predictionRaw) { // First token is \n...
-            promptChain.prompts[0].predictions[0].predictionRaw = promptChain.prompts[0].predictions[0].predictionRaw.concat(token);
+          if (token.trim() || prompt.results[0].resultRaw) { // First token is \n...
+            prompt.results[0].resultRaw = prompt.results[0].resultRaw.concat(token);
+            promptChain = promptChain; /* Triggers re-render (TODO: refactor) */
           }
         }
       }
@@ -167,7 +183,7 @@ async function handleOllamaPredict() {
             {#each chainParameters as paramName}
                     <tr>
                         <td class="min"><span class="paramName">{paramName}</span></td>
-                        <td> <input type="text" bind:value={promptChain.prompts[0].parametersDict[paramName]}> </td>
+                        <td> <input type="text" bind:value={promptChain.parametersDict[paramName]}> </td>
                     </tr>
             {/each}
         </table>
@@ -179,7 +195,6 @@ async function handleOllamaPredict() {
         {#if ! isPredicting}
             <button
               class="button runButton"
-              class:selected={promptChain.prompts[0].predictionService == PredictionService.openai}
               title="Run prediction"
               on:click={handlePredict}
             ><Fa icon={faPlay}/> Run</button>
@@ -198,11 +213,16 @@ async function handleOllamaPredict() {
       on:click={() => {serviceSettingsPanelOpen = true}}
     ><Fa icon={faGear} /></button>
   </div>
-{:else if promptChain && promptChain.prompts[0].predictions && promptChain.prompts[0].predictions[0].predictionRaw}
-  <div class="predictionResult">{promptChain.prompts[0].predictions[0].predictionRaw}</div>
+  {:else if promptChain.steps[0].results}
+  <div class="predictionResult">
+  {#each promptChain.steps as step}
+    {#if step.results}
+      <p>{step.results[0].resultRaw}</p>
+    {/if}
+  {/each}
+  </div>
   
-  <!-- TODO: renderedPromptText is empty when page is loading, this way earning is hidden for empty prompts -->
-  {#if renderedPromptText && promptChain.prompts[0].predictions[0].renderedPrompt != renderedPromptText}
+  {#if ! promptChain.steps.every(step => {let result = (!step.results || step.results[0].renderedPrompt == renderedPrompts[step.resultKey]); return result;})}
     <div class="predictionWarningMessage">This prediction was made using a different version of the prompt</div>
   {/if}
 {/if}
