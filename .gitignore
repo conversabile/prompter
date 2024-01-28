@@ -3,6 +3,7 @@ __pycache__
 
 .prompt_data/
 .promptData
-data/
+prompter_app/data/*
+!prompter_app/data/V/
 .DS_Store
 *.zip

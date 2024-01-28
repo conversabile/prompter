@@ -1,0 +1,15 @@
+{
+    "version": 3,
+    "title": "Untitled Prompt",
+    "prompts": [
+        {
+            "version": 3,
+            "prompt_text": "{# test prompt V3 #}\n\nTell me a story about {{ storyTopic }}, make it sound like you're very excited about {{ storyTopic | title }}!\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
+            "parameters_dict": {
+                "storyTopic": "time travelling"
+            },
+            "title": "Untitled Prompt",
+            "predictions": null
+        }
+    ]
+}

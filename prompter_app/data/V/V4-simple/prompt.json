@@ -1,0 +1,26 @@
+{
+    "version": 4,
+    "title": "Untitled Prompt",
+    "prompts": [
+        {
+            "version": 4,
+            "promptText": "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
+            "parametersDict": {
+                "storyTopic": "time travelling",
+                "maxWords": "50",
+                "anotherTopic": ""
+            },
+            "title": "Untitled Prompt",
+            "predictions": null,
+            "predictionService": "ollama",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            }
+        }
+    ]
+}
