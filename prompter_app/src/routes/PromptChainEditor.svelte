@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-  import { page } from '$app/stores';
   import { promptSchemaVersion, type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
 
@@ -23,8 +22,8 @@
   let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
   let userEditedChain: boolean;
   $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
-  let serviceSettingsPanelOpen: boolean = false;
   let renderedPrompts: Record<string, string> = {}; // Step resultKey -> rendered prompt text
+  let predictionStatus: Record<string, StepRunStatus> = {}; // Step resultKey -> status
   export let isShared: boolean = false;   // Show "Share" tab with permalink
   export let chainId: string | null = null;
   export let editKey: string | null = null;
@@ -36,6 +35,7 @@
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
 	import { PredictionService, defaultPredictionSettings, type ServiceSettings } from '$lib/services';
+	import type { StepRunStatus } from '$lib/prediction';
   
   let titleAsterisk: string;
   $: titleAsterisk = (userEditedChain) ? "* " : "";
@@ -52,7 +52,7 @@
     bind:prompt = {step}
     bind:paramDict = {promptChain.parametersDict}
     bind:renderedPrompts = {renderedPrompts}
-    bind:serviceSettingsPanelOpen = {serviceSettingsPanelOpen}
+    bind:predictionStatus = {predictionStatus}
 />
   
 {/each}
@@ -70,7 +70,7 @@
   <PredictionBox
     bind:promptChain={promptChain}
     bind:renderedPrompts={renderedPrompts}
-    bind:serviceSettingsPanelOpen={serviceSettingsPanelOpen}
+    bind:predictionStatus={predictionStatus}
   />
 </div>
 

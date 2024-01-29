@@ -12,7 +12,19 @@
   export let prompt: PromptStep;
   export let paramDict: Record<string, string>;
   export let renderedPrompts: Record<string, string>; // Will be read from outside to make predictions
-  export let serviceSettingsPanelOpen: boolean; // Can be opened by PredictionBox to ask for parameters
+  export let predictionStatus: Record<string, StepRunStatus>;
+  
+  let serviceSettingsPanelOpen: boolean = false;
+
+  // Prediction
+  let predictionIcon: IconDefinition = faRobot;
+  $: if (predictionStatus[prompt.resultKey]) {
+    if (predictionStatus[prompt.resultKey].status == RunStatus.success) predictionIcon = faRobot;
+    if (predictionStatus[prompt.resultKey].status == RunStatus.inProgress) predictionIcon = faHourglass;
+    if (predictionStatus[prompt.resultKey].status == RunStatus.error) predictionIcon = faCircleExclamation;
+    if (predictionStatus[prompt.resultKey].status == RunStatus.skipped) predictionIcon = faXmark;
+    if (predictionStatus[prompt.resultKey].status == RunStatus.onHold) predictionIcon = faPause;
+  }
   
   // Render Result
   let renderedPrompt = "";
@@ -48,8 +60,9 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faCheck, faClipboard, faClone, faCopy, faRobot } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClipboard, faClone, faCopy, faGear, faHourglass, faPause, faRobot, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES, type ServiceSettings } from '$lib/services';
+	import { RunStatus, type StepRunStatus } from '$lib/prediction';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
   // TODO: fixes ts(2686) but breaks CodeMirror reference :(
@@ -106,8 +119,9 @@
 <div class="promptBox">
   <header>
     <a href="javascript:void(0)" class="llmService" on:click={() => {serviceSettingsPanelOpen = ! serviceSettingsPanelOpen;}}>
-      <span class="serviceName"><Fa icon={faRobot} />
-        {LLM_SERVICE_NAMES[prompt.predictionService]}
+      <span class="serviceName">
+        <span><Fa icon={predictionIcon} /></span>
+        <span>{LLM_SERVICE_NAMES[prompt.predictionService]}</span>
         ({prompt.predictionSettings[prompt.predictionService].modelName})
       </span>
       <span class="expandButton">{#if serviceSettingsPanelOpen}<Fa icon={faAngleUp} />{:else}<Fa icon={faAngleDown} />{/if}</span>
@@ -122,11 +136,8 @@
   />
 
   <div class="promptDefinition">
+    <p class="reference">(note: only string parameter values are currently supported) <a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a></p>
     <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.promptText}</textarea>
-    <p class="reference"><a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a> (note: only string parameter values are currently supported)</p>
-  </div>
-
-  <footer>
     <div class="renderedPrompt" class:renderError="{renderError}">
       <div class="renderedPromptText">{@html renderedPrompt}</div>
       <span class="copiedConfirmation" class:hidden={!isCopied}><Fa icon={faCheck} /></span>
@@ -137,6 +148,29 @@
         on:svelte-copy={() => {isCopied = true; setTimeout(() => {isCopied = false;}, 500)}}
       ><Fa icon={faClone} /></button>
     </div>
+  </div>
+
+  <footer>
+    {#if prompt.results}
+      <div class="promptResult">
+        <p>
+          <span class="icon"><Fa icon={faRobot} /></span>
+          <span class="title">{prompt.resultKey}</span>
+          {#if prompt.results[0].renderedPrompt != renderedPrompts[prompt.resultKey]} <span class="warning">This prediction was made with a different version of the prompt</span>{/if}
+        </p><p>{prompt.results[0].resultRaw}</p>
+      </div>
+    {/if}
+
+    {#if predictionStatus[prompt.resultKey] && predictionStatus[prompt.resultKey].error}
+      <div class="promptResult predictionError">
+        <span class="message"><Fa icon={faCircleExclamation} /> {predictionStatus[prompt.resultKey].error}</span>
+        <button
+          class="button configureButton"
+          title="Open service configuration"
+          on:click={() => {serviceSettingsPanelOpen = true}}
+        ><Fa icon={faGear} /></button>
+      </div>
+    {/if}
   </footer>
 </div>
 
@@ -211,7 +245,7 @@ h2 {
 }
 
 .promptBox .promptDefinition {
-  padding: 1em 1em 0.5em 1em;
+  padding: 0 1em 1em 1em;
 }
 
 :global(.promptBox p) {
@@ -237,6 +271,7 @@ h2 {
   margin: 0;
   padding: 0;
   color: var(--color-A-bg);
+  text-align: right;
 }
 
 .reference:hover {
@@ -249,15 +284,58 @@ h2 {
 
 /* Result */
 
-.renderedPrompt {
+.promptResult {
   /* border: 1px solid var(--color-A-text-highlight); */
   border-top: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--color-bg-alphawhite25);
+  padding: 1em;
+  white-space: pre-wrap;
+  font-family: monospace;
+  border-radius: 0 0 5px 5px;
+  /* display: flex; */
+}
+
+.promptResult .title {
+  font-weight: bold;
+}
+
+.promptResult .warning {
+  font-size: .8em;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.predictionError {
+  color: #b03232;
+  text-align: center;
+  display: flex;
+}
+
+.predictionError .message {
+  width: 100%;
+  display: inline-block;
+  margin: auto;
+}
+
+.configureButton {
+  border: 1px solid;
+  margin: 0;
+  padding: 1em 1.1em;
+}
+
+.configureButton:hover {
+  background: rgb(255,255,255,0.1)
+}
+
+.renderedPrompt {
   background: var(--color-bg-alphawhite25);
   padding: 1em;
   white-space: pre-wrap;
   font-size: 0.8em;
   border-radius: 0 0 5px 5px;
   display: flex;
+  border: 1px solid var(--color-A-bg);
+  border-top: 0;
 }
 
 .renderedPromptText {

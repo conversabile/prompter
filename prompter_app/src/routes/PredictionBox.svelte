@@ -1,12 +1,12 @@
 <script lang="ts">
 import { parameterNameList, StepType, type PromptChain, type PromptStep, type StepResult, type Step, type PromptStepResult } from "$lib/prompts";
-import { faGear, faPlay } from "@fortawesome/free-solid-svg-icons";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
 export let promptChain: PromptChain;
 export let renderedPrompts: Record<string, string>; // -> PromptChainEditor
-export let serviceSettingsPanelOpen: boolean;
+export let predictionStatus: Record<string, StepRunStatus>;
 
 /* 
 * TODO:
@@ -23,64 +23,70 @@ import Fa from "svelte-fa";
 import { Clock } from "svelte-loading-spinners";
 import { PredictionService } from "$lib/services";
 import { userSettings } from "$lib/userSettings";
+import { RunStatus, errorStatus, type StepRunStatus } from "$lib/prediction";
 
 let chainParameters: string[];
 $: chainParameters = parameterNameList(promptChain);
 
-let userRequestedPrediction: boolean = false;
 let isPredicting: boolean = false;
-let predictionError: string = "";
 
 async function handlePredict() {
+  if (isPredicting) return;
+  isPredicting = true;
+
   for (let step of promptChain.steps) {
-    if (step.stepType == StepType.prompt) {
+    step.results = null;
+    predictionStatus[step.resultKey] = {
+      status: RunStatus.onHold,
+      error: null
+    }
+  }
+
+  let stepRunError = null;
+  for (let step of promptChain.steps) {
+    if (stepRunError) {
+      predictionStatus[step.resultKey] = {status: RunStatus.skipped, error: null};
+    } else if (step.stepType == StepType.prompt) {
       console.log("Predicting ", step.resultKey);
-      await predictPrompt(step);
-      console.log(promptChain);
+      predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
+      stepRunError = await predictPrompt(step);
+      if (stepRunError) {
+        predictionStatus[step.resultKey] = errorStatus(stepRunError);
+      } else {
+        predictionStatus[step.resultKey] = {status: RunStatus.success, error: null};
+      }
     } else {
       throw Error("Not implemented");
     }
   }
+
+  isPredicting = false;
 }
 
 async function predictPrompt(prompt: PromptStep) {
-  if (isPredicting) return;
-  userRequestedPrediction = true;
-
   if (prompt.predictionService == PredictionService.openai && ! $userSettings.predictionService.openai.apiKey) {
-    isPredicting = false;
-    predictionError = "An OpenAI API key is needed to run the prediction request";
-    return;
+    return "An OpenAI API key is needed to run the prediction request";
   }
 
   if (prompt.predictionService == PredictionService.ollama && ! $userSettings.predictionService.ollama.server) {
-    isPredicting = false;
-    predictionError = "An Ollama server needs to be configured to run the prediction request";
-    return;
+    return "An Ollama server needs to be configured to run the prediction request";
   }
 
   if (! renderedPrompts[prompt.resultKey]) {
-    isPredicting = false;
-    predictionError = "No prompt to predict";
-    return;
+    return "No prompt to predict";
   }
 
-  isPredicting = true;
   prompt.results = null;
-  predictionError = "";
   promptChain = promptChain; /* Triggers re-render (TODO: refactor) */
 
 
   if (prompt.predictionService == PredictionService.openai) {
-    await predictPromptOpenai(prompt);
+    return await predictPromptOpenai(prompt);
   }
 
   if (prompt.predictionService == PredictionService.ollama) {
-    await predictPromptOllama(prompt);
+    return await predictPromptOllama(prompt);
   }
-
-  isPredicting = false;
-
 }
 
 async function predictPromptOpenai(prompt: PromptStep) {
@@ -116,7 +122,7 @@ async function predictPromptOpenai(prompt: PromptStep) {
     }
 
   } catch (err: any) {
-      predictionError = err;
+      return err;
   }
 }
 
@@ -163,9 +169,9 @@ async function predictPromptOllama(prompt: PromptStep) {
   } catch (err: any) {
     console.log("ollama error: ", err);
     if (err.response) {
-      predictionError = "Ollama prediction request failed with status code " + err.response.status + " (" + err.response.statusText + ")";
+      return "Ollama prediction request failed with status code " + err.response.status + " (" + err.response.statusText + ")";
     } else {
-      predictionError = err;
+      return err;
     }
   }
 }
@@ -203,29 +209,6 @@ async function predictPromptOllama(prompt: PromptStep) {
         {/if}
     </div>
 </div>
-
-{#if predictionError}
-  <div class="predictionResult predictionError">
-    <span class="message">{predictionError}</span>
-    <button
-      class="button configureButton"
-      title="Open service configuration"
-      on:click={() => {serviceSettingsPanelOpen = true}}
-    ><Fa icon={faGear} /></button>
-  </div>
-  {:else if promptChain.steps[0].results}
-  <div class="predictionResult">
-  {#each promptChain.steps as step}
-    {#if step.results}
-      <p>{step.results[0].resultRaw}</p>
-    {/if}
-  {/each}
-  </div>
-  
-  {#if ! promptChain.steps.every(step => {let result = (!step.results || step.results[0].renderedPrompt == renderedPrompts[step.resultKey]); return result;})}
-    <div class="predictionWarningMessage">This prediction was made using a different version of the prompt</div>
-  {/if}
-{/if}
 
 <style>
 .grid {
@@ -274,53 +257,11 @@ async function predictPromptOllama(prompt: PromptStep) {
   font-weight: bold;
 }
 
-.configureButton {
-  color: white;
-  background: var(--color-B-lightbg);
-  border: 1px solid;
-  margin: 0;
-}
-
-.configureButton:hover {
-  background: rgb(255,255,255,0.1)
-}
-
 .runButton {
   border: 1px solid var(--color-A-bg);
   background-color: var(--color-A-bg);
   color: black;
   margin: 1em 0 0 0;
-}
-
-.predictionWarningMessage {
-  text-align: center;
-  font-size: .8em;
-  margin: .5em;
-}
-
-.predictionResult {
-  white-space: pre-wrap;
-  text-align: justify;
-  font-weight: lighter;
-  /* letter-spacing: 0.05em; */
-  /* font-size: 1.1em; */
-  /* border: 1px solid #888; */
-  padding: 1em;
-  background: var(--color-B-lightbg);
-  margin: 0;
-  border-top: 1px solid var(--color-bg-alphawhite25);
-}
-
-.predictionError {
-  color: #f55;
-  text-align: center;
-  display: flex;
-}
-
-.predictionError .message {
-  width: 100%;
-  display: inline-block;
-  margin: auto;
 }
 
 </style>
