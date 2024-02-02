@@ -50,6 +50,7 @@
 
 <PromptBox
     bind:prompt = {step}
+    bind:promptChain = {promptChain}
     bind:paramDict = {promptChain.parametersDict}
     bind:renderedPrompts = {renderedPrompts}
     bind:predictionStatus = {predictionStatus}

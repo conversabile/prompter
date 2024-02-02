@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { copy } from 'svelte-copy';
-  import { renderPrompt, type PromptStep, piledParameterDict } from '$lib/prompts';
+  import { renderPrompt, type PromptStep, type PromptChain, type StepResult } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
@@ -10,6 +10,7 @@
 
   // Model
   export let prompt: PromptStep;
+  export let promptChain: PromptChain;
   export let paramDict: Record<string, string>;
   export let renderedPrompts: Record<string, string>; // Will be read from outside to make predictions
   export let predictionStatus: Record<string, StepRunStatus>;
@@ -18,35 +19,83 @@
 
   // Prediction
   let predictionIcon: IconDefinition = faRobot;
+  let predictionIconSpin: boolean = false;
   $: if (predictionStatus[prompt.resultKey]) {
-    if (predictionStatus[prompt.resultKey].status == RunStatus.success) predictionIcon = faRobot;
-    if (predictionStatus[prompt.resultKey].status == RunStatus.inProgress) predictionIcon = faHourglass;
-    if (predictionStatus[prompt.resultKey].status == RunStatus.error) predictionIcon = faCircleExclamation;
-    if (predictionStatus[prompt.resultKey].status == RunStatus.skipped) predictionIcon = faXmark;
-    if (predictionStatus[prompt.resultKey].status == RunStatus.onHold) predictionIcon = faPause;
+    let status = predictionStatus[prompt.resultKey].status;
+    if (status == RunStatus.success) {predictionIcon = faRobot; predictionIconSpin = false;}
+    if (status == RunStatus.inProgress) {predictionIcon = faSpinner; predictionIconSpin = true;}
+    if (status == RunStatus.error) {predictionIcon = faCircleExclamation; predictionIconSpin = false;}
+    if (status == RunStatus.skipped) {predictionIcon = faXmark; predictionIconSpin = false;}
+    if (status == RunStatus.onHold) {predictionIcon = faHourglass; predictionIconSpin = false;}
   }
   
   // Render Result
   let renderedPrompt = "";
+  let renderedPromptComponents: Array<Array<any>> = [];
   let renderError = false;
   let isCopied = false;
 
+  let previousResults: Record<string, StepResult | null> = {};
+  $: promptChain.steps.forEach(step => {
+    // TODO break when prompt is reached
+    previousResults[step.resultKey] = step.results ? step.results[0] : null;
+  })
+
   function renderPromptV1() {
+    let resultComponents = [];
     let resultHtml: string;
     let resultText: string;
 
     try {
       renderError = false;
-      // https://regex101.com/r/WhYBv9/1
-      const jinjaRegex = /(\{\{\s*\w+\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
-      resultHtml = prompt.promptText.replace(jinjaRegex, '<span class="param">$1</span>');
+
+      // https://regex101.com/r/WhYBv9/2
+      const jinjaRegex = /(\{\{\s*(\w+)\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
+      const spinnerTag = "<i class=\"prompter spinner\"></i>"; // Will be replaced with spinner component
+      
+      resultHtml = prompt.promptText.replace(jinjaRegex, (match, _, matchedParamName) => {
+        if (previousResults[matchedParamName] !== undefined) {
+          let resultValue;
+          let resultSpinner = "";
+          if (
+            predictionStatus[matchedParamName]?.status == RunStatus.onHold ||
+            (predictionStatus[matchedParamName]?.status == RunStatus.inProgress && ! previousResults[matchedParamName])
+          ) {
+            resultValue = "";
+            resultSpinner = spinnerTag;
+          } else {
+            resultValue = (previousResults[matchedParamName]) ? match : '-';
+          }
+          return '<span class="previousResult">' +
+                    '<span class="resultKey">'+matchedParamName+'</span>' +
+                    resultValue +
+                 '</span>' + resultSpinner;
+        }
+        return '<span class="param">' + match + '</span>'
+      });
+
       // TODO: move sanitization at dict level
       let renderedParamDict: Record<string, string> = {};
       for (const paramName in paramDict) {
         renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
       }
+      for (const resultKey in previousResults) {
+        if (previousResults[resultKey] != null) {
+          renderedParamDict[resultKey] = (previousResults[resultKey] as StepResult).resultRaw;
+        }
+      }
       resultText = renderPrompt(prompt.promptText, renderedParamDict);
       resultHtml = renderPrompt(resultHtml, renderedParamDict);
+
+      // Replace spinner tag with spinner component
+      const spinnerSplit = resultHtml.split(spinnerTag);
+        if (spinnerSplit.length > 1) {
+          for (let i=0; i < spinnerSplit.length-1; i++) {
+            resultComponents.push([spinnerSplit[i], null]);
+            resultComponents.push([PromptBoxRenderedPromptSpinner, {}]);
+          }
+        }
+      resultComponents.push([spinnerSplit[spinnerSplit.length-1]]);
     } catch(err: any) {
       renderError = true;
       resultHtml = 'invalid syntax: ' + err.message;
@@ -54,15 +103,17 @@
     }
 
     renderedPrompt = resultHtml;
+    renderedPromptComponents = resultComponents;
     renderedPrompts[prompt.resultKey] = resultText;
   }
   $: if (prompt.promptText, paramDict) renderPromptV1();
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClipboard, faClone, faCopy, faGear, faHourglass, faPause, faRobot, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClipboard, faClone, faCopy, faGear, faHourglass, faPause, faRobot, faSpinner, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES, type ServiceSettings } from '$lib/services';
 	import { RunStatus, type StepRunStatus } from '$lib/prediction';
+	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
   // TODO: fixes ts(2686) but breaks CodeMirror reference :(
@@ -118,9 +169,13 @@
 
 <div class="promptBox">
   <header>
-    <a href="javascript:void(0)" class="llmService" on:click={() => {serviceSettingsPanelOpen = ! serviceSettingsPanelOpen;}}>
+    <a href="javascript:void(0)" 
+       class="llmService" 
+       on:click={() => {serviceSettingsPanelOpen = ! serviceSettingsPanelOpen;}}
+       title="{LLM_SERVICE_NAMES[prompt.predictionService]} ({prompt.predictionSettings[prompt.predictionService].modelName})"
+    >
       <span class="serviceName">
-        <span><Fa icon={predictionIcon} /></span>
+        <span><Fa icon={predictionIcon} bind:spin={predictionIconSpin} /></span>
         <span>{LLM_SERVICE_NAMES[prompt.predictionService]}</span>
         ({prompt.predictionSettings[prompt.predictionService].modelName})
       </span>
@@ -139,7 +194,16 @@
     <p class="reference">(note: only string parameter values are currently supported) <a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a></p>
     <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.promptText}</textarea>
     <div class="renderedPrompt" class:renderError="{renderError}">
-      <div class="renderedPromptText">{@html renderedPrompt}</div>
+      <!-- <div class="renderedPromptText">{@html renderedPrompt}</div> -->
+      <div class="renderedPromptText">
+      {#each renderedPromptComponents as [component, props]}
+          {#if typeof(component) == "string"}
+            {@html component}
+          {:else}
+            <svelte:component this={component} {...props} />
+          {/if}
+      {/each}
+     </div>
       <span class="copiedConfirmation" class:hidden={!isCopied}><Fa icon={faCheck} /></span>
       <button
         class="copyPrompt"
@@ -153,11 +217,7 @@
   <footer>
     {#if prompt.results}
       <div class="promptResult">
-        <p>
-          <span class="icon"><Fa icon={faRobot} /></span>
-          <span class="title">{prompt.resultKey}</span>
-          {#if prompt.results[0].renderedPrompt != renderedPrompts[prompt.resultKey]} <span class="warning">This prediction was made with a different version of the prompt</span>{/if}
-        </p><p>{prompt.results[0].resultRaw}</p>
+        <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{prompt.resultKey}</span> {#if prompt.results[0].renderedPrompt != renderedPrompts[prompt.resultKey]} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{prompt.results[0].resultRaw}</p>
       </div>
     {/if}
 
@@ -220,6 +280,23 @@ h2 {
   color: var(--color-B-text-highlight);
   cursor: pointer;
   text-decoration: none;
+}
+
+.promptBox header .llmService .serviceName {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 20vw;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1.5em;
+  vertical-align: middle;
+}
+
+.promptBox header .llmService .expandButton {
+  display: inline-flex;
+  line-height: 1em;
+  vertical-align: middle;
+  /* margin-left: .5em; */
 }
 
 .promptBox header .promptTitle {
@@ -295,8 +372,12 @@ h2 {
   /* display: flex; */
 }
 
-.promptResult .title {
+.promptResult .resultKey {
   font-weight: bold;
+}
+
+.promptResult .icon {
+  display: inline-block;
 }
 
 .promptResult .warning {
@@ -338,6 +419,28 @@ h2 {
   border-top: 0;
 }
 
+:global(.renderedPrompt .previousResult) {
+  border-bottom: 1px dashed var(--color-A-text-highlight);
+  border-radius: 3px;
+  padding: .25em 0;
+  line-height: 2em;
+  color: var(--color-A-text-highlight);
+}
+
+:global(.renderedPrompt .spinner) {
+  border: 0;
+}
+
+:global(.renderedPrompt .previousResult .resultKey) {
+  background: var(--color-A-text-highlight);
+  padding: .25em 0.5em;
+  color: white;
+  margin-right: .25em;
+  border-radius: 3px 3px 0 0;
+  border: 1px solid var(--color-A-text-highlight);
+  user-select: none;
+}
+
 .renderedPromptText {
   flex-grow: 1;
 }
@@ -377,10 +480,6 @@ h2 {
   visibility: hidden;
   opacity: 0;
   transition: visibility 0s 2s, opacity 0.5s linear;
-}
-
-.transparent {
-  opacity: 0;
 }
 
 .renderError {

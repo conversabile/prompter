@@ -235,9 +235,22 @@ export function promptParameterNameList(prompt: PromptStep) : Array<string> {
   return result;
 }
 
+/**
+ * Extracts the list of parameters from the prompt chain. This is the list of Jinja
+ * variables that are matched in the chain prompts, except those which name is a prompt's
+ * result key.
+ * NOTE: prompt order is not taken into account yet
+ * @param promptChain Any prompt chain
+ * @returns The list of parameters that should be used to solve the template
+ */
 export function parameterNameList(promptChain: PromptChain) : Array<string> {
   let result: string[] = [];
-  promptChain.steps.forEach(step => {result.push(...promptParameterNameList(step))});
+  const resultKeys: Set<string> = new Set(promptChain.steps.map(step => {return step.resultKey}));
+  promptChain.steps.forEach(step => {
+    promptParameterNameList(step).forEach(paramName => {
+      if (! resultKeys.has(paramName)) result.push(paramName);
+    })
+  });
   return [...new Set(result)];
 }
 
@@ -273,13 +286,12 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
   if (aChain.steps.length != anotherChain.steps.length) return false;
   if (! isEqual(parameterDict(aChain), parameterDict(anotherChain))) return false;
 
-  let i = 0;
-  aChain.steps.forEach(step => {
-    if (step.stepType != StepType.prompt) throw Error("Not implemented");
-    if (step.stepType != anotherChain.steps[i].stepType) return false;
-
-    const aPrompt: PromptStep = step;
+  for (let i = 0; i < aChain.steps.length; i++) {
+    const aPrompt: PromptStep = aChain.steps[i];
     const anotherPrompt: PromptStep = anotherChain.steps[i];
+    if (aPrompt.stepType != StepType.prompt) throw Error("Not implemented");
+    if (aPrompt.stepType != anotherPrompt.stepType) return false;
+
     // console.log(aPrompt, anotherPrompt);
     if (aPrompt.title != anotherPrompt.title) return false;
     if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
@@ -287,7 +299,7 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
     if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
     if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
     if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
-  })
+  }
   
 
   return true;
