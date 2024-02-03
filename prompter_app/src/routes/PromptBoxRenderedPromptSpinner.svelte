@@ -6,3 +6,9 @@
 <span class="previousResult spinner">
     <Fa icon={faSpinner} spin />
 </span>
+
+<style>
+.previousResult {
+    margin-left: .5em;
+}
+</style>

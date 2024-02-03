@@ -110,8 +110,8 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClipboard, faClone, faCopy, faGear, faHourglass, faPause, faRobot, faSpinner, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
-	import { LLM_SERVICE_NAMES, type ServiceSettings } from '$lib/services';
+	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faMinimize, faPause, faRobot, faSpinner, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+	import { LLM_SERVICE_NAMES } from '$lib/services';
 	import { RunStatus, type StepRunStatus } from '$lib/prediction';
 	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
   
@@ -130,9 +130,15 @@
   // };
 
   // let cmText: string;
+  let cmInitialized = false;
   let cmTextArea: HTMLTextAreaElement;
   export let editor = null;
   onMount(() => {
+    if (! prompt.minimized) initializeCodeMirror();
+  });
+  function initializeCodeMirror() {
+    if (cmInitialized) return;
+
     cmTextArea.style.height = "calc( "+ cmTextArea.scrollHeight + "px - 2em)" 
     
     // TODO: fix ts(2686)
@@ -142,8 +148,9 @@
     });
     editor.on("change", function (eventEditor: Editor) {
       prompt.promptText = eventEditor.getDoc().getValue();
-    })
-  });
+    });
+    cmInitialized = true;
+  }
 
   /**
    * Pressing "Enter" while editing title should de-focus the input element
@@ -167,7 +174,7 @@
   <!-- TODO: refactor with proper imports -->
 </svelte:head>
 
-<div class="promptBox">
+<div class="promptBox" class:minimized={prompt.minimized}>
   <header>
     <a href="javascript:void(0)" 
        class="llmService" 
@@ -181,7 +188,16 @@
       </span>
       <span class="expandButton">{#if serviceSettingsPanelOpen}<Fa icon={faAngleUp} />{:else}<Fa icon={faAngleDown} />{/if}</span>
     </a>
+    <!-- <p class="promptResultKey" contenteditable bind:innerText={prompt.resultKey} on:keydown={handleTitleKeydown}>{prompt.resultKey}</p> -->
     <h2 class="promptTitle" contenteditable bind:innerText={prompt.title} on:keydown={handleTitleKeydown}>{prompt.title}</h2>
+    <div class="stepActions">
+      <!-- <button><Fa icon={faDiagramProject} /></button> -->
+      <button on:click={() => {
+        prompt.minimized = ! prompt.minimized;
+        if (! prompt.minimized) setTimeout(initializeCodeMirror, 50);
+      }}><Fa icon={prompt.minimized ? faUpRightAndDownLeftFromCenter : faDownLeftAndUpRightToCenter} />
+      </button><!--<button><Fa icon={faXmark} /></button> -->
+    </div>
   </header>
 
   <PromptBoxLLMMenu
@@ -249,6 +265,10 @@ h2 {
   padding:0;
   border-radius: 5px;
   border: 1px solid;
+}
+
+.promptBox.minimized .promptDefinition, .promptBox.minimized footer {
+  display: none;
 }
 
 .promptBox header {
@@ -319,6 +339,24 @@ h2 {
   border: 0;
   cursor: inherit;
   font-weight: normal;
+}
+
+.promptBox header .stepActions button {
+  font-size: .8em;
+  line-height: 1.5em;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  border-left: 1px solid #00000054;
+  background: none;
+  padding: .25em 0;
+  width: 1.9em;
+  color: rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+}
+
+.promptBox header .stepActions button:hover {
+  color: black;
 }
 
 .promptBox .promptDefinition {

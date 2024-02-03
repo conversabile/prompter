@@ -41,6 +41,7 @@ export interface Step {
   stepType: StepType,
   resultKey: string;
   results?: StepResult[] | null;
+  minimized: boolean;
 }
 
 export interface StepResult {
@@ -196,6 +197,7 @@ function upgradeChain(chain: any): PromptChain {
         title: prompt.title,
         resultKey: "result_0",
         results: prompt.predictions,
+        minimized: false,
         promptText: prompt.promptText,
         predictionService: prompt.predictionService,
         predictionSettings: prompt.predictionSettings
@@ -296,6 +298,7 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
     if (aPrompt.title != anotherPrompt.title) return false;
     if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
     if (aPrompt.promptText != anotherPrompt.promptText) return false;
+    if (aPrompt.minimized != anotherPrompt.minimized) return false;
     if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
     if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
     if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
