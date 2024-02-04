@@ -196,7 +196,14 @@ function upgradeChain(chain: any): PromptChain {
         stepType: "prompt",
         title: prompt.title,
         resultKey: "result_0",
-        results: prompt.predictions,
+        results: prompt.predictions.map((prediction: any) : PromptStepResult => {
+          return {
+            model: prediction.model,
+            datetime: prediction.datetime,
+            renderedPrompt: prediction.renderedPrompt,
+            resultRaw: prediction.predictionRaw
+          }
+        }),
         minimized: false,
         promptText: prompt.promptText,
         predictionService: prompt.predictionService,

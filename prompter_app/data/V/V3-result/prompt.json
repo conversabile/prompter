@@ -1,0 +1,24 @@
+{
+    "version": 3,
+    "title": "Untitled Prompt",
+    "prompts": [
+        {
+            "version": 3,
+            "prompt_text": "Write a concise post for my Linkedin profile explaining why I, {{ myName }}, can be useful to {{ myAudience }}.\nUse some emojis but keep it real.\n\n{# We loved you Michael #}",
+            "parameters_dict": {
+                "storyTopic": "time travelling",
+                "myName": "Michael Chong",
+                "myAudience": "companies who need a seasoned AI practitioner with a taste for products rather then technicalities"
+            },
+            "title": "📣 prompted.link Announcement Post\n",
+            "predictions": [
+                {
+                    "datetime": "2023-07-24T07:27:50.734Z",
+                    "renderedPrompt": "Write a concise post for my Linkedin profile explaining why I, Michael Chong, can be useful to companies who need a seasoned AI practitioner with a taste for products rather then technicalities.\nUse some emojis but keep it real.",
+                    "predictionRaw": "👨‍💼 Hi everyone! I'm Michael Chong, and I'm here to bridge the gap between cutting-edge AI technology and exceptional product experiences! 🤖🔬\n\nWith years of experience as a seasoned AI practitioner, I have developed a deep understanding of how to leverage artificial intelligence to create user-centric and commercially successful products. 🚀📈\n\nI believe that the true value of AI lies in its ability to enhance and improve everyday lives. This is why my focus is always on delivering tangible results that positively impact users and drive business growth. 🌟💼\n\nWhat sets me apart is my ability to go beyond technicalities and truly grasp the essence of a product. By deeply understanding user needs and business objectives, I can effectively bridge the gap between AI capabilities and valuable user experiences. 💡👥\n\nI thrive in cross-functional environments, collaborating closely with product managers, designers, engineers, and stakeholders to identify AI opportunities and develop innovative solutions. Together, we can create products that harness the potential of AI while providing delightful experiences for users. 🤝💡🚀\n\nIf you're looking for an AI practitioner who is passionate about delivering product excellence and transforming ideas into reality, let's connect! I'm ready to help your company leverage the power of AI to achieve remarkable success. 💪🔥 \n\n#AI #ProductExcellence #UserCentric #Innovation #Collaboration",
+                    "model": "openai-gpt-3.5-turbo"
+                }
+            ]
+        }
+    ]
+}
