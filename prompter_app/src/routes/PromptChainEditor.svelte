@@ -14,6 +14,7 @@
       title:  chainTitle,
       resultKey: "result_0",
       results: null,
+      minimized: false,
       predictionService: PredictionService.openai,
       predictionSettings: defaultPredictionSettings()
     }]

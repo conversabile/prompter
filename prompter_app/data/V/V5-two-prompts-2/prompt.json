@@ -1,0 +1,92 @@
+{
+    "version": 5,
+    "title": "Untitled Sequence",
+    "parametersDict": {
+        "storyTopic": "time travelling",
+        "maxWords": "50",
+        "anotherTopic": "",
+        "s": "",
+        "st": "",
+        "sta": "",
+        "star": "",
+        "start": "",
+        "startW": "",
+        "startWo": "",
+        "startWor": "",
+        "startWord": "START",
+        "e": "",
+        "en": "",
+        "end": "",
+        "endW": "",
+        "endWo": "",
+        "endWor": "",
+        "endWord": "FINISH",
+        "enWord": "",
+        "eWord": "",
+        "Word": "",
+        "sWord": "",
+        "stWord": "",
+        "staWord": "",
+        "starWord": "",
+        "result_0": "",
+        "f": "",
+        "fu": "",
+        "ful": "",
+        "full": "",
+        "fullS": "",
+        "fullSt": "",
+        "fullSto": "",
+        "fullStor": "",
+        "fullStory": ""
+    },
+    "steps": [
+        {
+            "stepType": "prompt",
+            "promptText": "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}. Just write the text of the story, don't say anything else before or after.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
+            "title": "Tell a story\n",
+            "resultKey": "fullStory",
+            "results": [
+                {
+                    "datetime": "2024-02-03T18:05:18.022Z",
+                    "renderedPrompt": "Tell me a short (less than 100 words) story about time travelling. Just write the text of the story, don't say anything else before or after.",
+                    "resultRaw": "As the time machine whirred to life, Tom's heart raced with excitement. He set the controls for ancient Egypt and stepped inside. When he emerged, he found himself in a bustling marketplace filled with pyramids and camels. Tom marveled at the sights and sounds of a civilization long gone.",
+                    "model": "ollama-llama2"
+                }
+            ],
+            "predictionService": "ollama",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            },
+            "minimized": true
+        },
+        {
+            "stepType": "prompt",
+            "promptText": "Summarize the following text into max 10 words:\n\n{{ fullStory }}",
+            "title": "Summarize the story\n",
+            "resultKey": "summarizedStory",
+            "results": [
+                {
+                    "datetime": "2024-02-03T18:05:40.128Z",
+                    "renderedPrompt": "Summarize the following text into max 10 words:\n\nAs the time machine whirred to life, Tom's heart raced with excitement. He set the controls for ancient Egypt and stepped inside. When he emerged, he found himself in a bustling marketplace filled with pyramids and camels. Tom marveled at the sights and sounds of a civilization long gone.",
+                    "resultRaw": "Tom traveled back in time to ancient Egypt.",
+                    "model": "ollama-llama2"
+                }
+            ],
+            "predictionService": "ollama",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            },
+            "minimized": false
+        }
+    ]
+}

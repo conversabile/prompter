@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { copy } from 'svelte-copy';
-  import { renderPrompt, type PromptStep, type PromptChain, type StepResult } from '$lib/prompts';
+  import { renderPrompt, type PromptStep, type PromptChain, type StepResult, isValidParamName } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
 
   import '$lib/codemirror5/codemirror.css';
@@ -36,22 +36,22 @@
   let isCopied = false;
 
   let previousResults: Record<string, StepResult | null> = {};
-  $: promptChain.steps.forEach(step => {
-    // TODO break when prompt is reached
-    previousResults[step.resultKey] = step.results ? step.results[0] : null;
-  })
+  $: previousResults = Object.fromEntries(promptChain.steps.map(step => {
+    const stepResult = step.results ? step.results[0] : null;
+    return [step.resultKey, stepResult];
+  })); // TODO: move to Chain Editor / oonly consider previous results
 
   function renderPromptV1() {
     let resultComponents = [];
     let resultHtml: string;
     let resultText: string;
 
+    // https://regex101.com/r/WhYBv9/2
+    const jinjaRegex = /(\{\{\s*(\w+)\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
+    const spinnerTag = "<i class=\"prompter spinner\"></i>"; // Will be replaced with spinner component
+
     try {
       renderError = false;
-
-      // https://regex101.com/r/WhYBv9/2
-      const jinjaRegex = /(\{\{\s*(\w+)\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
-      const spinnerTag = "<i class=\"prompter spinner\"></i>"; // Will be replaced with spinner component
       
       resultHtml = prompt.promptText.replace(jinjaRegex, (match, _, matchedParamName) => {
         if (previousResults[matchedParamName] !== undefined) {
@@ -86,22 +86,22 @@
       }
       resultText = renderPrompt(prompt.promptText, renderedParamDict);
       resultHtml = renderPrompt(resultHtml, renderedParamDict);
-
-      // Replace spinner tag with spinner component
-      const spinnerSplit = resultHtml.split(spinnerTag);
-        if (spinnerSplit.length > 1) {
-          for (let i=0; i < spinnerSplit.length-1; i++) {
-            resultComponents.push([spinnerSplit[i], null]);
-            resultComponents.push([PromptBoxRenderedPromptSpinner, {}]);
-          }
-        }
-      resultComponents.push([spinnerSplit[spinnerSplit.length-1]]);
     } catch(err: any) {
       renderError = true;
       resultHtml = 'invalid syntax: ' + err.message;
       resultText = '';
     }
 
+    // Replace spinner tag with spinner component
+    const spinnerSplit = resultHtml.split(spinnerTag);
+    if (spinnerSplit.length > 1) {
+      for (let i=0; i < spinnerSplit.length-1; i++) {
+        resultComponents.push([spinnerSplit[i], null]);
+        resultComponents.push([PromptBoxRenderedPromptSpinner, {}]);
+      }
+    }
+    resultComponents.push([spinnerSplit[spinnerSplit.length-1]]);
+      
     renderedPrompt = resultHtml;
     renderedPromptComponents = resultComponents;
     renderedPrompts[prompt.resultKey] = resultText;
@@ -110,7 +110,7 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faMinimize, faPause, faRobot, faSpinner, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faKey, faMinimize, faPause, faRobot, faSpinner, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES } from '$lib/services';
 	import { RunStatus, type StepRunStatus } from '$lib/prediction';
 	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
@@ -156,13 +156,25 @@
    * Pressing "Enter" while editing title should de-focus the input element
    */
   function handleTitleKeydown(e: KeyboardEvent) {
-    if (e.key == "Enter") {
+    if (e.key == "Enter" || e.key == "Escape") {
       e.preventDefault();
       try {
         if (e.target) (e.target as HTMLElement).blur();
       } catch (e) {
         throw(e);
       }
+    }
+  }
+
+  /**
+   * Handles 'beforeInput' and 'paste' events. Blocks edit if new value is not a valid variable name
+   * @param e
+   */
+  function handleResultKeyEdit(e: any) {
+    let newValue = (e.clipboardData) ? e.clipboardData.getData('text') : e.data;
+    if (newValue && ! isValidParamName(newValue)) {
+      e.preventDefault();
+      return false;
     }
   }
 </script>
@@ -188,8 +200,19 @@
       </span>
       <span class="expandButton">{#if serviceSettingsPanelOpen}<Fa icon={faAngleUp} />{:else}<Fa icon={faAngleDown} />{/if}</span>
     </a>
-    <!-- <p class="promptResultKey" contenteditable bind:innerText={prompt.resultKey} on:keydown={handleTitleKeydown}>{prompt.resultKey}</p> -->
+    
     <h2 class="promptTitle" contenteditable bind:innerText={prompt.title} on:keydown={handleTitleKeydown}>{prompt.title}</h2>
+
+    <div class="promptResultKey" title="Result key. Use &#123;&#123; {prompt.resultKey} &#125;&#125; in other steps to reference the predicted result of this prompt.">
+      <Fa icon={faKey} />
+      <p contenteditable spellcheck="false"
+       bind:innerText={prompt.resultKey}
+       on:keydown={handleTitleKeydown}
+       on:beforeinput={handleResultKeyEdit}
+       on:paste={handleResultKeyEdit}
+       on:blur={() => {promptChain = promptChain;}}>{prompt.resultKey}</p>
+    </div>
+
     <div class="stepActions">
       <!-- <button><Fa icon={faDiagramProject} /></button> -->
       <button on:click={() => {
@@ -276,7 +299,7 @@ h2 {
 
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
 
   border-radius: 5px 5px 0 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.75);
@@ -286,8 +309,9 @@ h2 {
 .promptBox header .llmService {
   background: var(--color-B-bg);
   color: var(--color-B-text-standard);
-  height: 100%;
-  display: inline-block;
+  /* height: 100%; */
+  display: flex;
+  align-items: center;
   line-height: 1.5em;
   font-size: .8em;
   padding: .5em;
@@ -316,7 +340,7 @@ h2 {
   display: inline-flex;
   line-height: 1em;
   vertical-align: middle;
-  /* margin-left: .5em; */
+  margin-left: .5em;
 }
 
 .promptBox header .promptTitle {
@@ -324,12 +348,13 @@ h2 {
   flex: 1;
   line-height: 1rem;
   margin: 0;
-  padding: .3em;
+  padding: 0 .5em;
 
   text-transform: none;
   font-size: 0.9em;
   font-weight: normal;
-  display: inline;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   margin: 0;
 }
@@ -341,13 +366,45 @@ h2 {
   font-weight: normal;
 }
 
+.promptBox header .promptResultKey {
+  display: flex;
+  align-items: center;
+  padding-left: .5em;
+  font-size: .8em;
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.promptBox header .promptResultKey p {
+  margin: 0;
+  font-family: monospace;
+  font-weight: bold;
+  padding: .5em;
+  /* display: flex;
+  align-items: center; */
+  cursor: pointer;
+
+  max-width: 20vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.promptBox header .promptResultKey p:focus {
+  background-color: white;
+  cursor: inherit;
+  font-weight: normal;
+}
+
+.promptBox header .stepActions {
+  display: flex;
+}
+
 .promptBox header .stepActions button {
   font-size: .8em;
   line-height: 1.5em;
   margin: 0;
   border-radius: 0;
   border: 0;
-  border-left: 1px solid #00000054;
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
   background: none;
   padding: .25em 0;
   width: 1.9em;
@@ -470,6 +527,7 @@ h2 {
 }
 
 :global(.renderedPrompt .previousResult .resultKey) {
+  font-family: monospace;
   background: var(--color-A-text-highlight);
   padding: .25em 0.5em;
   color: white;

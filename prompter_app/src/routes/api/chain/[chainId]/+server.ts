@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 
-import { type PromptChain, PermissionDeniedError } from '$lib/prompts';
+import { type PromptChain, PermissionDeniedError, isValidChain } from '$lib/prompts';
 import { saveChain } from '$lib/prompts';
 
 export const GET = (({ url }) => {
@@ -17,6 +17,9 @@ export const POST = (async ({ url, request, params }) => {
         throw error(400, "Missing URL parameter: editKey");
     }
     console.log(`POST /api/chain/${params.chainId}`);
+    if (! isValidChain(chain)) {
+        throw error(400, "Invalid chain record");
+    }
     try {
         saveChain(params.chainId!, chain, editKey);
     } catch (e) {

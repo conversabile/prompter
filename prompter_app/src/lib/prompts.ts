@@ -215,6 +215,17 @@ function upgradeChain(chain: any): PromptChain {
 
 const paramParseRegex = /\{\{\s*(\w+)\s*(?:\||\}\})/gi // Jinja variables
 
+export function isValidChain(promptChain: PromptChain) : boolean {
+  for (let step of promptChain.steps) {
+    if (! isValidParamName(step.resultKey)) return false;
+  }
+  return true;
+}
+
+export function isValidParamName(s: string) : boolean {
+  return s.match(/^\w+$/gi) && true || false;
+}
+
 /**
  * Matches and return parameter names in a prompt template
  * @param prompt A Prompt step in a Chain
