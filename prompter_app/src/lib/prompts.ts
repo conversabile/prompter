@@ -196,7 +196,7 @@ function upgradeChain(chain: any): PromptChain {
         stepType: "prompt",
         title: prompt.title,
         resultKey: "result_0",
-        results: prompt.predictions.map((prediction: any) : PromptStepResult => {
+        results: prompt.predictions?.map((prediction: any) : PromptStepResult => {
           return {
             model: prediction.model,
             datetime: prediction.datetime,
@@ -257,20 +257,22 @@ export function promptParameterNameList(prompt: PromptStep) : Array<string> {
 
 /**
  * Extracts the list of parameters from the prompt chain. This is the list of Jinja
- * variables that are matched in the chain prompts, except those which name is a prompt's
- * result key.
+ * variables that are matched in the chain prompts. Those which name is a prompt's
+ * result key are excluded by default.
  * NOTE: prompt order is not taken into account yet
  * @param promptChain Any prompt chain
+ * @param includeResultKeys Also include parameter names which name is a result key in the chain
  * @returns The list of parameters that should be used to solve the template
  */
-export function parameterNameList(promptChain: PromptChain) : Array<string> {
+export function parameterNameList(promptChain: PromptChain, includeResultKeys = false) : Array<string> {
   let result: string[] = [];
   const resultKeys: Set<string> = new Set(promptChain.steps.map(step => {return step.resultKey}));
   promptChain.steps.forEach(step => {
     promptParameterNameList(step).forEach(paramName => {
-      if (! resultKeys.has(paramName)) result.push(paramName);
+      if (includeResultKeys || ! resultKeys.has(paramName)) result.push(paramName);
     })
   });
+  if (includeResultKeys) result = [...result, ...resultKeys];
   return [...new Set(result)];
 }
 

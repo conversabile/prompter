@@ -189,7 +189,7 @@ function dismissError() {
 }
 
 #sharedUrl {
-  background: var(--color-bg-alphawhite);
+  background: var(--color-bg-alphawhite25);
   margin: 1em 1em 0.5em 1em;
   padding: 1em;
   text-align: center;

@@ -1,53 +1,43 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-  import { promptSchemaVersion, type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/prompts';
+  import { type PromptChain, areChainsEquivalent, piledParameterDict } from '$lib/prompts';
   import PromptBox from './PromptBox.svelte';
+  import Fa from 'svelte-fa'
+  import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+	import PredictionBox from './PredictionBox.svelte';
+	import ShareBox from './ShareBox.svelte';
+	import type { StepRunStatus } from '$lib/prediction';
+	import Button from '../components/Button.svelte';
+	import { addChainStep, deleteChainStep, getDefaultChain } from '$lib/chainEditor';
 
-  export let chainTitle: string = "Untitled Prompt";
-  export let promptChain: PromptChain = {
-    version: promptSchemaVersion,
-    title: chainTitle,
-    parametersDict: {storyTopic: "time travelling", maxWords: "50"},
-    steps: [{
-      stepType: StepType.prompt,
-      promptText: "Tell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
-      title:  chainTitle,
-      resultKey: "result_0",
-      results: null,
-      minimized: false,
-      predictionService: PredictionService.openai,
-      predictionSettings: defaultPredictionSettings()
-    }]
-  }
+  export let promptChain: PromptChain = getDefaultChain();
   $: promptChain.parametersDict = piledParameterDict(promptChain);
   let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
   let userEditedChain: boolean;
   $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
   let renderedPrompts: Record<string, string> = {}; // Step resultKey -> rendered prompt text
   let predictionStatus: Record<string, StepRunStatus> = {}; // Step resultKey -> status
+
   export let isShared: boolean = false;   // Show "Share" tab with permalink
   export let chainId: string | null = null;
   export let editKey: string | null = null;
 
   let activeTab = (isShared) ? "share" : "prediction";
-
-  import Fa from 'svelte-fa'
-  import { faPlay, faShare, faCircle } from '@fortawesome/free-solid-svg-icons'
-	import PredictionBox from './PredictionBox.svelte';
-	import ShareBox from './ShareBox.svelte';
-	import { PredictionService, defaultPredictionSettings, type ServiceSettings } from '$lib/services';
-	import type { StepRunStatus } from '$lib/prediction';
   
   let titleAsterisk: string;
   $: titleAsterisk = (userEditedChain) ? "* " : "";
 </script>
 
 <svelte:head>
-	<title>{titleAsterisk}{chainTitle} - {env.PUBLIC_SITE_NAME}</title>
+	<title>{titleAsterisk}{promptChain.title} - {env.PUBLIC_SITE_NAME}</title>
 	<meta name="description" content="A web UI to edit and share LLM prompts" />
 </svelte:head>
 
-{#each promptChain.steps as step}
+<div class="addPromptContainer">
+  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {addChainStep(promptChain, 0); promptChain = promptChain;}}/>
+</div>
+
+{#each promptChain.steps as step, i}
 
 <PromptBox
     bind:prompt = {step}
@@ -56,6 +46,25 @@
     bind:renderedPrompts = {renderedPrompts}
     bind:predictionStatus = {predictionStatus}
 />
+
+<div class="chainButtonsContainer">
+  <div class="chainButtons">
+    <!-- <Button title="Move up" icon={faCaretUp} size="medium" style="A"/>
+    <Button title="Move down" icon={faCaretDown} size="medium" style="A"/> -->
+    {#if (promptChain.steps.length > 1)}
+      <Button title="Delete step" icon={faTrashCan} size="medium" style="A" onClick={() => {
+        deleteChainStep(promptChain, i);
+        promptChain = promptChain;
+      }}/>
+    {/if}
+  </div>
+</div>
+
+<div class="addPromptContainer">
+  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {
+    addChainStep(promptChain, i+1); promptChain = promptChain; 
+  }}/>
+</div>
   
 {/each}
 
@@ -141,6 +150,43 @@
 .editedCircle {
   font-size: 0.4em;
   vertical-align: top;
+}
+
+.addPromptContainer {
+  margin-top: 1em;
+  /* opacity: .75; */
+  width: 100%;
+  text-align: center;
+}
+
+/* .addPromptContainer:hover {
+  opacity: 1;
+} */
+
+:global(.addPromptContainer button.styleA) {
+  border-radius: 5px;
+  border: 1px dashed var(--color-text);
+  background: transparent;
+  color: var(--color-text);
+}
+
+:global(.addPromptContainer:hover button) {
+  background: var(--color-text);
+  border: 1px solid var(--color-bg-0);
+  color: var(--color-bg-0);
+}
+
+.chainButtonsContainer {
+  text-align: right;
+  width: 100%;
+  position: relative;
+}
+
+.chainButtons {
+  position: absolute;
+  text-align: right;
+  right: 1em;
+  margin-top: -5px;
 }
 
 </style>

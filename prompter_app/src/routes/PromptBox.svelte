@@ -42,6 +42,7 @@
   })); // TODO: move to Chain Editor / oonly consider previous results
 
   function renderPromptV1() {
+    // console.log("render: ", prompt.promptText);
     let resultComponents = [];
     let resultHtml: string;
     let resultText: string;
@@ -114,6 +115,7 @@
 	import { LLM_SERVICE_NAMES } from '$lib/services';
 	import { RunStatus, type StepRunStatus } from '$lib/prediction';
 	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
+	import type CodeMirror from 'codemirror';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
   // TODO: fixes ts(2686) but breaks CodeMirror reference :(
@@ -132,11 +134,13 @@
   // let cmText: string;
   let cmInitialized = false;
   let cmTextArea: HTMLTextAreaElement;
-  export let editor = null;
+  export let editor: CodeMirror.EditorFromTextArea | null = null;
   onMount(() => {
+    // console.log("on mount", prompt.resultKey)
     if (! prompt.minimized) initializeCodeMirror();
   });
   function initializeCodeMirror() {
+    // console.log("init code mirror", prompt.resultKey, prompt.promptText)
     if (cmInitialized) return;
 
     cmTextArea.style.height = "calc( "+ cmTextArea.scrollHeight + "px - 2em)" 
@@ -149,8 +153,13 @@
     editor.on("change", function (eventEditor: Editor) {
       prompt.promptText = eventEditor.getDoc().getValue();
     });
+    // editor.setValue(prompt.promptText);
     cmInitialized = true;
   }
+
+  // When a new step is added, only the last PromptBox component in the list is rendered from scratch.
+  // Svelte reuses existing steps changing their state. This causes the editor content to lose sync with prompt text
+  $: if (prompt.promptText && editor && editor.getDoc().getValue() != prompt.promptText) {editor.setValue(prompt.promptText);}
 
   /**
    * Pressing "Enter" while editing title should de-focus the input element
@@ -188,7 +197,7 @@
 
 <div class="promptBox" class:minimized={prompt.minimized}>
   <header>
-    <a href="javascript:void(0)" 
+    <a href={null}
        class="llmService" 
        on:click={() => {serviceSettingsPanelOpen = ! serviceSettingsPanelOpen;}}
        title="{LLM_SERVICE_NAMES[prompt.predictionService]} ({prompt.predictionSettings[prompt.predictionService].modelName})"
@@ -232,6 +241,7 @@
   <div class="promptDefinition">
     <p class="reference">(note: only string parameter values are currently supported) <a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a></p>
     <textarea class="codeMirrorTextarea" bind:this={cmTextArea}>{prompt.promptText}</textarea>
+    <!-- <textarea class="codeMirrorTextarea" contenteditable bind:this={cmTextArea} bind:value={prompt.promptText}></textarea> -->
     <div class="renderedPrompt" class:renderError="{renderError}">
       <!-- <div class="renderedPromptText">{@html renderedPrompt}</div> -->
       <div class="renderedPromptText">
@@ -586,5 +596,4 @@ h2 {
 :global(.renderedPrompt .param) {
   color: var(--color-A-text-highlight);
 }
-
 </style>

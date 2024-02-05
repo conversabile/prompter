@@ -12,6 +12,7 @@ export function escapeHtml(unsafe: string) {
 //
 
 export function isEqual(aVariable: any, anotherVariable: any): boolean {
+    if (aVariable === undefined) return anotherVariable === undefined;
     if (aVariable === null) return anotherVariable === null;
     if (Array.isArray(aVariable)) return isEqualToArray(aVariable, anotherVariable);
     if (typeof(aVariable) === "object") return isEqualToObject(aVariable, anotherVariable);
