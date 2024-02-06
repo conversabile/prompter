@@ -42,3 +42,9 @@ export function addChainStep(promptChain: PromptChain, position: number) : void 
 export function deleteChainStep(promptChain: PromptChain, position: number) : void {
     promptChain.steps.splice(position, 1);
 }
+
+export function moveChainStep(promptChain: PromptChain, sourcePosition: number, targetPosition: number) : void {
+    let step = promptChain.steps[sourcePosition];
+    promptChain.steps.splice(sourcePosition, 1);
+    promptChain.steps.splice(targetPosition, 0, step);
+}

@@ -7,11 +7,11 @@ Available features:
 * Prompt sharing via permalink
 * In-page predictions
 * Integration with OpenAI and Ollama prediction services 
+* Multi-prompt sequences
 
 Feature brainstorming:
 
-* Multi-prompt sequences
-* External service integrations
+* External services integrations
 * Output JSON parsing and schema validation
 * Automatic REST endpoints around prompts
 * User management with access levels and teams

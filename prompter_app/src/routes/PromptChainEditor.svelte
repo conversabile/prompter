@@ -26,6 +26,14 @@
   
   let titleAsterisk: string;
   $: titleAsterisk = (userEditedChain) ? "* " : "";
+
+  let easeInSteps = promptChain.steps.map(() => {return false;});
+  function handleAddStep(position: number) {
+    addChainStep(promptChain, position);
+    easeInSteps = promptChain.steps.map(() => {return false;});
+    easeInSteps[position] = true;
+    promptChain = promptChain;
+  }
 </script>
 
 <svelte:head>
@@ -34,36 +42,24 @@
 </svelte:head>
 
 <div class="addPromptContainer">
-  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {addChainStep(promptChain, 0); promptChain = promptChain;}}/>
+  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {handleAddStep(0)}}/>
 </div>
 
-{#each promptChain.steps as step, i}
+{#each [...promptChain.steps.keys()] as i}
 
 <PromptBox
-    bind:prompt = {step}
+    bind:prompt = {promptChain.steps[i]}
     bind:promptChain = {promptChain}
+    bind:promptChainPosition = {i}
     bind:paramDict = {promptChain.parametersDict}
     bind:renderedPrompts = {renderedPrompts}
     bind:predictionStatus = {predictionStatus}
+    bind:easeIn = {easeInSteps[i]}
+    easeOut={false}
 />
 
-<div class="chainButtonsContainer">
-  <div class="chainButtons">
-    <!-- <Button title="Move up" icon={faCaretUp} size="medium" style="A"/>
-    <Button title="Move down" icon={faCaretDown} size="medium" style="A"/> -->
-    {#if (promptChain.steps.length > 1)}
-      <Button title="Delete step" icon={faTrashCan} size="medium" style="A" onClick={() => {
-        deleteChainStep(promptChain, i);
-        promptChain = promptChain;
-      }}/>
-    {/if}
-  </div>
-</div>
-
 <div class="addPromptContainer">
-  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {
-    addChainStep(promptChain, i+1); promptChain = promptChain; 
-  }}/>
+  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {handleAddStep(i+1)}}/>
 </div>
   
 {/each}
@@ -174,19 +170,6 @@
   background: var(--color-text);
   border: 1px solid var(--color-bg-0);
   color: var(--color-bg-0);
-}
-
-.chainButtonsContainer {
-  text-align: right;
-  width: 100%;
-  position: relative;
-}
-
-.chainButtons {
-  position: absolute;
-  text-align: right;
-  right: 1em;
-  margin-top: -5px;
 }
 
 </style>

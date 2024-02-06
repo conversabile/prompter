@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { copy } from 'svelte-copy';
   import { renderPrompt, type PromptStep, type PromptChain, type StepResult, isValidParamName } from '$lib/prompts';
   import { escapeHtml } from '$lib/util';
@@ -11,11 +11,19 @@
   // Model
   export let prompt: PromptStep;
   export let promptChain: PromptChain;
+  export let promptChainPosition: any;
   export let paramDict: Record<string, string>;
   export let renderedPrompts: Record<string, string>; // Will be read from outside to make predictions
   export let predictionStatus: Record<string, StepRunStatus>;
-  
-  let serviceSettingsPanelOpen: boolean = false;
+  export let easeIn: boolean = false;
+  export let easeOut: boolean = false;
+  let noTransition: boolean = false;
+
+  let serviceSettingsPanelOpen: boolean;
+
+  $: if (easeIn) {tick().then(() => { easeIn = false;})}
+
+  const easeInOutTime: number = 200; // (ms) ! Has to match CSS !
 
   // Prediction
   let predictionIcon: IconDefinition = faRobot;
@@ -68,7 +76,7 @@
             resultValue = (previousResults[matchedParamName]) ? match : '-';
           }
           return '<span class="previousResult">' +
-                    '<span class="resultKey">'+matchedParamName+'</span>' +
+                    '<span class="resultKey">🔑 '+matchedParamName+'</span>' +
                     resultValue +
                  '</span>' + resultSpinner;
         }
@@ -111,11 +119,12 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faKey, faMinimize, faPause, faRobot, faSpinner, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faArrowDown, faArrowRight, faArrowUp, faCaretDown, faCaretUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faKey, faMinimize, faPause, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES } from '$lib/services';
 	import { RunStatus, type StepRunStatus } from '$lib/prediction';
 	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
 	import type CodeMirror from 'codemirror';
+	import { deleteChainStep, moveChainStep } from '$lib/chainEditor';
   
   // From https://github.com/NaokiM03/codemirror-svelte/blob/CodeMirror5/src/Codemirror.svelte
   // TODO: fixes ts(2686) but breaks CodeMirror reference :(
@@ -195,7 +204,7 @@
   <!-- TODO: refactor with proper imports -->
 </svelte:head>
 
-<div class="promptBox" class:minimized={prompt.minimized}>
+<div class="promptBox" class:minimized={prompt.minimized} class:easeIn={easeIn} class:easeOut={easeOut} class:noTransition={noTransition}>
   <header>
     <a href={null}
        class="llmService" 
@@ -223,12 +232,35 @@
     </div>
 
     <div class="stepActions">
-      <!-- <button><Fa icon={faDiagramProject} /></button> -->
+      {#if (promptChainPosition > 0)}
+      <button on:click={() => {
+        moveChainStep(promptChain, promptChainPosition, promptChainPosition-1);
+        promptChain = promptChain;
+      }} title="Move up"><Fa icon={faArrowUp} /></button>{/if}
+      {#if (promptChainPosition < promptChain.steps.length-1)}
+      <button on:click={() => {
+        moveChainStep(promptChain, promptChainPosition, promptChainPosition+1);
+        promptChain = promptChain;
+      }} title="Move down"><Fa icon={faArrowDown} /></button>{/if}
+      {#if (promptChain.steps.length > 1)}
+      <button on:click={() => {
+        easeOut = true;               // Prompt box slides away
+        setTimeout(() => {
+          deleteChainStep(promptChain, promptChainPosition);
+          noTransition = true;        // Block animations
+          easeOut = false;            // Prompt box back in (svelte will recycle the component, updating its state to contain another prompt)
+          promptChain = promptChain;  // Force re render
+          tick().then(()=>{
+            noTransition = false;
+          });                         // After render, re-enable animations
+          // promptChain = promptChain;
+        }, 200);
+      }} title="Delete step"><Fa icon={faTrashCan} /></button>{/if}
       <button on:click={() => {
         prompt.minimized = ! prompt.minimized;
         if (! prompt.minimized) setTimeout(initializeCodeMirror, 50);
       }}><Fa icon={prompt.minimized ? faUpRightAndDownLeftFromCenter : faDownLeftAndUpRightToCenter} />
-      </button><!--<button><Fa icon={faXmark} /></button> -->
+      </button>
     </div>
   </header>
 
@@ -272,12 +304,20 @@
 
     {#if predictionStatus[prompt.resultKey] && predictionStatus[prompt.resultKey].error}
       <div class="promptResult predictionError">
-        <span class="message"><Fa icon={faCircleExclamation} /> {predictionStatus[prompt.resultKey].error}</span>
-        <button
+        <span class="message">
+          <Fa icon={faCircleExclamation} />
+          {predictionStatus[prompt.resultKey].error}
+          <a href={null} 
+           on:click={() => {serviceSettingsPanelOpen = true}}
+           style="color:black; font-weight:bold; cursor: pointer;"
+          >[→ Configure <Fa icon={faGear} />]</a>
+        </span>
+       
+        <!-- <button
           class="button configureButton"
           title="Open service configuration"
           on:click={() => {serviceSettingsPanelOpen = true}}
-        ><Fa icon={faGear} /></button>
+        ><Fa icon={faGear} /></button> -->
       </div>
     {/if}
   </footer>
@@ -298,6 +338,25 @@ h2 {
   padding:0;
   border-radius: 5px;
   border: 1px solid;
+
+  transition-timing-function: ease-in;
+  transition: 0.2s;
+}
+
+.easeIn {
+  /* Display outside viewport. Will slide in when class is removed */
+  transform: translateX(-200%);
+  transition: none;
+}
+
+.easeOut {
+  /* Will slide block outside viewport when applied */
+  transform: translateX(-200%);
+  transition: 0.2s;
+}
+
+.noTransition {
+  transition: none;
 }
 
 .promptBox.minimized .promptDefinition, .promptBox.minimized footer {
@@ -326,7 +385,6 @@ h2 {
   font-size: .8em;
   padding: .5em;
   font-family: monospace;
-  z-index: 2;
 }
 
 .promptBox header .llmService:hover {
@@ -525,11 +583,11 @@ h2 {
 }
 
 :global(.renderedPrompt .previousResult) {
-  border-bottom: 1px dashed var(--color-A-text-highlight);
   border-radius: 3px;
   padding: .25em 0;
-  line-height: 2em;
   color: var(--color-A-text-highlight);
+  text-decoration: underline;
+  text-decoration-style: dashed;
 }
 
 :global(.renderedPrompt .spinner) {
