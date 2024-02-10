@@ -119,9 +119,9 @@
 
   import type { Editor } from "codemirror";
 	import Fa from 'svelte-fa';
-	import { faAngleDown, faAngleUp, faArrowDown, faArrowRight, faArrowUp, faCaretDown, faCaretUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faKey, faMinimize, faPause, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+	import { faAngleDown, faAngleUp, faArrowDown, faArrowUp, faCheck, faCircleExclamation, faClone, faDownLeftAndUpRightToCenter, faGear, faHourglass, faKey, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faWarning, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 	import { LLM_SERVICE_NAMES } from '$lib/services';
-	import { RunStatus, type StepRunStatus } from '$lib/prediction';
+	import { RunStatus, type StepRunStatus } from '$lib/prediction/chain';
 	import PromptBoxRenderedPromptSpinner from './PromptBoxRenderedPromptSpinner.svelte';
 	import type CodeMirror from 'codemirror';
 	import { deleteChainStep, moveChainStep } from '$lib/chainEditor';

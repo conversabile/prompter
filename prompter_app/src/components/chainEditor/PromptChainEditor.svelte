@@ -6,9 +6,9 @@
   import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
-	import type { StepRunStatus } from '$lib/prediction';
-	import Button from '../components/Button.svelte';
-	import { addChainStep, deleteChainStep, getDefaultChain } from '$lib/chainEditor';
+	import type { StepRunStatus } from '$lib/prediction/chain';
+	import Button from '../Button.svelte';
+	import { addChainStep, getDefaultChain } from '$lib/chainEditor';
 
   export let promptChain: PromptChain = getDefaultChain();
   $: promptChain.parametersDict = piledParameterDict(promptChain);

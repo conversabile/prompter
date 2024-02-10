@@ -2,6 +2,8 @@
 
 ## v0.0.7 (in development)
 
+* Add multi-step editor UI 
+
 ## v0.0.6
 
 * Add support for streaming OpenAI predictions

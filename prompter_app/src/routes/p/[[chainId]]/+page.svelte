@@ -1,7 +1,7 @@
 <script>
 	import { env } from '$env/dynamic/public';
 
-	import PromptChainEditor from '../../PromptChainEditor.svelte';
+	import PromptChainEditor from '../../../components/chainEditor/PromptChainEditor.svelte';
 	export let data;
 	const title = data.promptChain ? data.promptChain.title : "New Prompt";
 </script>

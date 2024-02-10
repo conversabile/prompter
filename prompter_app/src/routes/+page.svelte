@@ -1,5 +1,5 @@
 <script>
-	import PromptChainEditor from './PromptChainEditor.svelte';
+	import PromptChainEditor from '../components/chainEditor/PromptChainEditor.svelte';
 	import { env } from '$env/dynamic/public';
 </script>
 
