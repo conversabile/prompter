@@ -2,9 +2,7 @@
 	import { page } from '$app/stores';
     import { env } from '$env/dynamic/public';
 	import { PredictionService, LLM_SERVICE_NAMES, OPENAI_MODELS, type PredictionSettings, ENABLED_SERVICES } from "$lib/services";
-	import { readLocalSettings, readLocalSettingsDict, setLocalSettings, userSettings } from '$lib/userSettings';
-	import { faXmark } from "@fortawesome/free-solid-svg-icons";
-	import Fa from "svelte-fa";
+	import { readLocalSettingsDict, setLocalSettings, userSettings } from '$lib/userSettings';
 
     export let open: boolean = false;
     export let service: PredictionService;
@@ -47,9 +45,6 @@
 <div class="modal" on:click={() => {open = false;}}></div>
 
 <div class="llmServiceMenu">
-    <!-- <div class="closeContainer">
-        <a on:click={() => {open = false;}}><Fa icon={faXmark} /></a>
-    </div> -->
     <h2>Prompt configuration</h2>
 
     <table>
@@ -135,6 +130,7 @@
 {/if}
 
 <style>
+
 .modal {
     /* background-color: black; */
     position: fixed;
@@ -158,7 +154,7 @@
     z-index: 2;
 }
 
-a {
+.llmServiceMenu a {
     color: var(--color-B-text-highlight);
     text-decoration: underline;
 }
@@ -168,10 +164,6 @@ h2 {
     font-weight: bold;
     text-transform: uppercase;
     color: var(--color-B-text-highlight);
-}
-
-.closeContainer {
-    text-align: right;
 }
 
 select, input[type=text] {

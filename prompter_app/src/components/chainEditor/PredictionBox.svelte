@@ -1,5 +1,5 @@
 <script lang="ts">
-import { parameterNameList, StepType, type PromptChain } from "$lib/prompts";
+import { parameterNameList, StepType, type PromptChain } from "$lib/chains";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 

@@ -2,8 +2,8 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { nanoid } from 'nanoid';
 
-import type { PromptChain } from '$lib/prompts';
-import { chainExists, saveChain } from '$lib/prompts';
+import type { PromptChain } from '$lib/chains';
+import { chainExists, saveChain } from '$lib/chains';
 
 export const GET = (({ url }) => {
     return new Response(`Error`);

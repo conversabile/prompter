@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-  import { type PromptChain, areChainsEquivalent, piledParameterDict } from '$lib/prompts';
-  import PromptBox from './PromptBox.svelte';
+  import { type PromptChain, areChainsEquivalent, piledParameterDict } from '$lib/chains';
   import Fa from 'svelte-fa'
   import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+	import StepBox from './StepBox.svelte';
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
 	import type { StepRunStatus } from '$lib/prediction/chain';
@@ -47,10 +47,10 @@
 
 {#each [...promptChain.steps.keys()] as i}
 
-<PromptBox
-    bind:prompt = {promptChain.steps[i]}
+<StepBox
+    bind:step = {promptChain.steps[i]}
     bind:promptChain = {promptChain}
-    bind:promptChainPosition = {i}
+    bind:stepChainPosition = {i}
     bind:paramDict = {promptChain.parametersDict}
     bind:renderedPrompts = {renderedPrompts}
     bind:predictionStatus = {predictionStatus}

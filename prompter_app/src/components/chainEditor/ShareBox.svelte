@@ -1,6 +1,6 @@
 <script lang="ts">
 import { page } from "$app/stores";
-import type { PromptChain } from "$lib/prompts";
+import type { PromptChain } from "$lib/chains";
 import { faClone, faSave, faShare } from "@fortawesome/free-solid-svg-icons";
 import Fa from "svelte-fa";
 	import { Clock } from "svelte-loading-spinners";

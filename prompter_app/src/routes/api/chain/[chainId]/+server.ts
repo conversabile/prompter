@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 
-import { type PromptChain, PermissionDeniedError, isValidChain } from '$lib/prompts';
-import { saveChain } from '$lib/prompts';
+import { type PromptChain, PermissionDeniedError, isValidChain } from '$lib/chains';
+import { saveChain } from '$lib/chains';
 
 export const GET = (({ url }) => {
     const id = Number(url.searchParams.get('id') ?? '0');

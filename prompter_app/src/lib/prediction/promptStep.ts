@@ -1,4 +1,4 @@
-import type { PromptStep, PromptStepResult } from "$lib/prompts";
+import type { PromptStep } from "$lib/chains";
 import { PredictionService } from "$lib/services";
 import type { LocalUserSettings } from "$lib/userSettings";
 import OpenAI from "openai";

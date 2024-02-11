@@ -1,4 +1,4 @@
-import { StepType, type PromptChain, type PromptStep, parameterNameList } from "./prompts";
+import { StepType, type PromptChain, type PromptStep, parameterNameList } from "./chains";
 import { PredictionService, defaultPredictionSettings } from "./services";
 
 export function getDefaultChain(): PromptChain {
