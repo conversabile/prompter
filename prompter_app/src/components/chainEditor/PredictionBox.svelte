@@ -1,5 +1,5 @@
 <script lang="ts">
-import { parameterNameList, StepType, type PromptChain } from "$lib/chains";
+import { parameterNameList, StepType, type PromptChain, type PromptStep } from "$lib/chains";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
@@ -49,7 +49,7 @@ async function handlePredict() {
       predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
       try {
         const predictor = new PromptStepPredictor(
-          step,
+          step as PromptStep,
           renderedPrompts[step.resultKey],
           $userSettings,
           () => {promptChain = promptChain;}, // onPredictionStart

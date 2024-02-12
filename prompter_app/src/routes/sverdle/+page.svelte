@@ -205,7 +205,7 @@
 	}
 
 	.how-to-play {
-		color: var(--color-text);
+		color: var(--color-base-text);
 	}
 
 	.how-to-play::before {
@@ -217,7 +217,7 @@
 		height: 1em;
 		padding: 0.2em;
 		line-height: 1;
-		border: 1.5px solid var(--color-text);
+		border: 1.5px solid var(--color-base-text);
 		border-radius: 50%;
 		text-align: center;
 		margin: 0 0.5em 0 0;
@@ -251,7 +251,7 @@
 	}
 
 	.grid.playing .row.current {
-		filter: drop-shadow(3px 3px 10px var(--color-bg-0));
+		filter: drop-shadow(3px 3px 10px var(--color-base-bg));
 	}
 
 	.letter {
@@ -277,12 +277,12 @@
 	}
 
 	.letter.exact {
-		background: var(--color-bg-0);
+		background: var(--color-base-bg);
 		color: white;
 	}
 
 	.letter.close {
-		border: 2px solid var(--color-bg-0);
+		border: 2px solid var(--color-base-bg);
 	}
 
 	.selected {
@@ -324,7 +324,7 @@
 	}
 
 	.keyboard button.exact {
-		background: var(--color-bg-0);
+		background: var(--color-base-bg);
 		color: white;
 	}
 
@@ -333,7 +333,7 @@
 	}
 
 	.keyboard button.close {
-		border: 2px solid var(--color-bg-0);
+		border: 2px solid var(--color-base-bg);
 	}
 
 	.keyboard button:focus {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-  import { type PromptChain, areChainsEquivalent, piledParameterDict } from '$lib/chains';
+  import { type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/chains';
   import Fa from 'svelte-fa'
   import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 	import StepBox from './StepBox.svelte';
@@ -9,6 +9,7 @@
 	import type { StepRunStatus } from '$lib/prediction/chain';
 	import Button from '../Button.svelte';
 	import { addChainStep, getDefaultChain } from '$lib/chainEditor';
+	import AddStepPlaceholder from './AddStepPlaceholder.svelte';
 
   export let promptChain: PromptChain = getDefaultChain();
   $: promptChain.parametersDict = piledParameterDict(promptChain);
@@ -27,9 +28,31 @@
   let titleAsterisk: string;
   $: titleAsterisk = (userEditedChain) ? "* " : "";
 
-  let easeInSteps = promptChain.steps.map(() => {return false;});
+  let addFirstStep: boolean = false;
+  let addStepAfter: Set<string> = new Set();
   function handleAddStep(position: number) {
-    addChainStep(promptChain, position);
+    if (position == 0) {
+      addFirstStep = true;
+    } else {
+      addStepAfter.add(promptChain.steps[position-1].resultKey);
+      console.log(addStepAfter);
+    }
+    addStepAfter = addStepAfter;
+  }
+
+  function cancelAddStep(position: number) {
+    if (position == 0) {
+      addFirstStep = false;
+    } else {
+      addStepAfter.delete(promptChain.steps[position-1].resultKey);
+    }
+    addStepAfter = addStepAfter;
+  }
+
+  let easeInSteps = promptChain.steps.map(() => {return false;});
+  function saveNewStep(position: number, stepType: StepType) {
+    cancelAddStep(position);
+    addChainStep(promptChain, position, stepType);
     easeInSteps = promptChain.steps.map(() => {return false;});
     easeInSteps[position] = true;
     promptChain = promptChain;
@@ -41,9 +64,16 @@
 	<meta name="description" content="A web UI to edit and share LLM prompts" />
 </svelte:head>
 
+{#if addFirstStep}
+  <AddStepPlaceholder
+    handleCancel={() => {cancelAddStep(0)}}
+    handleConfirm={(stepType) => {saveNewStep(0, stepType);}}  
+  />
+{:else}
 <div class="addPromptContainer">
   <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {handleAddStep(0)}}/>
 </div>
+{/if}
 
 {#each [...promptChain.steps.keys()] as i}
 
@@ -58,9 +88,16 @@
     easeOut={false}
 />
 
-<div class="addPromptContainer">
-  <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {handleAddStep(i+1)}}/>
-</div>
+{#if addStepAfter.has(promptChain.steps[i].resultKey)}
+  <AddStepPlaceholder
+    handleCancel={() => {cancelAddStep(i+1);}}
+    handleConfirm={(stepType) => {saveNewStep(i+1, stepType);}}
+  />
+{:else}
+  <div class="addPromptContainer">
+    <Button icon={faPlus} title="Add step here" size="medium" style="A" onClick={() => {handleAddStep(i+1)}}/>
+  </div>
+{/if}
   
 {/each}
 
@@ -161,15 +198,15 @@
 
 :global(.addPromptContainer button.styleA) {
   border-radius: 5px;
-  border: 1px dashed var(--color-text);
+  border: 1px dashed var(--color-base-text);
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-base-text);
 }
 
 :global(.addPromptContainer:hover button) {
-  background: var(--color-text);
-  border: 1px solid var(--color-bg-0);
-  color: var(--color-bg-0);
+  background: var(--color-base-text);
+  border: 1px solid var(--color-base-bg);
+  color: var(--color-base-bg);
 }
 
 </style>

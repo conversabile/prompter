@@ -6,12 +6,12 @@
 	--column-width: 42rem;
 	--column-margin-top: 4rem;
 	font-family: var(--font-body);
-	color: var(--color-text);
+	color: var(--color-base-text);
 
     /* Default */
-    --color-bg-0: #4c5c96;
-	--color-text: #d3d3d3;
-	--color-text-highlight: #ffa700;
+    --color-base-bg: #4c5c96;
+	--color-base-text: #d3d3d3;
+	--color-base-text-highlight: #ffa700;
 	--color-bg-alphawhite: rgba(255, 255, 255, 0.5);
 	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
 	--color-A-bg: #ffa700; 
@@ -23,9 +23,9 @@
     --color-B-text-highlight: white;
 
     /* Sand */
-    /* --color-bg-0: #e8e8e8;
-	--color-text: rgba(0, 0, 0, 0.7);
-	--color-text-highlight: black;
+    /* --color-base-bg: #e8e8e8;
+	--color-base-text: rgba(0, 0, 0, 0.7);
+	--color-base-text-highlight: black;
 	--color-bg-alphawhite: rgba(255, 255, 255, 0.5);
 	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
 	--color-A-bg: #c1baac;

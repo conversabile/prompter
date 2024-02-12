@@ -4,7 +4,7 @@ body {
 	min-height: 100vh;
 	margin: 0;
 	background-attachment: fixed;
-	background-color: var(--color-bg-0);
+	background-color: var(--color-base-bg);
 }
 
 h1,
@@ -18,7 +18,7 @@ p {
 }
 
 a {
-	color: var(--color-text-highlight);
+	color: var(--color-base-text-highlight);
 	text-decoration: none;
 }
 
@@ -43,7 +43,7 @@ pre {
 	box-shadow: 2px 2px 6px rgb(255 255 255 / 25%);
 	padding: 0.5em;
 	overflow-x: auto;
-	color: var(--color-text);
+	color: var(--color-base-text);
 }
 
 .text-column {

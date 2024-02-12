@@ -23,13 +23,14 @@ function assert(value: unknown) {
 
 export enum StepType {
   prompt = "prompt",
+  documentIndex = "documentIndex",
   rest = "rest"
 }
 
 export interface PromptChain {
   version: number;
   title: string;
-  steps: PromptStep[];
+  steps: Step[];
   parametersDict: Record<string, string>;
 }
 
@@ -229,9 +230,14 @@ export function isValidParamName(s: string) : boolean {
  * @param prompt A Prompt step in a Chain
  * @returns The list of parameter names that are matched in the prompt template message
  */
-export function promptParameterNameList(prompt: PromptStep) : Array<string> {
+export function stepParameterNameList(step: Step) : Array<string> {
   let result: string[] = [];
 
+  if (step.stepType != StepType.prompt) {
+    throw Error("Unsupported step type");
+  }
+
+  let prompt: PromptStep = step as PromptStep;
   let matchedParams = prompt.promptText.matchAll(paramParseRegex);
   if (matchedParams) {
     let newParamList = [];
@@ -259,7 +265,7 @@ export function parameterNameList(promptChain: PromptChain, includeResultKeys = 
   let result: string[] = [];
   const resultKeys: Set<string> = new Set(promptChain.steps.map(step => {return step.resultKey}));
   promptChain.steps.forEach(step => {
-    promptParameterNameList(step).forEach(paramName => {
+    stepParameterNameList(step).forEach(paramName => {
       if (includeResultKeys || ! resultKeys.has(paramName)) result.push(paramName);
     })
   });
@@ -271,7 +277,7 @@ export function parameterDict(promptChain: PromptChain) : Record<string, string>
   let result: Record<string, string> = {};
 
   promptChain.steps.forEach(step => {
-    const paramList = promptParameterNameList(step);
+    const paramList = stepParameterNameList(step);
     paramList.forEach((paramName) => {
       result[paramName] = promptChain.parametersDict[paramName] ?? '';
     });
@@ -284,7 +290,7 @@ export function piledParameterDict(promptChain: PromptChain) : Record<string, st
   let result: Record<string, string> = promptChain.parametersDict;
 
   promptChain.steps.forEach(step => {
-    const paramList = promptParameterNameList(step);
+    const paramList = stepParameterNameList(step);
     paramList.forEach((paramName) => {
       result[paramName] = promptChain.parametersDict[paramName] ?? '';
     });
@@ -300,21 +306,28 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
   if (! isEqual(parameterDict(aChain), parameterDict(anotherChain))) return false;
 
   for (let i = 0; i < aChain.steps.length; i++) {
-    const aPrompt: PromptStep = aChain.steps[i];
-    const anotherPrompt: PromptStep = anotherChain.steps[i];
-    if (aPrompt.stepType != StepType.prompt) throw Error("Not implemented");
-    if (aPrompt.stepType != anotherPrompt.stepType) return false;
+    const aStep: Step = aChain.steps[i];
+    const anotherStep: Step = anotherChain.steps[i];
+    if (aStep.stepType != anotherStep.stepType) return false;
 
-    // console.log(aPrompt, anotherPrompt);
-    if (aPrompt.title != anotherPrompt.title) return false;
-    if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
-    if (aPrompt.promptText != anotherPrompt.promptText) return false;
-    if (aPrompt.minimized != anotherPrompt.minimized) return false;
-    if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
-    if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
-    if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
+    if (aStep.stepType == StepType.prompt) {
+      if (! arePromptsEquivalent(aStep as PromptStep, anotherStep as PromptStep)) return false;
+    } else {
+      throw Error("Unsupported step type");
+    }
   }
   
 
+  return true;
+}
+
+function arePromptsEquivalent(aPrompt: PromptStep, anotherPrompt: PromptStep) : boolean {
+  if (aPrompt.title != anotherPrompt.title) return false;
+  if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
+  if (aPrompt.promptText != anotherPrompt.promptText) return false;
+  if (aPrompt.minimized != anotherPrompt.minimized) return false;
+  if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
+  if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
+  if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
   return true;
 }
