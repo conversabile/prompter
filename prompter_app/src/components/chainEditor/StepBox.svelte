@@ -15,6 +15,7 @@
 
   let promptStep: PromptStep | null;
   $: promptStep = (step.stepType == StepType.prompt) ? (step as PromptStep) : null;
+  $: restStep = (step.stepType == StepType.rest) ? (step as RestStep) : null;
 
   let thisComponent = get_current_component();
   let stepConfigurationMenuOpen: boolean;
@@ -24,12 +25,15 @@
   const easeInOutTime: number = 200; // (ms) ! Has to match CSS !
 
 	import Fa from 'svelte-fa';
-	import { faCircleExclamation, faGear, faRobot, faWarning} from '@fortawesome/free-solid-svg-icons';
+	import { faCircleExclamation, faGear, faPlug, faRobot, faWarning} from '@fortawesome/free-solid-svg-icons';
 	import { get_current_component } from 'svelte/internal';
 	import { deleteChainStep } from '$lib/chainEditor';
-	import { StepType, type PromptChain, type PromptStep, type Step } from '$lib/chains';
+	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep, stepParameterNameList } from '$lib/chains/chains';
 	import type { StepRunStatus } from '$lib/prediction/chain';
-	import StepBoxPrompt from './StepBoxPrompt.svelte';
+	import PromptContent from './steps/PromptContent.svelte';
+	import PromptConfiguration from './steps/PromptConfiguration.svelte';
+	import RestConfiguration from './steps/RestConfiguration.svelte';
+	import RestContent from './steps/RestContent.svelte';
   
   export function handleDeleteStep() {
     easeOut = true;               // Prompt box slides away
@@ -54,16 +58,39 @@
     bind:stepConfigurationMenuOpen
     bind:predictionStatus
     parentStepBox={thisComponent}
-  />
+  >
+    <!-- Configuration Menu (should be conditional, but https://github.com/sveltejs/svelte/pull/8304) -->
+    <svelte:fragment slot="configurationMenu">
+      {#if promptStep}
+        <PromptConfiguration
+          bind:service={promptStep.predictionService}
+          bind:settings={promptStep.predictionSettings}
+        />
+      {:else if restStep}
+        <RestConfiguration />
+      {/if}
+    </svelte:fragment>
+    
+    <!-- <PromptConfiguration
+        bind:open={stepConfigurationMenuOpen}
+        bind:service={promptStep.predictionService}
+        bind:settings={promptStep.predictionSettings}
+        slot="configurationMenu"
+      /> -->
+  </StepBoxHeader>
 
   <div class="stepContent">
     {#if (promptStep)}
-      <StepBoxPrompt
+      <PromptContent
         bind:prompt={promptStep}
         bind:promptChain
         bind:paramDict
         bind:predictionStatus
         bind:renderedPrompts
+      />
+    {:else if (restStep)}
+      <RestContent 
+        bind:restStep
       />
     {/if}
   </div>
@@ -74,6 +101,10 @@
       <div class="stepResult">
         <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{step.resultKey}</span> {#if promptStep.results[0].renderedPrompt != renderedPrompts[step.resultKey]} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
       </div>
+    {:else if step && step.results}
+    <div class="stepResult">
+      <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey">{step.resultKey}</span> <p>{step.results[0].resultRaw}</p>
+    </div>
     {/if}
 
     {#if predictionStatus[step.resultKey] && predictionStatus[step.resultKey].error}

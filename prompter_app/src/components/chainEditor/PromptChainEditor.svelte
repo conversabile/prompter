@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-  import { type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/chains';
+  import { type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/chains/chains';
   import Fa from 'svelte-fa'
   import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 	import StepBox from './StepBox.svelte';
@@ -35,7 +35,6 @@
       addFirstStep = true;
     } else {
       addStepAfter.add(promptChain.steps[position-1].resultKey);
-      console.log(addStepAfter);
     }
     addStepAfter = addStepAfter;
   }

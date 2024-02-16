@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type { PromptChain, PromptStep, StepResult } from "$lib/chains";
+    import type { PromptChain, PromptStep, StepResult } from "$lib/chains/chains";
     import type { StepRunStatus } from "$lib/prediction/chain";
-    import { renderPrompt, type ComponentAndProps } from "$lib/prompts";
+    import { renderPrompt, type ComponentAndProps } from "$lib/chains/prompts";
     import { faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
     import '$lib/codemirror5/codemirror.css';
     import type { Editor } from "codemirror";

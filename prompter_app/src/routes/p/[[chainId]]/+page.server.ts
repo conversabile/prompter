@@ -1,5 +1,5 @@
-import type { PromptChain } from '$lib/chains';
-import { ChainNotFoundError, loadChain } from '$lib/chains';
+import type { PromptChain } from '$lib/chains/chains';
+import { ChainNotFoundError, loadChain } from '$lib/chains/chains';
 import { error, type ServerLoadEvent } from '@sveltejs/kit';
 
 export function load({ url, params }: ServerLoadEvent) {

@@ -2,8 +2,9 @@ import fs from 'fs';
 import util from 'util';
 
 import { convert } from 'html-to-text';
-import { defaultPredictionSettings, PredictionService, type PredictionSettings } from './services';
-import { isEqual } from './util';
+import { defaultPredictionSettings, PredictionService, type PredictionSettings } from '../services';
+import { isEqual } from '../util';
+import { faBook, faPlug, faRobot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 export const promptSchemaVersion: number = 5; /* 5: prompts -> steps */
                                               /* 4: camelCase; add predictionService, predictionSettings */
@@ -58,6 +59,50 @@ export interface PromptStepResult extends StepResult {
   renderedPrompt: string,
   model: string
 }
+
+export enum RestStepMethods {
+  GET = "GET",
+  POST = "POST",
+  PUT = "PUT",
+  PATCH = "PATCH",
+  DELETE = "DELETE",
+  HEAD = "HEAD",
+  OPTIONS = "OPTIONS",
+}
+
+export interface RestStepHeader {
+  key: string,
+  value: string,
+  disabled: boolean
+}
+
+export interface RestStep extends Step {
+  method: RestStepMethods,
+  url: string,
+  header: RestStepHeader[],
+  body: string | null,
+}
+
+interface StepTypeData {
+  label: string,
+  icon: IconDefinition
+}
+
+export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {
+  [StepType.prompt]: {
+      label: "Prompt",
+      icon: faRobot,
+  },
+  [StepType.rest]: {
+      label: "API Call (beta)",
+      icon: faPlug,
+  },
+  [StepType.documentIndex]: {
+      label: "Document Index",
+      icon: faBook,
+  }
+};
+
 
 /*
  * Input/Output
@@ -233,21 +278,33 @@ export function isValidParamName(s: string) : boolean {
 export function stepParameterNameList(step: Step) : Array<string> {
   let result: string[] = [];
 
-  if (step.stepType != StepType.prompt) {
+  let fieldsToMatch: string[] = [];
+  if (step.stepType == StepType.prompt) {
+    fieldsToMatch = [(step as PromptStep).promptText]
+  } else if (step.stepType == StepType.rest) {
+    const restStep = (step as RestStep);
+    fieldsToMatch = [
+      restStep.url,
+    ];
+    if (restStep.body) fieldsToMatch.push(restStep.body);
+    restStep.header.forEach((h) => {fieldsToMatch.push(h.value)});
+  } else {
     throw Error("Unsupported step type");
   }
 
-  let prompt: PromptStep = step as PromptStep;
-  let matchedParams = prompt.promptText.matchAll(paramParseRegex);
-  if (matchedParams) {
-    let newParamList = [];
-    for (let param of matchedParams) {
-      let paramName = param[1];
-      // if (paramDict[paramName] == undefined) { paramDict[paramName] = ""; }
-      newParamList.push(paramName);
+  let newParamList: string[] = [];
+  fieldsToMatch.forEach((s: string) => {
+    let matchedParams = s.matchAll(paramParseRegex);
+    if (matchedParams) {
+      for (let param of matchedParams) {
+        let paramName = param[1];
+        // if (paramDict[paramName] == undefined) { paramDict[paramName] = ""; }
+        newParamList.push(paramName);
+      }
     }
-    result = Array.from(new Set(newParamList));
-  }
+  });
+  
+  result = Array.from(new Set(newParamList));
 
   return result;
 }
@@ -309,9 +366,15 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
     const aStep: Step = aChain.steps[i];
     const anotherStep: Step = anotherChain.steps[i];
     if (aStep.stepType != anotherStep.stepType) return false;
+    if (aStep.title != anotherStep.title) return false;
+    if (aStep.resultKey != anotherStep.resultKey) return false;
+    if (aStep.minimized != anotherStep.minimized) return false;
+    if (! isEqual(aStep.results, anotherStep.results)) return false;
 
     if (aStep.stepType == StepType.prompt) {
       if (! arePromptsEquivalent(aStep as PromptStep, anotherStep as PromptStep)) return false;
+    } else if (aStep.stepType == StepType.rest) {
+      if (! areRestStepsEquivalent(aStep as RestStep, anotherStep as RestStep)) return false;
     } else {
       throw Error("Unsupported step type");
     }
@@ -322,12 +385,16 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
 }
 
 function arePromptsEquivalent(aPrompt: PromptStep, anotherPrompt: PromptStep) : boolean {
-  if (aPrompt.title != anotherPrompt.title) return false;
-  if (aPrompt.resultKey != anotherPrompt.resultKey) return false;
   if (aPrompt.promptText != anotherPrompt.promptText) return false;
-  if (aPrompt.minimized != anotherPrompt.minimized) return false;
   if (aPrompt.predictionService != anotherPrompt.predictionService) return false;
   if (! isEqual(aPrompt.predictionSettings, anotherPrompt.predictionSettings)) return false;
-  if (! isEqual(aPrompt.results, anotherPrompt.results)) return false;
+  return true;
+}
+
+function areRestStepsEquivalent(aRestStep: RestStep, anotherRestStep: RestStep) : boolean {
+  if (aRestStep.method != anotherRestStep.method) return false;
+  if (aRestStep.url != anotherRestStep.url) return false;
+  if (! isEqual(aRestStep.header, anotherRestStep.header)) return false;
+  if (aRestStep.body != anotherRestStep.body) return false;
   return true;
 }

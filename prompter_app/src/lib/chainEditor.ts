@@ -1,6 +1,6 @@
-import { StepType, type PromptChain, type PromptStep, parameterNameList, type Step } from "./chains";
-import { getDefaultPrompt, getExamplePrompt } from "./prompts";
-import { PredictionService, defaultPredictionSettings } from "./services";
+import { StepType, type PromptChain, type PromptStep, parameterNameList, type Step } from "./chains/chains";
+import { getDefaultPrompt, getExamplePrompt } from "./chains/prompts";
+import { getExampleRestStep } from "./chains/rest";
 
 export function getDefaultChain(): PromptChain {
     return {
@@ -17,6 +17,8 @@ export function addChainStep(promptChain: PromptChain, position: number, stepTyp
     let newStep: Step;
     if (stepType == StepType.prompt) {
         newStep = getExamplePrompt(promptChain, position);
+    } else if (stepType == StepType.rest) {
+        newStep = getExampleRestStep(promptChain, position);
     } else {
         throw Error("Unsupported step type: " + stepType);
     }

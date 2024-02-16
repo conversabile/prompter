@@ -1,5 +1,5 @@
 <script lang="ts">
-import { parameterNameList, StepType, type PromptChain, type PromptStep } from "$lib/chains";
+import { parameterNameList, StepType, type PromptChain, type PromptStep, type RestStep } from "$lib/chains/chains";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
@@ -22,6 +22,7 @@ import { Clock } from "svelte-loading-spinners";
 import { userSettings } from "$lib/userSettings";
 import { RunStatus, errorStatus, type StepRunStatus } from "$lib/prediction/chain";
 import { PromptStepPredictor, type LLMStreamedTokenData } from "$lib/prediction/promptStep";
+	import { runRestStep } from "$lib/chains/rest";
 
 let chainParameters: string[];
 $: chainParameters = parameterNameList(promptChain);
@@ -42,12 +43,14 @@ async function handlePredict() {
 
   let stepRunError = null;
   for (let step of promptChain.steps) {
-    if (stepRunError) {
-      predictionStatus[step.resultKey] = {status: RunStatus.skipped, error: null};
-    } else if (step.stepType == StepType.prompt) {
-      console.log("Predicting ", step.resultKey);
-      predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
-      try {
+    console.log("Predicting ", step.resultKey);
+    predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
+    
+    try {
+      if (stepRunError) {
+        predictionStatus[step.resultKey] = {status: RunStatus.skipped, error: null};
+
+      } else if (step.stepType == StepType.prompt) {
         const predictor = new PromptStepPredictor(
           step as PromptStep,
           renderedPrompts[step.resultKey],
@@ -56,16 +59,21 @@ async function handlePredict() {
           (data: LLMStreamedTokenData) => {promptChain = promptChain;}  // onStreamedToken
         )
         await predictor.predict();
-      } catch(err: any) {
-        stepRunError = err
-      }
-      if (stepRunError) {
-        predictionStatus[step.resultKey] = errorStatus(stepRunError);
+        
+      } else if (step.stepType == StepType.rest) {
+        await runRestStep(step as RestStep);
+        promptChain = promptChain;
+        
       } else {
-        predictionStatus[step.resultKey] = {status: RunStatus.success, error: null};
+        throw Error("Not implemented");
       }
+    } catch(err: any) {
+      stepRunError = err
+    }
+    if (stepRunError) {
+      predictionStatus[step.resultKey] = errorStatus(stepRunError);
     } else {
-      throw Error("Not implemented");
+      predictionStatus[step.resultKey] = {status: RunStatus.success, error: null};
     }
   }
 

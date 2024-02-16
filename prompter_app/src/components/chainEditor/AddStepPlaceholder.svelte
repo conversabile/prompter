@@ -1,32 +1,16 @@
 <script lang="ts">
 	import { faBook, faCommentDots, faFilePdf, faPlug, faRoad, faRobot } from "@fortawesome/free-solid-svg-icons";
 	import Button from "../Button.svelte";
-	import { StepType } from "$lib/chains";
+	import { STEP_TYPE_DATA, StepType } from "$lib/chains/chains";
 
     export let handleCancel: () => void;
     export let handleConfirm: (stepType: StepType) => void;
 
-    const STEP_TYPES = [
-        {
-            stepType: StepType.prompt,
-            label: "Prompt",
-            icon: faRobot,
-        },
-        // {
-        //     stepType: StepType.rest,
-        //     label: "API Call",
-        //     icon: faPlug,
-        // },
-        // {
-        //     stepType: StepType.documentIndex,
-        //     label: "Document Index",
-        //     icon: faBook,
-        // }
-    ];
-
-    const STEP_DESCRIPTIONS: Record<string, string> = {
-        prompt: "<strong>Prompt</strong> steps run natural language instructions on Large Language Models such as <strong>GPT</strong> or LLaMA. Other step results will be available as variables in your prompt using the powerful Jinja2 templating syntax, and you will also be able to add new variables that will be the parameters of your Link. <strong>Example</strong>: <em>Write a short story about {{ storyTopic }}</em>",
-        rest: "<strong>API Call</strong> steps will run a request to a <strong>REST endpoint</strong>, and make the response available to other steps. <strong>Example</strong>: you can query the <a href='https://metmuseum.github.io/' target='_blank'>Metropolitan Museum API</a>, and then add a Prompt to answer questions on one of the museum's paintings."
+    const STEP_TYPES = [StepType.prompt, StepType.rest, /*StepType.documentIndex*/];
+    const STEP_DESCRIPTIONS: Record<StepType, string> = {
+        [StepType.prompt]: "<strong>Prompt</strong> steps run natural language instructions on Large Language Models such as <strong>GPT</strong> or LLaMA. Just like ChatGPT, your prompts will produce a free-text answer, but you can also ask to generate JSON or code. <strong>Example</strong>: <em>Write a short story about {{ storyTopic }}</em>",
+        [StepType.rest]: "<strong>API Call</strong> steps will run a request to a <strong>REST endpoint</strong>, and make the response available to other steps. <strong>Example</strong>: you can query the <a href='https://metmuseum.github.io/' target='_blank'>Metropolitan Museum API</a>, and then add a Prompt to answer questions on one of the museum's paintings.",
+        [StepType.documentIndex]: "tbd"
     };
 
     let selectedStepType: StepType | null = null;
@@ -37,11 +21,11 @@
 
         {#each STEP_TYPES as stepType}
             <Button
-                icon={stepType.icon}
-                label={stepType.label}
+                icon={STEP_TYPE_DATA[stepType].icon}
+                label={STEP_TYPE_DATA[stepType].label}
                 style="base"
-                highlight={selectedStepType==stepType.stepType}
-                onClick={() => {selectedStepType = stepType.stepType}}
+                highlight={selectedStepType==stepType}
+                onClick={() => {selectedStepType = stepType}}
             />&nbsp;
         {/each}
         {#if selectedStepType}
@@ -49,10 +33,12 @@
         {/if}
     </div>
 
-    <footer>
-        <Button label="Cancel" style="base" rounded onClick={handleCancel} />
-        <Button label="Add" style="base" highlight={selectedStepType != null} rounded onClick={() => {if (selectedStepType) handleConfirm(selectedStepType)}} />
-    </footer>
+    {#if selectedStepType}
+        <footer>
+            <Button label="Cancel" style="base" rounded onClick={handleCancel} />
+            <Button label="Add" style="base" highlight rounded onClick={() => {if (selectedStepType) handleConfirm(selectedStepType)}} />
+        </footer>
+    {/if}
 </div>
 
 <style>

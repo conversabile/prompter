@@ -36,3 +36,8 @@
     --color-B-text-standard: #DDD;
     --color-B-text-highlight: white;     */
 }
+
+input {
+	border: 1px solid;
+	/* padding: 0 .5em; */
+}

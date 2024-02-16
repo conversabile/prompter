@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
     import { env } from '$env/dynamic/public';
+	import { STEP_TYPE_DATA, StepType } from '$lib/chains/chains';
 	import { PredictionService, LLM_SERVICE_NAMES, OPENAI_MODELS, type PredictionSettings, ENABLED_SERVICES } from "$lib/services";
 	import { readLocalSettingsDict, setLocalSettings, userSettings } from '$lib/userSettings';
 
-    export let open: boolean = false;
     export let service: PredictionService;
     export let settings: PredictionSettings;
 
@@ -40,12 +40,7 @@
     }
 </script>
 
-{#if open}
-
-<div class="modal" on:click={() => {open = false;}}></div>
-
-<div class="llmServiceMenu">
-    <h2>Prompt configuration</h2>
+    <h2>{STEP_TYPE_DATA[StepType.rest].label} configuration</h2>
 
     <table>
         <tr>
@@ -124,40 +119,9 @@
             </tr>
         {/if}
     </table>
-    
-</div>
 
-{/if}
 
 <style>
-
-.modal {
-    /* background-color: black; */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* backdrop-filter: blur(1px); */
-    z-index: 1;
-}
-
-.llmServiceMenu {
-    position: absolute;
-    background: var(--color-B-bg);
-    color: var(--color-B-text-standard);
-    padding: 1em;
-    max-width: 30rem;
-    border: 1px solid #ffffff36;
-    border-top: 0;
-    margin-left: -2px;
-    z-index: 2;
-}
-
-.llmServiceMenu a {
-    color: var(--color-B-text-highlight);
-    text-decoration: underline;
-}
 
 h2 {
     font-size: 0.8em;
@@ -202,5 +166,10 @@ th {
 
 .persistSettingsSelector input[type=checkbox] {
     margin: 0 .5em 0 0;
+}
+
+a {
+    color: var(--color-B-text-highlight);
+    text-decoration: underline;
 }
 </style>

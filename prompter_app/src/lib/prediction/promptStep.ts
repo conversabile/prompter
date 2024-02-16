@@ -1,4 +1,4 @@
-import type { PromptStep } from "$lib/chains";
+import type { PromptStep } from "$lib/chains/chains";
 import { PredictionService } from "$lib/services";
 import type { LocalUserSettings } from "$lib/userSettings";
 import OpenAI from "openai";
@@ -80,10 +80,10 @@ export class PromptStepPredictor {
         // Init prediction object
         if (! this.prompt.results) {
             this.prompt.results = [{
-            "datetime": new Date(),
-            "renderedPrompt":  this.renderedPrompt,
-            "resultRaw": "",
-            "model": "openai-" + this.prompt.predictionSettings.openai.modelName
+            datetime: new Date(),
+            renderedPrompt:  this.renderedPrompt,
+            resultRaw: "",
+            model: "openai-" + this.prompt.predictionSettings.openai.modelName
             }]
         }
     

@@ -1,10 +1,10 @@
 import type { ComponentEvents, ComponentType, SvelteComponent } from "svelte";
-import PromptBoxRenderedPromptSpinner from "../components/chainEditor/PromptBoxRenderedPromptSpinner.svelte";
+import PromptBoxRenderedPromptSpinner from "../../components/chainEditor/PromptBoxRenderedPromptSpinner.svelte";
 import { StepType, type PromptStep, type StepResult, type PromptChain, parameterNameList } from "./chains";
-import { RunStatus, type StepRunStatus } from "./prediction/chain";
-import { escapeHtml } from "./util";
+import { RunStatus, type StepRunStatus } from "../prediction/chain";
+import { escapeHtml } from "../util";
 import nunjucks from 'nunjucks';
-import { PredictionService, defaultPredictionSettings } from "./services";
+import { PredictionService, defaultPredictionSettings } from "../services";
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 

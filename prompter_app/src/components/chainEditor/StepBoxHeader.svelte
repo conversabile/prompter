@@ -1,11 +1,10 @@
 <script lang="ts">
   import { moveChainStep } from '$lib/chainEditor';
-  import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step } from '$lib/chains';
+  import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step, STEP_TYPE_DATA } from '$lib/chains/chains';
   import { RunStatus, type StepRunStatus } from '$lib/prediction/chain';
   import { LLM_SERVICE_NAMES } from '$lib/services';
   import { faAngleDown, faAngleUp, faArrowDown, faArrowUp, faCircleExclamation, faDownLeftAndUpRightToCenter, faHourglass, faKey, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
-	import StepBoxPromptMenu from './StepBoxPromptMenu.svelte';
 
   export let step: Step;
   export let promptChain: PromptChain;
@@ -17,7 +16,8 @@
   let promptStep: PromptStep | null = null;
   $: promptStep = (step.stepType == StepType.prompt) ? (step as PromptStep) : null;
 
-  let stepIcon: IconDefinition = faRobot;
+  let stepIcon: IconDefinition
+  $: stepIcon = STEP_TYPE_DATA[step.stepType].icon;
   let stepIconSpin: boolean = false;
   $: if (predictionStatus[step.resultKey]) {
     let status = predictionStatus[step.resultKey].status;
@@ -32,6 +32,8 @@
   
   $: if (promptStep) {
     stepConfigurationLabel = LLM_SERVICE_NAMES[promptStep.predictionService] + " (" + promptStep.predictionSettings[promptStep.predictionService].modelName + ")";
+  } else {
+    stepConfigurationLabel = STEP_TYPE_DATA[step.stepType].label;
   }
 
   /**
@@ -108,15 +110,14 @@
     </div>
   </header>
 
-  {#if promptStep}
-    <StepBoxPromptMenu
-      bind:open={stepConfigurationMenuOpen}
-      bind:service={promptStep.predictionService}
-      bind:settings={promptStep.predictionSettings}
-    />
+  {#if stepConfigurationMenuOpen}
+    <div class="modal" on:click={() => {stepConfigurationMenuOpen = false;}}></div>
+
+    <div class="configurationMenu">
+      <slot name="configurationMenu" />
+    </div>
   {/if}
   
-
 <style>
 
 header {
@@ -241,5 +242,30 @@ header .stepActions button {
 
 header .stepActions button:hover {
   color: black;
+}
+
+/* Configuration menu */
+
+.modal {
+    /* background-color: black; */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* backdrop-filter: blur(1px); */
+    z-index: 1;
+}
+
+.configurationMenu {
+    position: absolute;
+    background: var(--color-B-bg);
+    color: var(--color-B-text-standard);
+    padding: 1em;
+    max-width: 30rem;
+    border: 1px solid #ffffff36;
+    border-top: 0;
+    margin-left: -2px;
+    z-index: 2;
 }
 </style>
