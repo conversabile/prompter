@@ -1,6 +1,6 @@
-import type { ComponentEvents, ComponentType, SvelteComponent } from "svelte";
+import type { ComponentType } from "svelte";
 import PromptBoxRenderedPromptSpinner from "../../components/chainEditor/PromptBoxRenderedPromptSpinner.svelte";
-import { StepType, type PromptStep, type StepResult, type PromptChain, parameterNameList } from "./chains";
+import { StepType, type PromptStep, type StepResult, type PromptChain } from "./chains";
 import { RunStatus, type StepRunStatus } from "../prediction/chain";
 import { escapeHtml } from "../util";
 import nunjucks from 'nunjucks';
@@ -8,12 +8,12 @@ import { PredictionService, defaultPredictionSettings } from "../services";
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
-export function getDefaultPrompt(): PromptStep {
+export function getDefaultPrompt(resultKey: string): PromptStep {
   return {
       stepType: StepType.prompt,
       promptText: "{# This is an example prompt: replace it with your own! #}\n\nTell me a short (less than {{ maxWords }} words) story about {{ storyTopic }}.\n\n{% if anotherTopic %}\nAnd another one about {{ anotherTopic | upper }}!!!\n{% endif %}",
       title:  "Untitled Prompt",
-      resultKey: "result_0",
+      resultKey: resultKey,
       results: null,
       minimized: false,
       predictionService: PredictionService.openai,
@@ -21,17 +21,8 @@ export function getDefaultPrompt(): PromptStep {
   }
 }
 
-export function getExamplePrompt(promptChain: PromptChain, position: number): PromptStep {
-  let result = getDefaultPrompt();
-  let i = 0;
-  let resultKey = null;
-  const existingParamNames = new Set(parameterNameList(promptChain, true));
-  while (! resultKey) {
-      let candidateKey = "result_" + i;
-      if (! existingParamNames.has(candidateKey)) resultKey = candidateKey;
-      i++;
-  }
-  result.resultKey = resultKey;
+export function getExamplePrompt(resultKey: string, promptChain: PromptChain, position: number): PromptStep {
+  let result = getDefaultPrompt(resultKey);
 
   // Customise example based on the new prompt position
   if (position == 0) result.promptText = "{# This is an example additional step: try using its result key as a variable in the next ones! #}\n\nProduce a JSON object describing the properties of a character in a story about {{ storyTopic }}"
@@ -89,7 +80,7 @@ export function renderPrompt(
         resultValue = "";
         resultSpinner = spinnerTag;
         } else {
-        resultValue = (previousResults[matchedParamName]) ? match : '-';
+        resultValue = (previousResults[matchedParamName]) ? match : ' - ';
         }
         return '<span class="previousResult">' +
                 '<span class="resultKey">🔑 '+matchedParamName+'</span>' +

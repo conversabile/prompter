@@ -102,10 +102,7 @@
       }} title="Move down"><Fa icon={faArrowDown} /></button>{/if}
       {#if (promptChain.steps.length > 1)}
       <button on:click={parentStepBox.handleDeleteStep} title="Delete step"><Fa icon={faTrashCan} /></button>{/if}
-      <button on:click={() => {
-        step.minimized = ! step.minimized;
-        if (! step.minimized) setTimeout(parentStepBox.initializeCodeMirror, 50);
-      }}><Fa icon={step.minimized ? faUpRightAndDownLeftFromCenter : faDownLeftAndUpRightToCenter} />
+      <button on:click={() => {step.minimized = ! step.minimized}}><Fa icon={step.minimized ? faUpRightAndDownLeftFromCenter : faDownLeftAndUpRightToCenter} />
       </button>
     </div>
   </header>

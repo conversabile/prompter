@@ -1,10 +1,12 @@
 import { StepType, type RestStep, RestStepMethods, type PromptChain } from "./chains";
 
-export function getDefaultRestStep() : RestStep {
+export const METHODS_WITHOUT_BODY = new Set([RestStepMethods.HEAD, RestStepMethods.GET]);
+
+export function getDefaultRestStep(resultKey: string) : RestStep {
     return {
       stepType: StepType.rest,
       title:  "Untitled Step",
-      resultKey: "result_0",
+      resultKey: resultKey,
       results: null,
       minimized: false,
 
@@ -15,8 +17,8 @@ export function getDefaultRestStep() : RestStep {
     }
 }
 
-export function getExampleRestStep(promptChain: PromptChain, position: number) : RestStep {
-    return getDefaultRestStep();
+export function getExampleRestStep(resultKey: string, promptChain: PromptChain, position: number) : RestStep {
+    return getDefaultRestStep(resultKey);
 }
 
 function headersDict(restStep: RestStep) : Record<string, string> {

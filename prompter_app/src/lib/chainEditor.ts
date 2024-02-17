@@ -8,17 +8,30 @@ export function getDefaultChain(): PromptChain {
         title: "Untitled Chain",
         parametersDict: {storyTopic: "time travelling", maxWords: "50"},
         steps: [
-            getDefaultPrompt(),
+            getDefaultPrompt("result_0"),
         ]
     }
 }
 
+export function getNewResultKey(promptChain: PromptChain) : string {
+    let i = 0;
+    let result = null;
+    const existingParamNames = new Set(parameterNameList(promptChain, true));
+    while (! result) {
+        let candidateKey = "result_" + i;
+        if (! existingParamNames.has(candidateKey)) result = candidateKey;
+        i++;
+    }
+    return result;
+}
+
 export function addChainStep(promptChain: PromptChain, position: number, stepType: StepType) : void {
     let newStep: Step;
+    let newStepResultKey = getNewResultKey(promptChain);
     if (stepType == StepType.prompt) {
-        newStep = getExamplePrompt(promptChain, position);
+        newStep = getExamplePrompt(newStepResultKey, promptChain, position);
     } else if (stepType == StepType.rest) {
-        newStep = getExampleRestStep(promptChain, position);
+        newStep = getExampleRestStep(newStepResultKey, promptChain, position);
     } else {
         throw Error("Unsupported step type: " + stepType);
     }

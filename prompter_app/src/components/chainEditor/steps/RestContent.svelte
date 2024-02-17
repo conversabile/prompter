@@ -2,7 +2,8 @@
 	import { type RestStep, RestStepMethods } from "$lib/chains/chains";
 	import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 	import Button from "../../Button.svelte";
-	import { removeHeader } from "$lib/chains/rest";
+	import { METHODS_WITHOUT_BODY, removeHeader } from "$lib/chains/rest";
+	import CodeMirrorTextarea from "../../CodeMirrorTextarea.svelte";
 
     export let restStep: RestStep;
 
@@ -38,7 +39,10 @@
                 <option value={method}>{method}</option>            
             {/each}
         </select>
-        <input type="text" class="reqUrl" bind:value={restStep.url}>
+        <!-- <input type="text" class="reqUrl" bind:value={restStep.url}> -->
+        <div class="reqUrl">
+            <CodeMirrorTextarea bind:value={restStep.url} defaultStyle="width: 100%; height:1.5em; padding:0.2em" />
+        </div>
     </div>
 
     <h2>Headers</h2>
@@ -49,7 +53,7 @@
                 <Button icon={faMinus} size="small" onClick={() => handleRemoveHeader(header.key)} />
             </div>
         {/each}
-        <form class="row" on:submit|preventDefault={() => {console.log("mimmo"); handleAddHeader();}}>
+        <form class="row" on:submit|preventDefault={() => {handleAddHeader();}}>
             <input type="text" bind:value={newHeaderKey} bind:this={newHeaderKeyElement}>
             <input type="text" bind:value={newHeaderValue}>
             <input type="submit" style="display: none">
@@ -57,8 +61,13 @@
         </form>
     </div>
 
-    <h2>Body</h2>
-    <textarea class="reqBody" bind:value={restStep.body}></textarea>
+    {#if ! METHODS_WITHOUT_BODY.has(restStep.method)}
+        <h2>Body</h2>
+        <div class="reqBody">
+            <CodeMirrorTextarea bind:value={restStep.body} defaultStyle="width: 100%; height:100px; padding:0.5em" />
+        </div>
+    {/if}
+
 </div>
 
 <style>
@@ -83,9 +92,14 @@ h2 {
 .reqUrl {
     flex-grow: 1;
     margin-left: .5em;
-    line-height: 2em;
+    /* line-height: 2em;
     font-family: monospace;
-    padding-left: .5em;
+    padding-left: .5em; */
+}
+
+:global(.reqUrl .CodeMirror) {
+  border: 1px solid black;
+  padding: 0.1em;
 }
 
 .reqHeaders {
@@ -112,5 +126,10 @@ h2 {
 
 .reqBody {
     width: 100%;
+}
+
+:global(.reqBody .CodeMirror) {
+  border: 1px solid black;
+  padding: 0.5em;
 }
 </style>
