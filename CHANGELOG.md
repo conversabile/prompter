@@ -3,6 +3,7 @@
 ## v0.0.7 (in development)
 
 * Add multi-step editor UI 
+* Add REST Steps
 
 ## v0.0.6
 

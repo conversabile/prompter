@@ -2,10 +2,14 @@
 	import { type RestStep, RestStepMethods } from "$lib/chains/chains";
 	import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 	import Button from "../../Button.svelte";
-	import { METHODS_WITHOUT_BODY, removeHeader } from "$lib/chains/rest";
-	import CodeMirrorTextarea from "../../CodeMirrorTextarea.svelte";
+	import { METHODS_WITHOUT_BODY, removeHeader, type RenderedRestStep } from "$lib/chains/rest";
+	import { renderedSteps } from "$lib/editorSession";
+	import CodeMirrorPreviewedTextarea from "../../CodeMirrorPreviewedTextarea.svelte";
 
     export let restStep: RestStep;
+
+    let rendered: RenderedRestStep;
+    $: rendered = ($renderedSteps[restStep.resultKey]) as RenderedRestStep;
 
     let newHeaderKey: string;
     let newHeaderValue: string;
@@ -41,7 +45,11 @@
         </select>
         <!-- <input type="text" class="reqUrl" bind:value={restStep.url}> -->
         <div class="reqUrl">
-            <CodeMirrorTextarea bind:value={restStep.url} defaultStyle="width: 100%; height:1.5em; padding:0.2em" />
+            <CodeMirrorPreviewedTextarea
+                bind:content={restStep.url}
+                bind:renderedContent={rendered.url}
+                textareaDefaultStyle="width: 100%; height:1.5em; padding:0.2em"
+            />
         </div>
     </div>
 
@@ -64,7 +72,11 @@
     {#if ! METHODS_WITHOUT_BODY.has(restStep.method)}
         <h2>Body</h2>
         <div class="reqBody">
-            <CodeMirrorTextarea bind:value={restStep.body} defaultStyle="width: 100%; height:100px; padding:0.5em" />
+            <CodeMirrorPreviewedTextarea
+                bind:content={restStep.body}
+                bind:renderedContent={rendered.body}
+                textareaDefaultStyle="width: 100%; height:100px; padding:0.5em"
+            />
         </div>
     {/if}
 
@@ -87,19 +99,20 @@ h2 {
 .reqMethod {
     background-color: white;
     border: 1px solid;
+    height: 2.3em;
 }
 
 .reqUrl {
     flex-grow: 1;
     margin-left: .5em;
+    overflow: hidden;
     /* line-height: 2em;
     font-family: monospace;
     padding-left: .5em; */
 }
 
 :global(.reqUrl .CodeMirror) {
-  border: 1px solid black;
-  padding: 0.1em;
+    padding:0.1em;
 }
 
 .reqHeaders {
@@ -122,6 +135,7 @@ h2 {
 .reqHeaders input {
     flex-grow: 1;
     margin-right: .5em;
+    min-width: 5em;
 }
 
 .reqBody {

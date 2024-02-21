@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { moveChainStep } from '$lib/chainEditor';
+  import { editorSession, moveChainStep } from '$lib/editorSession';
   import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step, STEP_TYPE_DATA } from '$lib/chains/chains';
   import { RunStatus, type StepRunStatus } from '$lib/prediction/chain';
   import { LLM_SERVICE_NAMES } from '$lib/services';
@@ -9,7 +9,6 @@
   export let step: Step;
   export let promptChain: PromptChain;
   export let stepChainPosition: number;
-  export let predictionStatus: Record<string, StepRunStatus>;
   export let stepConfigurationMenuOpen: boolean;
   export let parentStepBox: any;
 
@@ -19,8 +18,8 @@
   let stepIcon: IconDefinition
   $: stepIcon = STEP_TYPE_DATA[step.stepType].icon;
   let stepIconSpin: boolean = false;
-  $: if (predictionStatus[step.resultKey]) {
-    let status = predictionStatus[step.resultKey].status;
+  $: if ($editorSession.predictionStatus[step.resultKey]) {
+    let status = $editorSession.predictionStatus[step.resultKey].status;
     if (status == RunStatus.success) {stepIcon = faRobot; stepIconSpin = false;}
     if (status == RunStatus.inProgress) {stepIcon = faSpinner; stepIconSpin = true;}
     if (status == RunStatus.error) {stepIcon = faCircleExclamation; stepIconSpin = false;}
@@ -92,12 +91,12 @@
     <div class="stepActions">
       {#if (stepChainPosition > 0)}
       <button on:click={() => {
-        moveChainStep(promptChain, stepChainPosition, stepChainPosition-1);
+        moveChainStep(stepChainPosition, stepChainPosition-1);
         promptChain = promptChain;
       }} title="Move up"><Fa icon={faArrowUp} /></button>{/if}
       {#if (stepChainPosition < promptChain.steps.length-1)}
       <button on:click={() => {
-        moveChainStep(promptChain, stepChainPosition, stepChainPosition+1);
+        moveChainStep(stepChainPosition, stepChainPosition+1);
         promptChain = promptChain;
       }} title="Move down"><Fa icon={faArrowDown} /></button>{/if}
       {#if (promptChain.steps.length > 1)}

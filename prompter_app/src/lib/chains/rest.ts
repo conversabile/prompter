@@ -1,6 +1,12 @@
-import { StepType, type RestStep, RestStepMethods, type PromptChain } from "./chains";
+import type { RenderedTemplate } from "$lib/jinja";
+import { StepType, type RestStep, RestStepMethods, type PromptChain, type StepResult } from "./chains";
 
 export const METHODS_WITHOUT_BODY = new Set([RestStepMethods.HEAD, RestStepMethods.GET]);
+
+export interface RenderedRestStep {
+    url: RenderedTemplate,
+    body: RenderedTemplate
+}
 
 export function getDefaultRestStep(resultKey: string) : RestStep {
     return {
@@ -11,7 +17,7 @@ export function getDefaultRestStep(resultKey: string) : RestStep {
       minimized: false,
 
       method: RestStepMethods.GET,
-      url: "https://date.nager.at/api/v3/publicholidays/{{ year }}/{{ countryCode | upper }}",
+      url: "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
       header: [],
       body: null
     }
@@ -31,17 +37,28 @@ export function removeHeader(restStep: RestStep, key: string) {
     restStep.header = restStep.header.filter((h) => {return h.key != key});
 }
 
-export async function runRestStep(restStep: RestStep) {
+export async function runRestStep(restStep: RestStep, renderedRestStep: RenderedRestStep) {
     let req: Record<string, any> = {
         method: restStep.method,
         headers: headersDict(restStep)
     }
-    if (restStep.body) req["body"] = restStep.body;
-    const res = await fetch(restStep.url, req);
+    if (! METHODS_WITHOUT_BODY.has(restStep.method) && renderedRestStep.body.text) req["body"] = renderedRestStep.body.text;
+    const res = await fetch(renderedRestStep.url.text, req);
     const responseText = await res.text();
     restStep.results = [{
         datetime: new Date(),
         resultRaw: responseText,
     }];
-    console.log(restStep);
 }
+
+// export function renderRestStep (
+//     restStep: RestStep,
+//     paramDict: Record<string, string>,
+//     previousResults: Record<string, StepResult | null>,
+//     predictionStatus: Record<string, StepRunStatus>
+//   ) : RenderedRestStep {
+//     return {
+//       url: renderTemplate(restStep.url, paramDict, previousResults, predictionStatus),
+//       body: renderTemplate(restStep.body ?? "", paramDict, previousResults, predictionStatus)
+//     }
+//   }

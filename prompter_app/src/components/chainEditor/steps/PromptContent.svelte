@@ -1,49 +1,30 @@
 <script lang="ts">
-    import type { PromptChain, PromptStep, StepResult } from "$lib/chains/chains";
-    import type { StepRunStatus } from "$lib/prediction/chain";
-    import { renderPrompt, type ComponentAndProps } from "$lib/chains/prompts";
-    import { faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
-    import '$lib/codemirror5/codemirror.css';
-    import { copy } from "svelte-copy";
-    import Fa from "svelte-fa";
-	  import CodeMirrorTextarea from "../../CodeMirrorTextarea.svelte";
+  import type { PromptChain, PromptStep, StepResult } from "$lib/chains/chains";
+  import { faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
+  import '$lib/codemirror5/codemirror.css';
+  import { copy } from "svelte-copy";
+  import Fa from "svelte-fa";
+  import CodeMirrorTextarea from "../../CodeMirrorTextarea.svelte";
+	import { editorSession, renderedSteps } from "$lib/editorSession";
+	import type { RenderedPrompt } from "$lib/chains/prompts";
+	import ComponentList from "../../ComponentList.svelte";
     
-    export let prompt: PromptStep;
-    export let promptChain: PromptChain;
-    export let paramDict: Record<string, string>;
-    export let predictionStatus: Record<string, StepRunStatus>;
-    export let renderedPrompts: Record<string, string>;
-    
-    // Render template
-    let renderedPrompt = "";
-    let renderedPromptComponents: ComponentAndProps[] = [];
-    let renderError = false;
-    let isCopied = false;
-    
-    let previousResults: Record<string, StepResult | null> = {};
-    $: previousResults = Object.fromEntries(promptChain.steps.map(step => {
-        const stepResult = step.results ? step.results[0] : null;
-        return [step.resultKey, stepResult];
-    })); // TODO: move to Chain Editor / only consider previous results
-    
-    function renderPromptV1() {
-        renderError = false;
-        
-        try {
-            let renderResult = renderPrompt(
-              prompt, paramDict, previousResults, predictionStatus
-            );
-            renderedPrompts[prompt.resultKey] = renderResult.text;
-            renderedPrompt = renderResult.html;
-            renderedPromptComponents = renderResult.components;
-        } catch(err: any) {
-            renderError = true;
-            renderedPrompt = 'invalid syntax: ' + err.message;
-            renderedPrompts[prompt.resultKey] = '';
-            renderedPromptComponents = [[renderedPrompt, null]]
-        }
-    }
-    $: if (prompt.promptText, paramDict) renderPromptV1();
+  export let prompt: PromptStep;
+
+  let promptChain: PromptChain;
+  let paramDict: Record<string, string>;
+
+  $: promptChain = $editorSession.promptChain;
+  $: paramDict = $editorSession.promptChain.parametersDict;
+  $: rendered = $renderedSteps[prompt.resultKey] as RenderedPrompt
+  
+  let isCopied = false;
+  
+  let previousResults: Record<string, StepResult | null> = {};
+  $: previousResults = Object.fromEntries(promptChain.steps.map(step => {
+      const stepResult = step.results ? step.results[0] : null;
+      return [step.resultKey, stepResult];
+  })); // TODO: move to Chain Editor / only consider previous results
 
 </script>
 
@@ -51,23 +32,16 @@
     <p class="reference">(note: only string parameter values are currently supported) <a href="https://mozilla.github.io/nunjucks/templating.html" target="_blank">template syntax</a></p>
     <!-- TODO: customize 100px in defaultStyle with a better estimate of textarea height based on prompt rows -->
     <CodeMirrorTextarea bind:value={prompt.promptText} defaultStyle="width: calc( 100% - 1em ); height: 100px; padding: 0.5em;" />
-    <div class="renderedPrompt" class:renderError="{renderError}">
-        <!-- <div class="renderedPromptText">{@html renderedPrompt}</div> -->
+    <div class="renderedPrompt" class:renderError="{rendered.prompt.error}">
         <div class="renderedPromptText">
-            {#each renderedPromptComponents as [component, props]}
-            {#if typeof(component) == "string"}
-            {@html component}
-            {:else}
-            <svelte:component this={component} {...props} />
-            {/if}
-            {/each}
+            <ComponentList components={rendered.prompt.components} />
         </div>
         <span class="copiedConfirmation" class:hidden={!isCopied}><Fa icon={faCheck} /></span>
         <button
-        class="copyPrompt"
-        title="Copy prompt to clipboard"
-        use:copy={renderedPrompts[prompt.resultKey]}
-        on:svelte-copy={() => {isCopied = true; setTimeout(() => {isCopied = false;}, 500)}}
+          class="copyPrompt"
+          title="Copy prompt to clipboard"
+          use:copy={rendered.prompt.text}
+          on:svelte-copy={() => {isCopied = true; setTimeout(() => {isCopied = false;}, 500)}}
         ><Fa icon={faClone} /></button>
     </div>
 </div>
@@ -117,6 +91,7 @@
   color: var(--color-A-text-highlight);
   text-decoration: underline;
   text-decoration-style: dashed;
+  font-family: monospace;
 }
 
 :global(.renderedPrompt .spinner) {

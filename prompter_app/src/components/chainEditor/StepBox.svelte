@@ -2,20 +2,36 @@
   import { tick } from 'svelte';
   import StepBoxHeader from './StepBoxHeader.svelte';
 
+  import Fa from 'svelte-fa';
+	import { faCircleExclamation, faGear, faPlug, faRobot, faWarning} from '@fortawesome/free-solid-svg-icons';
+	import { get_current_component } from 'svelte/internal';
+	import { deleteChainStep, editorSession, renderedSteps } from '$lib/editorSession';
+	import PromptContent from './steps/PromptContent.svelte';
+	import PromptConfiguration from './steps/PromptConfiguration.svelte';
+	import RestConfiguration from './steps/RestConfiguration.svelte';
+	import RestContent from './steps/RestContent.svelte';
+	import type { RenderedPrompt } from '$lib/chains/prompts';
+	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep } from '$lib/chains/chains';
+
   // Model
   export let step: Step;
-  export let promptChain: PromptChain;
   export let stepChainPosition: number;
-  export let paramDict: Record<string, string>;
-  export let renderedPrompts: Record<string, string>; // Will be read from outside to make predictions
-  export let predictionStatus: Record<string, StepRunStatus>;
   export let easeIn: boolean = false;
   export let easeOut: boolean = false;
   let noTransition: boolean = false;
 
+  let promptChain: PromptChain;
+  $: promptChain = $editorSession.promptChain
+
   let promptStep: PromptStep | null;
   $: promptStep = (step.stepType == StepType.prompt) ? (step as PromptStep) : null;
   $: restStep = (step.stepType == StepType.rest) ? (step as RestStep) : null;
+
+  let outdatedPrediction = false;
+  $: if (promptStep && promptStep.results) {
+    let rendered = $renderedSteps[step.resultKey] as RenderedPrompt;
+    outdatedPrediction = promptStep.results[0].renderedPrompt != rendered.prompt.text;
+  }
 
   let thisComponent = get_current_component();
   let stepConfigurationMenuOpen: boolean;
@@ -23,29 +39,18 @@
   $: if (easeIn) {tick().then(() => { easeIn = false;})}
 
   const easeInOutTime: number = 200; // (ms) ! Has to match CSS !
-
-	import Fa from 'svelte-fa';
-	import { faCircleExclamation, faGear, faPlug, faRobot, faWarning} from '@fortawesome/free-solid-svg-icons';
-	import { get_current_component } from 'svelte/internal';
-	import { deleteChainStep } from '$lib/chainEditor';
-	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep, stepParameterNameList } from '$lib/chains/chains';
-	import type { StepRunStatus } from '$lib/prediction/chain';
-	import PromptContent from './steps/PromptContent.svelte';
-	import PromptConfiguration from './steps/PromptConfiguration.svelte';
-	import RestConfiguration from './steps/RestConfiguration.svelte';
-	import RestContent from './steps/RestContent.svelte';
   
   export function handleDeleteStep() {
     easeOut = true;               // Prompt box slides away
     setTimeout(() => {
-      deleteChainStep(promptChain, stepChainPosition);
+      deleteChainStep(stepChainPosition);
       noTransition = true;        // Block animations
       easeOut = false;            // Prompt box back in (svelte will recycle the component, updating its state to contain another prompt)
-      promptChain = promptChain;  // Force re render
+      // $editorSession.promptChain = $editorSession.promptChain;  // Force re render
       tick().then(()=>{
         noTransition = false;
       });                         // After render, re-enable animations
-      // promptChain = promptChain;
+      // $editorSession.promptChain = $editorSession.promptChain;
     }, easeInOutTime);
   }
 </script>
@@ -56,7 +61,6 @@
     bind:promptChain
     bind:stepChainPosition
     bind:stepConfigurationMenuOpen
-    bind:predictionStatus
     parentStepBox={thisComponent}
   >
     <!-- Configuration Menu (should be conditional, but https://github.com/sveltejs/svelte/pull/8304) -->
@@ -83,10 +87,6 @@
     {#if (promptStep)}
       <PromptContent
         bind:prompt={promptStep}
-        bind:promptChain
-        bind:paramDict
-        bind:predictionStatus
-        bind:renderedPrompts
       />
     {:else if (restStep)}
       <RestContent 
@@ -99,7 +99,7 @@
   <footer>
     {#if promptStep && promptStep.results}
       <div class="stepResult">
-        <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{step.resultKey}</span> {#if promptStep.results[0].renderedPrompt != renderedPrompts[step.resultKey]} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
+        <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{step.resultKey}</span> {#if outdatedPrediction} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
       </div>
     {:else if step && step.results}
     <div class="stepResult">
@@ -107,11 +107,11 @@
     </div>
     {/if}
 
-    {#if predictionStatus[step.resultKey] && predictionStatus[step.resultKey].error}
+    {#if $editorSession.predictionStatus[step.resultKey] && $editorSession.predictionStatus[step.resultKey].error}
       <div class="stepResult predictionError">
         <span class="message">
           <Fa icon={faCircleExclamation} />
-          {predictionStatus[step.resultKey].error}
+          {$editorSession.predictionStatus[step.resultKey].error}
           <a href={null} 
            on:click={() => {stepConfigurationMenuOpen = true}}
            style="color:black; font-weight:bold; cursor: pointer;"

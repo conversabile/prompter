@@ -3,11 +3,6 @@ import { parameterNameList, StepType, type PromptChain, type PromptStep, type Re
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
-// Display parameters and Prediction UI, will be used in PromptChainEditor
-export let promptChain: PromptChain;
-export let renderedPrompts: Record<string, string>; // -> PromptChainEditor
-export let predictionStatus: Record<string, StepRunStatus>;
-
 /* 
 * TODO:
 *  - DONE persist predictions in saved prompts
@@ -22,10 +17,12 @@ import { Clock } from "svelte-loading-spinners";
 import { userSettings } from "$lib/userSettings";
 import { RunStatus, errorStatus, type StepRunStatus } from "$lib/prediction/chain";
 import { PromptStepPredictor, type LLMStreamedTokenData } from "$lib/prediction/promptStep";
-	import { runRestStep } from "$lib/chains/rest";
+import { runRestStep, type RenderedRestStep } from "$lib/chains/rest";
+import { editorSession, renderedSteps } from "$lib/editorSession";
+	import type { RenderedPrompt } from "$lib/chains/prompts";
 
 let chainParameters: string[];
-$: chainParameters = parameterNameList(promptChain);
+$: chainParameters = parameterNameList($editorSession.promptChain);
 
 let isPredicting: boolean = false;
 
@@ -33,48 +30,52 @@ async function handlePredict() {
   if (isPredicting) return;
   isPredicting = true;
 
-  for (let step of promptChain.steps) {
+  for (let step of $editorSession.promptChain.steps) {
     step.results = null;
-    predictionStatus[step.resultKey] = {
+    $editorSession.predictionStatus[step.resultKey] = {
       status: RunStatus.onHold,
       error: null
     }
   }
 
   let stepRunError = null;
-  for (let step of promptChain.steps) {
+  for (let step of $editorSession.promptChain.steps) {
     console.log("Predicting ", step.resultKey);
-    predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
+    $editorSession.predictionStatus[step.resultKey] = {status: RunStatus.inProgress, error: null};
     
-    try {
-      if (stepRunError) {
-        predictionStatus[step.resultKey] = {status: RunStatus.skipped, error: null};
-
-      } else if (step.stepType == StepType.prompt) {
-        const predictor = new PromptStepPredictor(
-          step as PromptStep,
-          renderedPrompts[step.resultKey],
-          $userSettings,
-          () => {promptChain = promptChain;}, // onPredictionStart
-          (data: LLMStreamedTokenData) => {promptChain = promptChain;}  // onStreamedToken
-        )
-        await predictor.predict();
-        
-      } else if (step.stepType == StepType.rest) {
-        await runRestStep(step as RestStep);
-        promptChain = promptChain;
-        
-      } else {
-        throw Error("Not implemented");
-      }
-    } catch(err: any) {
-      stepRunError = err
-    }
     if (stepRunError) {
-      predictionStatus[step.resultKey] = errorStatus(stepRunError);
+      $editorSession.predictionStatus[step.resultKey] = {status: RunStatus.skipped, error: null};
     } else {
-      predictionStatus[step.resultKey] = {status: RunStatus.success, error: null};
+      try {
+
+        if (step.stepType == StepType.prompt) {
+          const predictor = new PromptStepPredictor(
+            step as PromptStep,
+            ($renderedSteps[step.resultKey] as RenderedPrompt).prompt.text,
+            $userSettings,
+            () => {$editorSession.promptChain = $editorSession.promptChain;}, // onPredictionStart
+            (data: LLMStreamedTokenData) => {$editorSession.promptChain = $editorSession.promptChain;}  // onStreamedToken
+          )
+          await predictor.predict();
+          
+        } else if (step.stepType == StepType.rest) {
+          await runRestStep(step as RestStep, $renderedSteps[step.resultKey] as RenderedRestStep);
+          $editorSession.promptChain = $editorSession.promptChain;
+
+        } else {
+          throw Error("Not implemented");
+        }
+      } catch(err: any) {
+        stepRunError = err
+      }
+
+      if (stepRunError) {
+        $editorSession.predictionStatus[step.resultKey] = errorStatus(stepRunError);
+      } else {
+        $editorSession.predictionStatus[step.resultKey] = {status: RunStatus.success, error: null};
+      }
     }
+
   }
 
   isPredicting = false;
@@ -95,7 +96,7 @@ async function handlePredict() {
             {#each chainParameters as paramName}
                     <tr>
                         <td class="min"><span class="paramName">{paramName}</span></td>
-                        <td> <input type="text" bind:value={promptChain.parametersDict[paramName]}> </td>
+                        <td> <input type="text" bind:value={$editorSession.promptChain.parametersDict[paramName]}> </td>
                     </tr>
             {/each}
         </table>

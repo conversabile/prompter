@@ -2,22 +2,23 @@
 	import { env } from '$env/dynamic/public';
   import { type PromptChain, areChainsEquivalent, piledParameterDict, StepType } from '$lib/chains/chains';
   import Fa from 'svelte-fa'
-  import { faPlay, faShare, faCircle, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+  import { faPlay, faShare, faCircle, faPlus } from '@fortawesome/free-solid-svg-icons'
 	import StepBox from './StepBox.svelte';
 	import PredictionBox from './PredictionBox.svelte';
 	import ShareBox from './ShareBox.svelte';
-	import type { StepRunStatus } from '$lib/prediction/chain';
 	import Button from '../Button.svelte';
-	import { addChainStep, getDefaultChain } from '$lib/chainEditor';
+	import { addChainStep, editorSession, getDefaultChain } from '$lib/editorSession';
 	import AddStepPlaceholder from './AddStepPlaceholder.svelte';
 
-  export let promptChain: PromptChain = getDefaultChain();
-  $: promptChain.parametersDict = piledParameterDict(promptChain);
-  let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify(promptChain));
+  export let promptChain: PromptChain | null = null;
+  editorSession.set({
+    promptChain: promptChain ?? getDefaultChain(),
+    predictionStatus: {}
+  });
+  $: $editorSession.promptChain.parametersDict = piledParameterDict($editorSession.promptChain);
+  let lastSavedPromptChain: PromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
   let userEditedChain: boolean;
-  $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify(promptChain)), lastSavedPromptChain);
-  let renderedPrompts: Record<string, string> = {}; // Step resultKey -> rendered prompt text
-  let predictionStatus: Record<string, StepRunStatus> = {}; // Step resultKey -> status
+  $: userEditedChain = ! areChainsEquivalent(JSON.parse(JSON.stringify($editorSession.promptChain)), lastSavedPromptChain);
 
   export let isShared: boolean = false;   // Show "Share" tab with permalink
   export let chainId: string | null = null;
@@ -34,7 +35,7 @@
     if (position == 0) {
       addFirstStep = true;
     } else {
-      addStepAfter.add(promptChain.steps[position-1].resultKey);
+      addStepAfter.add($editorSession.promptChain.steps[position-1].resultKey);
     }
     addStepAfter = addStepAfter;
   }
@@ -43,23 +44,23 @@
     if (position == 0) {
       addFirstStep = false;
     } else {
-      addStepAfter.delete(promptChain.steps[position-1].resultKey);
+      addStepAfter.delete($editorSession.promptChain.steps[position-1].resultKey);
     }
     addStepAfter = addStepAfter;
   }
 
-  let easeInSteps = promptChain.steps.map(() => {return false;});
+  let easeInSteps = $editorSession.promptChain.steps.map(() => {return false;});
   function saveNewStep(position: number, stepType: StepType) {
     cancelAddStep(position);
-    addChainStep(promptChain, position, stepType);
-    easeInSteps = promptChain.steps.map(() => {return false;});
+    addChainStep(position, stepType);
+    easeInSteps = $editorSession.promptChain.steps.map(() => {return false;});
     easeInSteps[position] = true;
-    promptChain = promptChain;
+    $editorSession.promptChain = $editorSession.promptChain;
   }
 </script>
 
 <svelte:head>
-	<title>{titleAsterisk}{promptChain.title} - {env.PUBLIC_SITE_NAME}</title>
+	<title>{titleAsterisk}{$editorSession.promptChain.title} - {env.PUBLIC_SITE_NAME}</title>
 	<meta name="description" content="A web UI to edit and share LLM prompts" />
 </svelte:head>
 
@@ -74,20 +75,16 @@
 </div>
 {/if}
 
-{#each [...promptChain.steps.keys()] as i}
+{#each [...$editorSession.promptChain.steps.keys()] as i}
 
 <StepBox
-    bind:step = {promptChain.steps[i]}
-    bind:promptChain = {promptChain}
+    bind:step = {$editorSession.promptChain.steps[i]}
     bind:stepChainPosition = {i}
-    bind:paramDict = {promptChain.parametersDict}
-    bind:renderedPrompts = {renderedPrompts}
-    bind:predictionStatus = {predictionStatus}
     bind:easeIn = {easeInSteps[i]}
     easeOut={false}
 />
 
-{#if addStepAfter.has(promptChain.steps[i].resultKey)}
+{#if addStepAfter.has($editorSession.promptChain.steps[i].resultKey)}
   <AddStepPlaceholder
     handleCancel={() => {cancelAddStep(i+1);}}
     handleConfirm={(stepType) => {saveNewStep(i+1, stepType);}}
@@ -110,16 +107,11 @@
 </div>
 
 <div class="predictionTab tabContent" class:hidden={activeTab != "prediction"}>
-  <PredictionBox
-    bind:promptChain={promptChain}
-    bind:renderedPrompts={renderedPrompts}
-    bind:predictionStatus={predictionStatus}
-  />
+  <PredictionBox />
 </div>
 
 <div class="shareTab tabContent" class:hidden={activeTab != "share"}>
   <ShareBox
-    bind:promptChain={promptChain}
     bind:lastSavedPromptChain={lastSavedPromptChain}
     bind:isShared={isShared}
     bind:chainId={chainId}

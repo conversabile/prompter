@@ -1,12 +1,12 @@
 <script lang="ts">
 import { page } from "$app/stores";
 import type { PromptChain } from "$lib/chains/chains";
+	import { editorSession } from "$lib/editorSession";
 import { faClone, faSave, faShare } from "@fortawesome/free-solid-svg-icons";
 import Fa from "svelte-fa";
-	import { Clock } from "svelte-loading-spinners";
+import { Clock } from "svelte-loading-spinners";
 
 // Display parameters and Prediction UI, will be used in PromptChainEditor
-export let promptChain: PromptChain;
 export let lastSavedPromptChain: PromptChain;
 export let isShared: boolean;         // will be populate by the page server module, through PromptChainEditor
 export let chainId: string | null;
@@ -28,14 +28,14 @@ async function handleShare() {
     error = "";
     const res = await fetch(`/api/chain`, {
 			method: 'POST',
-			body: JSON.stringify(promptChain)
+			body: JSON.stringify($editorSession.promptChain)
 		});
 
 		const responseJson = await res.json()
     console.log("Saved prompt chain with id: " + responseJson.chainId);
     chainId = responseJson.chainId;
     editKey = responseJson.editKey;
-    lastSavedPromptChain = JSON.parse(JSON.stringify(promptChain));
+    lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
     let newSharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
     let newSharedUrlEditable = newSharedUrlReadOnly + '?editKey=' + responseJson.editKey;
 
@@ -52,7 +52,7 @@ async function handleUpdate() {
     error = "";
     const res = await fetch(`/api/chain/${chainId}?editKey=${editKey}`, {
 			method: 'POST',
-			body: JSON.stringify(promptChain)
+			body: JSON.stringify($editorSession.promptChain)
 		})
     .then(async function(response) {
       if (!response.ok){
@@ -61,7 +61,7 @@ async function handleUpdate() {
         error = response.status + " " + response.statusText + ": " + responseText;
       } else {
         console.log(`Updated prompt chain with id: ${chainId}`);
-        lastSavedPromptChain = JSON.parse(JSON.stringify(promptChain));
+        lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
         isShared = true;
       }
       isSharing = false;
@@ -148,6 +148,8 @@ function dismissError() {
 
 .sharedLinksTable {
     width: 100%;
+    overflow: scroll;
+    display: block;
 }
 
 .sharedLinksTable td, .sharedLinksTable th {
