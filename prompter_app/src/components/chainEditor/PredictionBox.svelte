@@ -60,8 +60,6 @@ async function handlePredict() {
           
         } else if (step.stepType == StepType.rest) {
           await runRestStep(step as RestStep, $renderedSteps[step.resultKey] as RenderedRestStep);
-          $editorSession.promptChain = $editorSession.promptChain;
-
         } else {
           throw Error("Not implemented");
         }
@@ -94,10 +92,10 @@ async function handlePredict() {
                 <th class="min">Param Name</th> <th>Param Value</th>
             </tr>
             {#each chainParameters as paramName}
-                    <tr>
-                        <td class="min"><span class="paramName">{paramName}</span></td>
-                        <td> <input type="text" bind:value={$editorSession.promptChain.parametersDict[paramName]}> </td>
-                    </tr>
+                <tr>
+                    <td class="min"><span class="paramName">{paramName}</span></td>
+                    <td> <input type="text" bind:value={$editorSession.promptChain.parametersDict[paramName]}> </td>
+                </tr>
             {/each}
         </table>
       </div>

@@ -43,13 +43,27 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
         headers: headersDict(restStep)
     }
     if (! METHODS_WITHOUT_BODY.has(restStep.method) && renderedRestStep.body.text) req["body"] = renderedRestStep.body.text;
-    const res = await fetch(renderedRestStep.url.text, req);
+    let res;
+    try {
+        res = await fetch(renderedRestStep.url.text, req);
+    } catch (err: any) {
+        throw new RestStepFetchError(err);
+    }
     const responseText = await res.text();
+    let responseJson = null;
+    try { responseJson = JSON.parse(responseText) } catch {};
     restStep.results = [{
         datetime: new Date(),
         resultRaw: responseText,
+        resultResponse: {
+            status: res.status,
+            text: responseText,
+            json: responseJson
+        }
     }];
 }
+
+export class RestStepFetchError extends Error {};
 
 // export function renderRestStep (
 //     restStep: RestStep,

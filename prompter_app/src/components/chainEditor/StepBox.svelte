@@ -12,7 +12,9 @@
 	import RestContent from './steps/RestContent.svelte';
 	import type { RenderedPrompt } from '$lib/chains/prompts';
 	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep } from '$lib/chains/chains';
-
+  import Highlight, { HighlightAuto } from "svelte-highlight";
+  import json from "svelte-highlight/languages/json";
+  import a11yLight from "svelte-highlight/styles/a11y-light";
   // Model
   export let step: Step;
   export let stepChainPosition: number;
@@ -37,8 +39,20 @@
   let stepConfigurationMenuOpen: boolean;
 
   $: if (easeIn) {tick().then(() => { easeIn = false;})}
-
   const easeInOutTime: number = 200; // (ms) ! Has to match CSS !
+
+  // RestStep has tabs for different keys in its result
+  let selectedResultKey = "";
+  let activeResultKey: string;
+  $: if (restStep && restStep.results) {
+    activeResultKey = selectedResultKey;
+    if (! activeResultKey) {
+      activeResultKey = "json";
+    }
+    if (activeResultKey == "json" && ! restStep.results[0].resultResponse.json) {
+      activeResultKey = "text";
+    }
+  }
   
   export function handleDeleteStep() {
     easeOut = true;               // Prompt box slides away
@@ -46,14 +60,16 @@
       deleteChainStep(stepChainPosition);
       noTransition = true;        // Block animations
       easeOut = false;            // Prompt box back in (svelte will recycle the component, updating its state to contain another prompt)
-      // $editorSession.promptChain = $editorSession.promptChain;  // Force re render
       tick().then(()=>{
         noTransition = false;
       });                         // After render, re-enable animations
-      // $editorSession.promptChain = $editorSession.promptChain;
     }, easeInOutTime);
   }
 </script>
+
+<svelte:head>
+  {@html a11yLight}
+</svelte:head>
 
 <div class="stepBox" class:minimized={step.minimized} class:easeIn={easeIn} class:easeOut={easeOut} class:noTransition={noTransition}>
   <StepBoxHeader
@@ -101,10 +117,29 @@
       <div class="stepResult">
         <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{step.resultKey}</span> {#if outdatedPrediction} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
       </div>
+    {:else if restStep && restStep.results}
+      <div class="stepResult">
+        <div class="stepResultKeys">
+          {#if restStep.results[0].resultResponse.json}
+            <p><a href={null} on:click={() => selectedResultKey = "json"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="json"}>{step.resultKey}.json</span></a></p>
+          {/if}
+          <p><a href={null} on:click={() => selectedResultKey = "text"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="text"}>{step.resultKey}.text</span></a></p>
+          <p><a href={null} on:click={() => selectedResultKey = "status"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="status"}>{step.resultKey}.status</span></a></p>
+        </div>
+        <div class="stepResultValue">
+          {#if activeResultKey == "json"}
+            <Highlight language={json} code={restStep.results[0].resultResponse.text} />
+          {:else if activeResultKey == "text"}
+            <p>{restStep.results[0].resultResponse.text}</p>
+          {:else if activeResultKey == "status"}
+            <p>{restStep.results[0].resultResponse.status}</p>
+          {/if}
+        </div>
+      </div>
     {:else if step && step.results}
-    <div class="stepResult">
-      <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey">{step.resultKey}</span> <p>{step.results[0].resultRaw}</p>
-    </div>
+      <div class="stepResult">
+        <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey">{step.resultKey}</span></p> <p>{step.results[0].resultRaw}</p>
+      </div>
     {/if}
 
     {#if $editorSession.predictionStatus[step.resultKey] && $editorSession.predictionStatus[step.resultKey].error}
@@ -170,7 +205,7 @@
   white-space: pre-wrap;
   font-family: monospace;
   border-radius: 0 0 5px 5px;
-  /* display: flex; */
+  display: grid;
 }
 
 .stepResult .resultKey {
@@ -197,5 +232,43 @@
   width: 100%;
   display: inline-block;
   margin: auto;
+}
+
+.stepResultKeys {
+  display: flex;
+  border-bottom: 1px solid;
+}
+
+.stepResultKeys a {
+  color: inherit;
+  cursor: pointer;
+}
+
+.stepResultKeys a:hover {
+  text-decoration: none;
+}
+
+.stepResultKeys .resultKey {
+  font-weight: initial;
+}
+
+.stepResultKeys .active {
+  font-weight: bold;
+}
+
+.stepResultValue {
+  overflow: scroll;
+  max-height: 500px;
+}
+
+:global(.stepResult pre) {
+  padding: 0;
+  background: transparent;
+  margin: 0;
+  box-shadow: none;
+}
+
+:global(.hljs) {
+  background: transparent !important;
 }
 </style>

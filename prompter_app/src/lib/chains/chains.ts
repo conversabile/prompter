@@ -81,11 +81,22 @@ export interface RestStep extends Step {
   url: string,
   header: RestStepHeader[],
   body: string | null,
+  results?: RestStepResult[] | null;
 }
 
 interface StepTypeData {
   label: string,
   icon: IconDefinition
+}
+
+export interface RestStepResponse {
+  status: number,
+  text: string,
+  json: object | null
+}
+
+export interface RestStepResult extends StepResult {
+  resultResponse: RestStepResponse
 }
 
 export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {

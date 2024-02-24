@@ -3,12 +3,12 @@ import { RunStatus, type StepRunStatus } from "./prediction/chain";
 import { escapeHtml } from "./util";
 
 import nunjucks from 'nunjucks';
-import type { PromptStep, StepResult } from "./chains/chains";
+import type { PromptStep, RestStepResult, StepResult } from "./chains/chains";
 import PromptBoxRenderedPromptSpinner from "../components/chainEditor/PromptBoxRenderedPromptSpinner.svelte";
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
-function renderString(template: string, paramDict: Record<string, string>): string {
+function renderString(template: string, paramDict: Record<string, string | object>): string {
     let result = template;
     result = nunjucks.renderString(template, paramDict);
     return result.trim();
@@ -36,8 +36,8 @@ export function renderTemplate(
     let resultHtml: string;
     let resultText: string;
 
-    // https://regex101.com/r/WhYBv9/2
-    const jinjaRegex = /(\{\{\s*(\w+)\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
+    // https://regex101.com/r/WhYBv9/3
+    const jinjaRegex = /(\{\{\s*([\w]+)[^|\}]*\s*(?:\|\s*(?:[\w]+\(".*?"\)|[\w]+\('.*?'\)|.*?)\s?\}\}|\}\}))/gi;
     const spinnerTag = "<i class=\"prompter spinner\"></i>"; // Will be replaced with spinner component
 
     try {
@@ -63,14 +63,21 @@ export function renderTemplate(
         });
 
         // TODO: move sanitization at dict level
-        let renderedParamDict: Record<string, string> = {};
+        let renderedParamDict: Record<string, string | object> = {};
         for (const paramName in paramDict) {
         renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
         }
         for (const resultKey in previousResults) {
-        if (previousResults[resultKey] != null) {
-            renderedParamDict[resultKey] = (previousResults[resultKey] as StepResult).resultRaw;
-        }
+            let previousResult = previousResults[resultKey];
+            if (previousResult != null) {
+                let resultValue: string | object;
+                if ("resultResponse" in previousResult) {
+                    resultValue = (previousResult as RestStepResult).resultResponse
+                } else {
+                    resultValue = (previousResult as StepResult).resultRaw;
+                }
+                renderedParamDict[resultKey] = resultValue;
+            }
         }
         resultText = renderString(text, renderedParamDict);
         resultHtml = renderString(resultHtml, renderedParamDict);
