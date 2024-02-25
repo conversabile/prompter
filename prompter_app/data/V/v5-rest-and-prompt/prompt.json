@@ -1,0 +1,94 @@
+{
+    "version": 5,
+    "title": "Untitled Chain",
+    "parametersDict": {
+        "storyTopic": "time travelling",
+        "maxWords": "50",
+        "anotherTopic": "",
+        "result_1": "",
+        "s": "",
+        "st": "",
+        "sto": "",
+        "stor": "",
+        "story": "",
+        "storyT": "",
+        "storyTo": "",
+        "storyTop": "",
+        "storyTopi": "",
+        "bookApi": ""
+    },
+    "steps": [
+        {
+            "stepType": "rest",
+            "title": "Untitled Step",
+            "resultKey": "bookApi",
+            "results": [
+                {
+                    "datetime": "2024-02-25T11:54:05.934Z",
+                    "resultRaw": "{\n    \"numFound\": 15487,\n    \"start\": 0,\n    \"numFoundExact\": true,\n    \"docs\": [\n        {\n            \"title\": \"Time Traveler's Wife\",\n            \"author_name\": [\n                \"Audrey Niffenegger\",\n                \"William Hope\",\n                \"Laurel Lefkow\"\n            ],\n            \"person\": [\n                \"Clare Anne Abshire\",\n                \"Henry DeTamble\",\n                \"Dr. Kendrick\",\n                \"Alba DeTamble\"\n            ],\n            \"place\": [\n                \"Newberry Library\",\n                \"Chicago\",\n                \"South Haven\",\n                \"Michigan\"\n            ]\n        }\n    ],\n    \"num_found\": 15487,\n    \"q\": \"time travelling\",\n    \"offset\": null\n}",
+                    "resultJson": {
+                        "numFound": 15487,
+                        "start": 0,
+                        "numFoundExact": true,
+                        "docs": [
+                            {
+                                "title": "Time Traveler's Wife",
+                                "author_name": [
+                                    "Audrey Niffenegger",
+                                    "William Hope",
+                                    "Laurel Lefkow"
+                                ],
+                                "person": [
+                                    "Clare Anne Abshire",
+                                    "Henry DeTamble",
+                                    "Dr. Kendrick",
+                                    "Alba DeTamble"
+                                ],
+                                "place": [
+                                    "Newberry Library",
+                                    "Chicago",
+                                    "South Haven",
+                                    "Michigan"
+                                ]
+                            }
+                        ],
+                        "num_found": 15487,
+                        "q": "time travelling",
+                        "offset": null
+                    },
+                    "status": 200
+                }
+            ],
+            "minimized": false,
+            "method": "GET",
+            "url": "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
+            "header": [],
+            "body": null
+        },
+        {
+            "stepType": "prompt",
+            "promptText": "{# This is an example additional step: you can use previous result keys here! #}\n\nWrite a short story about {{ storyTopic }} using character names and places from the following book records as it was retrieved from a REST endpoint. The story setting and characters should be a crossover between the books that are represented in the JSON\n\n{{ bookApi }}",
+            "title": "Untitled Prompt",
+            "resultKey": "result_0",
+            "results": [
+                {
+                    "datetime": "2024-02-25T11:54:06.653Z",
+                    "renderedPrompt": "Write a short story about time travelling using character names and places from the following book records as it was retrieved from a REST endpoint. The story setting and characters should be a crossover between the books that are represented in the JSON\n\n{\"numFound\":15487,\"start\":0,\"numFoundExact\":true,\"docs\":[{\"title\":\"Time Traveler's Wife\",\"author_name\":[\"Audrey Niffenegger\",\"William Hope\",\"Laurel Lefkow\"],\"person\":[\"Clare Anne Abshire\",\"Henry DeTamble\",\"Dr. Kendrick\",\"Alba DeTamble\"],\"place\":[\"Newberry Library\",\"Chicago\",\"South Haven\",\"Michigan\"]}],\"num_found\":15487,\"q\":\"time travelling\",\"offset\":null}",
+                    "resultRaw": "Once upon a time, in the bustling city of Chicago, there lived a brilliant young woman named Clare Anne Abshire. Clare worked as a librarian at the Newberry Library, spending her days surrounded by stacks of ancient books and manuscripts. Little did anyone know, Clare possessed a secret that set her apart from the rest - she was married to a time traveler.\n\nHenry DeTamble was a mysterious man who had the extraordinary ability to travel through time. One moment he would be standing beside Clare in the present, and the next he would vanish into thin air, only to reappear in a different era. Despite the challenges that came with Henry's unique gift, Clare loved him with all her heart.\n\nOne day, as Clare was shelving books in the library, she felt a sudden shift in the air. Henry appeared before her, a wide smile on his face. \"Clare, my love, I have a surprise for you,\" he said, taking her hand in his.\n\nWithout another word, Henry whisked Clare away on an adventure through time. They traveled to the year 1888, where they wandered the streets of South Haven, Michigan, marveling at the quaint charm of the small town. They watched the sunset over Lake Michigan, their hearts full of wonder at the beauty of the world around them.\n\nAs they made their way back to the present, Clare and Henry knew that their love was truly timeless. They were two souls bound together across the ages, their bond unbreakable even by the constraints of time and space. And as they stepped back into the Newberry Library, hand in hand, they knew that their journey was only just beginning.",
+                    "resultJson": null,
+                    "model": "openai-gpt-3.5-turbo"
+                }
+            ],
+            "minimized": false,
+            "predictionService": "openai",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            }
+        }
+    ]
+}

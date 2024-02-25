@@ -8,6 +8,54 @@ import PromptBoxRenderedPromptSpinner from "../components/chainEditor/PromptBoxR
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
 
+class RenderableObject extends Object {
+    constructor(originalObject: any) {
+        super();
+        Object.keys(originalObject).forEach((k) => {
+            (this as Record<any, any>)[k] = originalObject[k]
+        })
+    }
+
+    toString() {
+        return JSON.stringify(this);
+    }
+}
+
+/**
+ * Objects by default are stringified as [Object object] in js. This makes it
+ * inconvenient to use them in Jinja templates, as one would have to use the 
+ * {{ thing | dump }} syntax. Instead, we define a custom .toString() method 
+ * for objects that produces a meaningful representation.
+ * 
+ * Strings, numbers, booleans and returned as they are. Lists are returned as 
+ * standard lists, but their items are processed recursively. Objects are 
+ * returned as RenderableObject instances and processed recursively.
+ * 
+ * @param thing Anything that could be part of a JSON-serializable object
+ * @returns The thing itself, or a copy of it with a readable .toString() implmentation
+ */
+function makeRenderableThing(thing: any) : any {
+    if (
+        thing === undefined ||
+        thing === null ||
+        ["string", "number", "boolean", "bigint"].includes(typeof(thing))
+    ) return thing;
+
+    if (Array.isArray(thing)) {
+        let result: any[] = [];
+        thing.forEach((item) => {result.push(makeRenderableThing(item))});
+        return result;
+    };
+
+    if (typeof(thing) === "object") {
+        let resultObject: Record<any, any> = {}
+        Object.keys(thing).forEach((k) => {
+            resultObject[k] = makeRenderableThing(thing[k]);
+        })
+        return new RenderableObject(resultObject);
+    }; 
+}
+
 function renderString(template: string, paramDict: Record<string, string | object>): string {
     let result = template;
     result = nunjucks.renderString(template, paramDict);
@@ -42,17 +90,21 @@ export function renderTemplate(
 
     try {
         resultHtml = text.replace(jinjaRegex, (match, _, matchedParamName) => {
-        if (previousResults[matchedParamName] !== undefined) {
+       
+        // resultKey__variant -> resultKey
+        let candidateResultKey = matchedParamName.replace(/(.+)__.*/ig, "$1");
+
+        if (previousResults[candidateResultKey] !== undefined) {
             let resultValue;
             let resultSpinner = "";
             if (
-                predictionStatus[matchedParamName]?.status == RunStatus.onHold ||
-                (predictionStatus[matchedParamName]?.status == RunStatus.inProgress && ! previousResults[matchedParamName])
+                predictionStatus[candidateResultKey]?.status == RunStatus.onHold ||
+                (predictionStatus[candidateResultKey]?.status == RunStatus.inProgress && ! previousResults[candidateResultKey])
             ) {
                 resultValue = "";
                 resultSpinner = spinnerTag;
             } else {
-                resultValue = (previousResults[matchedParamName]) ? match : ' - ';
+                resultValue = (previousResults[candidateResultKey]) ? match : ' - ';
             }
             return '<span class="previousResult">' +
                     '<span class="resultKey">🔑 '+matchedParamName+'</span>' +
@@ -70,13 +122,16 @@ export function renderTemplate(
         for (const resultKey in previousResults) {
             let previousResult = previousResults[resultKey];
             if (previousResult != null) {
-                let resultValue: string | object;
-                if ("resultResponse" in previousResult) {
-                    resultValue = (previousResult as RestStepResult).resultResponse
+                if (previousResult.resultJson) {
+                    renderedParamDict[resultKey] = makeRenderableThing(previousResult.resultJson);
+                    renderedParamDict[resultKey + "__raw"] = previousResult.resultRaw;
                 } else {
-                    resultValue = (previousResult as StepResult).resultRaw;
+                    renderedParamDict[resultKey] = previousResult.resultRaw
                 }
-                renderedParamDict[resultKey] = resultValue;
+
+                if ("status" in previousResult) {
+                    renderedParamDict[resultKey + "__status"] = (previousResult as RestStepResult).status.toString();
+                }
             }
         }
         resultText = renderString(text, renderedParamDict);

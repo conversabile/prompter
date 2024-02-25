@@ -51,15 +51,14 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
     }
     const responseText = await res.text();
     let responseJson = null;
-    try { responseJson = JSON.parse(responseText) } catch {};
+    try {
+        responseJson = JSON.parse(responseText);
+    } catch {};
     restStep.results = [{
         datetime: new Date(),
         resultRaw: responseText,
-        resultResponse: {
-            status: res.status,
-            text: responseText,
-            json: responseJson
-        }
+        resultJson: responseJson,
+        status: res.status,
     }];
 }
 

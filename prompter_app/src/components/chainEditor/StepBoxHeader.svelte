@@ -55,7 +55,7 @@
    */
   function handleResultKeyEdit(e: any) {
     let newValue = (e.clipboardData) ? e.clipboardData.getData('text') : e.data;
-    if (newValue && ! isValidParamName(newValue)) {
+    if (newValue && ! isValidParamName(step.resultKey + newValue)) {
       e.preventDefault();
       return false;
     }
@@ -107,6 +107,7 @@
   </header>
 
   {#if stepConfigurationMenuOpen}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="modal" on:click={() => {stepConfigurationMenuOpen = false;}}></div>
 
     <div class="configurationMenu">

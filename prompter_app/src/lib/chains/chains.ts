@@ -46,6 +46,7 @@ export interface Step {
 export interface StepResult {
   datetime: Date,
   resultRaw: string,
+  resultJson: object | null
 }
 
 export interface PromptStep extends Step {
@@ -89,14 +90,8 @@ interface StepTypeData {
   icon: IconDefinition
 }
 
-export interface RestStepResponse {
-  status: number,
-  text: string,
-  json: object | null
-}
-
 export interface RestStepResult extends StepResult {
-  resultResponse: RestStepResponse
+  status: number
 }
 
 export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {
@@ -249,7 +244,8 @@ function upgradeChain(chain: any): PromptChain {
             model: prediction.model,
             datetime: prediction.datetime,
             renderedPrompt: prediction.renderedPrompt,
-            resultRaw: prediction.predictionRaw
+            resultRaw: prediction.predictionRaw,
+            resultJson: null
           }
         }),
         minimized: false,
@@ -278,7 +274,7 @@ export function isValidChain(promptChain: PromptChain) : boolean {
 }
 
 export function isValidParamName(s: string) : boolean {
-  return s.match(/^\w+$/gi) && true || false;
+  return (s.match(/^\w+$/gi) && s.search("__") == -1 && true) || false;
 }
 
 /**

@@ -83,6 +83,7 @@ export class PromptStepPredictor {
             datetime: new Date(),
             renderedPrompt:  this.renderedPrompt,
             resultRaw: "",
+            resultJson: null,
             model: "openai-" + this.prompt.predictionSettings.openai.modelName
             }]
         }
@@ -115,6 +116,7 @@ export class PromptStepPredictor {
                 "datetime": new Date(),
                 "renderedPrompt":  this.renderedPrompt,
                 "resultRaw": "",
+                "resultJson": null,
                 "model": "ollama-" + this.prompt.predictionSettings.ollama.modelName
               }]
             }

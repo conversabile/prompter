@@ -42,17 +42,7 @@
   const easeInOutTime: number = 200; // (ms) ! Has to match CSS !
 
   // RestStep has tabs for different keys in its result
-  let selectedResultKey = "";
-  let activeResultKey: string;
-  $: if (restStep && restStep.results) {
-    activeResultKey = selectedResultKey;
-    if (! activeResultKey) {
-      activeResultKey = "json";
-    }
-    if (activeResultKey == "json" && ! restStep.results[0].resultResponse.json) {
-      activeResultKey = "text";
-    }
-  }
+  let selectedResultKey = "default";
   
   export function handleDeleteStep() {
     easeOut = true;               // Prompt box slides away
@@ -120,19 +110,21 @@
     {:else if restStep && restStep.results}
       <div class="stepResult">
         <div class="stepResultKeys">
-          {#if restStep.results[0].resultResponse.json}
-            <p><a href={null} on:click={() => selectedResultKey = "json"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="json"}>{step.resultKey}.json</span></a></p>
-          {/if}
-          <p><a href={null} on:click={() => selectedResultKey = "text"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="text"}>{step.resultKey}.text</span></a></p>
-          <p><a href={null} on:click={() => selectedResultKey = "status"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={activeResultKey=="status"}>{step.resultKey}.status</span></a></p>
+          <p><a href={null} on:click={() => selectedResultKey = "default"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span></a></p>
+          <p><a href={null} on:click={() => selectedResultKey = "raw"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="raw"}>{step.resultKey}__raw</span></a></p>
+          <p><a href={null} on:click={() => selectedResultKey = "status"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="status"}>{step.resultKey}__status</span></a></p>
         </div>
         <div class="stepResultValue">
-          {#if activeResultKey == "json"}
-            <Highlight language={json} code={restStep.results[0].resultResponse.text} />
-          {:else if activeResultKey == "text"}
-            <p>{restStep.results[0].resultResponse.text}</p>
-          {:else if activeResultKey == "status"}
-            <p>{restStep.results[0].resultResponse.status}</p>
+          {#if selectedResultKey == "default"}
+            {#if restStep.results[0].resultJson}
+              <Highlight language={json} code={restStep.results[0].resultRaw} />
+            {:else}
+              <p>{restStep.results[0].resultRaw}</p>
+            {/if}
+          {:else if selectedResultKey == "raw"}
+            <p>{restStep.results[0].resultRaw}</p>
+          {:else if selectedResultKey == "status"}
+            <p>{restStep.results[0].status}</p>
           {/if}
         </div>
       </div>
