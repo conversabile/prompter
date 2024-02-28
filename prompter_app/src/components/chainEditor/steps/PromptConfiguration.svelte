@@ -122,37 +122,6 @@
 
 
 <style>
-
-h2 {
-    font-size: 0.8em;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: var(--color-B-text-highlight);
-}
-
-select, input[type=text] {
-    background: white;
-    border: 1px solid;
-    width: 100%;
-    font-size: .8em;
-    box-sizing: border-box;
-    padding: 0.3em
-}
-
-table {
-    text-align: left;
-}
-
-th, td {
-    padding: 0 0.5em;
-}
-
-th {
-    font-weight: normal;
-    width: 0em;
-    white-space: nowrap;
-}
-
 .userSettingsInfo {
     font-style: italic;
     text-align: center;

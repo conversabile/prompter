@@ -63,7 +63,8 @@
             "method": "GET",
             "url": "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
             "header": [],
-            "body": null
+            "body": null,
+            "proxied": false
         },
         {
             "stepType": "prompt",

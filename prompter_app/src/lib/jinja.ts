@@ -124,14 +124,14 @@ export function renderTemplate(
             if (previousResult != null) {
                 if (previousResult.resultJson) {
                     renderedParamDict[resultKey] = makeRenderableThing(previousResult.resultJson);
-                    renderedParamDict[resultKey + "__raw"] = previousResult.resultRaw;
+                    // renderedParamDict[resultKey + "__raw"] = previousResult.resultRaw;
                 } else {
                     renderedParamDict[resultKey] = previousResult.resultRaw
                 }
 
-                if ("status" in previousResult) {
-                    renderedParamDict[resultKey + "__status"] = (previousResult as RestStepResult).status.toString();
-                }
+                // if ("status" in previousResult) {
+                //     renderedParamDict[resultKey + "__status"] = (previousResult as RestStepResult).status.toString();
+                // }
             }
         }
         resultText = renderString(text, renderedParamDict);

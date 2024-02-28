@@ -1,0 +1,71 @@
+{
+    "version": 5,
+    "title": "Untitled Chain",
+    "parametersDict": {
+        "storyTopic": "time travelling",
+        "maxWords": "50",
+        "anotherTopic": "",
+        "result_1": "",
+        "s": "",
+        "st": "",
+        "sto": "",
+        "stor": "",
+        "story": "",
+        "storyT": "",
+        "storyTo": "",
+        "storyTop": "",
+        "storyTopi": "",
+        "bookApi": ""
+    },
+    "steps": [
+        {
+            "stepType": "rest",
+            "title": "Retrieve a dog fact\n\n",
+            "resultKey": "dogFact",
+            "results": [
+                {
+                    "datetime": "2024-02-25T14:31:26.987Z",
+                    "resultRaw": "{\"facts\":[\"Therapy dogs, who bring healing to individuals and families by visiting hospitals schools or retirement homes, differ from service dogs, who assist individuals who have disabilities.\"],\"success\":true}",
+                    "resultJson": {
+                        "facts": [
+                            "Therapy dogs, who bring healing to individuals and families by visiting hospitals schools or retirement homes, differ from service dogs, who assist individuals who have disabilities."
+                        ],
+                        "success": true
+                    },
+                    "status": 200
+                }
+            ],
+            "minimized": false,
+            "method": "GET",
+            "url": "http://dog-api.kinduff.com/api/facts?number=1",
+            "header": [],
+            "body": null,
+            "proxied": true
+        },
+        {
+            "stepType": "prompt",
+            "promptText": "Produce a short poem about the following dog fact: {{dogFact.facts[0]}}",
+            "title": "Write a poem about it\n\n",
+            "resultKey": "poem",
+            "results": [
+                {
+                    "datetime": "2024-02-25T14:31:34.793Z",
+                    "renderedPrompt": "Produce a short poem about the following dog fact: Therapy dogs, who bring healing to individuals and families by visiting hospitals schools or retirement homes, differ from service dogs, who assist individuals who have disabilities.",
+                    "resultRaw": "Soft paws and wagging tails,\nBring joy to those in fail,\nTherapy dogs, with hearts so true,\nVisit hospitals, schools, and retirement too.\nTheir presence brings healing grace,\nTo those who suffer and feel dismayed,\nThey offer comfort, love, and cheer,\nIn a way that's simply beyond compare.\n\nWhile service dogs assist with might,\nHelping hands for those in sight,\nTherapy dogs spread joy and delight,\nBringing smiles to faces both bright and light.\nSo here's to therapy dogs, so dear,\nSpreading love and cheer, year after year.",
+                    "resultJson": null,
+                    "model": "ollama-llama2"
+                }
+            ],
+            "minimized": false,
+            "predictionService": "ollama",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            }
+        }
+    ]
+}

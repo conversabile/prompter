@@ -1,5 +1,6 @@
 import type { RenderedTemplate } from "$lib/jinja";
-import { StepType, type RestStep, RestStepMethods, type PromptChain, type StepResult } from "./chains";
+import { RestProxyService, type LocalUserSettings } from "$lib/userSettings";
+import { StepType, type RestStep, RestStepMethods, type PromptChain, type StepResult, type RestStepResult } from "./chains";
 
 export const METHODS_WITHOUT_BODY = new Set([RestStepMethods.HEAD, RestStepMethods.GET]);
 
@@ -19,7 +20,8 @@ export function getDefaultRestStep(resultKey: string) : RestStep {
       method: RestStepMethods.GET,
       url: "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
       header: [],
-      body: null
+      body: null,
+      proxied: false,
     }
 }
 
@@ -37,7 +39,15 @@ export function removeHeader(restStep: RestStep, key: string) {
     restStep.header = restStep.header.filter((h) => {return h.key != key});
 }
 
-export async function runRestStep(restStep: RestStep, renderedRestStep: RenderedRestStep) {
+export async function runRestStep(restStep: RestStep, renderedRestStep: RenderedRestStep, userSettings: LocalUserSettings) {
+    let url = renderedRestStep.url.text;
+    if (restStep.proxied) {
+        if (userSettings.restProxy.service != RestProxyService.corsyproxy) {
+            throw Error("Proxy is not implemented: " + userSettings.restProxy.service)
+        }
+        url = 'https://corsproxy.io/?' + encodeURIComponent(renderedRestStep.url.text);
+    }
+
     let req: Record<string, any> = {
         method: restStep.method,
         headers: headersDict(restStep)
@@ -45,7 +55,7 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
     if (! METHODS_WITHOUT_BODY.has(restStep.method) && renderedRestStep.body.text) req["body"] = renderedRestStep.body.text;
     let res;
     try {
-        res = await fetch(renderedRestStep.url.text, req);
+        res = await fetch(url, req);
     } catch (err: any) {
         throw new RestStepFetchError(err);
     }
@@ -61,6 +71,16 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
         status: res.status,
     }];
 }
+
+// export function getRestDerivedResults(resultKey: string, restResult: RestStepResult) {
+//     let result: Record<string, any> = {};
+
+//     result[`${resultKey}__request`] = {
+//         "status": restResult.status
+//     };
+    
+//     return result;
+// }
 
 export class RestStepFetchError extends Error {};
 

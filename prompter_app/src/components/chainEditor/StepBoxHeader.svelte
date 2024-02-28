@@ -1,6 +1,6 @@
 <script lang="ts">
   import { editorSession, moveChainStep } from '$lib/editorSession';
-  import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step, STEP_TYPE_DATA } from '$lib/chains/chains';
+  import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step, STEP_TYPE_DATA, type RestStep } from '$lib/chains/chains';
   import { RunStatus, type StepRunStatus } from '$lib/prediction/chain';
   import { LLM_SERVICE_NAMES } from '$lib/services';
   import { faAngleDown, faAngleUp, faArrowDown, faArrowUp, faCircleExclamation, faDownLeftAndUpRightToCenter, faHourglass, faKey, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +14,9 @@
 
   let promptStep: PromptStep | null = null;
   $: promptStep = (step.stepType == StepType.prompt) ? (step as PromptStep) : null;
+
+  let restStep: RestStep | null = null;
+  $: restStep = (step.stepType == StepType.rest) ? (step as RestStep) : null;
 
   let stepIcon: IconDefinition
   $: stepIcon = STEP_TYPE_DATA[step.stepType].icon;
@@ -31,6 +34,9 @@
   
   $: if (promptStep) {
     stepConfigurationLabel = LLM_SERVICE_NAMES[promptStep.predictionService] + " (" + promptStep.predictionSettings[promptStep.predictionService].modelName + ")";
+  } else if (restStep) {
+    let proxiedLabel = restStep.proxied ? " (proxied)" : ""; 
+    stepConfigurationLabel = "API Call" + proxiedLabel;
   } else {
     stepConfigurationLabel = STEP_TYPE_DATA[step.stepType].label;
   }
@@ -165,6 +171,35 @@ header {
   line-height: 1em;
   vertical-align: middle;
   margin-left: .5em;
+}
+
+:global(.configurationMenu h2) {
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--color-B-text-highlight);
+}
+:global(.configurationMenu select, .configurationMenu input[type=text]) {
+    background: white;
+    border: 1px solid;
+    width: 100%;
+    font-size: .8em;
+    box-sizing: border-box;
+    padding: 0.3em
+}
+
+:global(.configurationMenu table) {
+    text-align: left;
+}
+
+:global(.configurationMenu th, .configurationMenu td) {
+    padding: 0 0.5em;
+}
+
+:global(.configurationMenu th) {
+    font-weight: normal;
+    width: 0em;
+    white-space: nowrap;
 }
 
 

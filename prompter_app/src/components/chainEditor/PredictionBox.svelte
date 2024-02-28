@@ -59,7 +59,7 @@ async function handlePredict() {
           await predictor.predict();
           
         } else if (step.stepType == StepType.rest) {
-          await runRestStep(step as RestStep, $renderedSteps[step.resultKey] as RenderedRestStep);
+          await runRestStep(step as RestStep, $renderedSteps[step.resultKey] as RenderedRestStep, $userSettings);
         } else {
           throw Error("Not implemented");
         }

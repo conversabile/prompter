@@ -198,7 +198,7 @@ function dismissError() {
 }
 
 #sharedUrl a {
-  color: var(--color-A-text-highlight);
+  color: var(--color-A-text-highlight-1);
 }
 
 #sharedDisclaimer p {

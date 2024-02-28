@@ -41,6 +41,6 @@
 }
 
 :global(.editorAndRendered .rendered .param) {
-  color: var(--color-A-text-highlight);
+  color: var(--color-A-text-highlight-1);
 }
 </style>

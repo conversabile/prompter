@@ -82,6 +82,7 @@ export interface RestStep extends Step {
   url: string,
   header: RestStepHeader[],
   body: string | null,
+  proxied: boolean,
   results?: RestStepResult[] | null;
 }
 
@@ -403,5 +404,6 @@ function areRestStepsEquivalent(aRestStep: RestStep, anotherRestStep: RestStep) 
   if (aRestStep.url != anotherRestStep.url) return false;
   if (! isEqual(aRestStep.header, anotherRestStep.header)) return false;
   if (aRestStep.body != anotherRestStep.body) return false;
+  if (aRestStep.proxied != anotherRestStep.proxied) return false;
   return true;
 }

@@ -69,7 +69,7 @@
 }
 
 .reference a {
-  color: var(--color-A-text-highlight);
+  color: var(--color-A-text-highlight-1);
 }
 
 /* Rendered prompt */
@@ -88,9 +88,7 @@
 :global(.renderedPrompt .previousResult) {
   border-radius: 3px;
   padding: .25em 0;
-  color: var(--color-A-text-highlight);
-  text-decoration: underline;
-  text-decoration-style: dashed;
+  color: var(--color-A-text-highlight-2);
   font-family: monospace;
 }
 
@@ -100,13 +98,13 @@
 
 :global(.renderedPrompt .previousResult .resultKey) {
   font-family: monospace;
-  background: var(--color-A-text-highlight);
+  background: var(--color-A-text-highlight-2);
   padding: .25em 0.5em;
-  color: white;
+  color: rgba(255, 255, 255, 0.8);
   margin-right: .25em;
   border-radius: 3px 3px 0 0;
-  border: 1px solid var(--color-A-text-highlight);
   user-select: none;
+  white-space: nowrap;
 }
 
 .renderedPromptText {
@@ -156,6 +154,6 @@
 }
 
 :global(.renderedPrompt .param) {
-  color: var(--color-A-text-highlight);
+  color: var(--color-A-text-highlight-1);
 }
 </style>

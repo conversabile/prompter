@@ -3,9 +3,17 @@ import { defaultServiceSettings } from "./services";
 import { writable } from "svelte/store";
 import type { ServiceSettings } from "./services";
 
+export enum RestProxyService {
+    internal = "internal",
+    corsyproxy = "corsyproxy"
+}
+export interface RestProxySettings {
+    service: RestProxyService
+}
 
 export interface LocalUserSettings {
-    predictionService: ServiceSettings
+    predictionService: ServiceSettings,
+    restProxy: RestProxySettings
 }
 
 export function readLocalSettings(): LocalUserSettings {
@@ -13,6 +21,10 @@ export function readLocalSettings(): LocalUserSettings {
         predictionService: {
             ...defaultServiceSettings(),
             ...readLocalSettingsDict().predictionService
+        },
+        restProxy: {
+            service: RestProxyService.corsyproxy,
+            ...readLocalSettingsDict().restProxy
         }
     }
 }

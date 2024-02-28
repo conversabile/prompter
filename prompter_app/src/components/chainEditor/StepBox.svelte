@@ -15,6 +15,7 @@
   import Highlight, { HighlightAuto } from "svelte-highlight";
   import json from "svelte-highlight/languages/json";
   import a11yLight from "svelte-highlight/styles/a11y-light";
+
   // Model
   export let step: Step;
   export let stepChainPosition: number;
@@ -77,7 +78,7 @@
           bind:settings={promptStep.predictionSettings}
         />
       {:else if restStep}
-        <RestConfiguration />
+        <RestConfiguration bind:proxiedRequest={restStep.proxied} />
       {/if}
     </svelte:fragment>
     
@@ -110,14 +111,13 @@
     {:else if restStep && restStep.results}
       <div class="stepResult">
         <div class="stepResultKeys">
-          <p><a href={null} on:click={() => selectedResultKey = "default"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span></a></p>
-          <p><a href={null} on:click={() => selectedResultKey = "raw"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="raw"}>{step.resultKey}__raw</span></a></p>
-          <p><a href={null} on:click={() => selectedResultKey = "status"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="status"}>{step.resultKey}__status</span></a></p>
+          <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span> ({restStep.results[0].status})</p>
+          <!-- <p><a href={null} on:click={() => selectedResultKey = "default"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span></a></p> -->
         </div>
         <div class="stepResultValue">
           {#if selectedResultKey == "default"}
             {#if restStep.results[0].resultJson}
-              <Highlight language={json} code={restStep.results[0].resultRaw} />
+              <Highlight language={json} code={JSON.stringify(restStep.results[0].resultJson, null, '  ')} />
             {:else}
               <p>{restStep.results[0].resultRaw}</p>
             {/if}
@@ -190,7 +190,7 @@
 }
 
 .stepResult {
-  /* border: 1px solid var(--color-A-text-highlight); */
+  /* border: 1px solid var(--color-A-text-highlight-1); */
   border-top: 1px solid rgba(0, 0, 0, 0.25);
   background: var(--color-bg-alphawhite25);
   padding: 1em;
@@ -228,7 +228,12 @@
 
 .stepResultKeys {
   display: flex;
-  border-bottom: 1px solid;
+  /* border-bottom: 1px solid; */
+  overflow: scroll;
+}
+
+.stepResultKeys {
+  white-space: nowrap;
 }
 
 .stepResultKeys a {

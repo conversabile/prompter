@@ -134,7 +134,7 @@
 
 .tabLabels button {
   display:inline-block;
-  /* color:var(--color-A-text-highlight); */
+  /* color:var(--color-A-text-highlight-1); */
   border:0;
   border-radius: 2px 2px 0 0;
   background:var(--color-A-bg);

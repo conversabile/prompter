@@ -16,7 +16,8 @@
 	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
 	--color-A-bg: #ffa700; 
 	--color-A-text-standard: rgba(0, 0, 0, 0.7);
-	--color-A-text-highlight: #4c5c96;
+	--color-A-text-highlight-1: #4c5c96;
+	--color-A-text-highlight-2: #7928a1;
 	--color-B-bg: #343541;
 	--color-B-lightbg: #444654;
     --color-B-text-standard: #DDD;
@@ -30,7 +31,8 @@
 	--color-bg-alphawhite25: rgba(255, 255, 255, 0.25);
 	--color-A-bg: #c1baac;
 	--color-A-text: rgba(0, 0, 0, 0.7);
-	--color-A-text-highlight: black;
+	--color-A-text-highlight-1: black;
+	--color-A-text-highlight-2: darkblue;
 	--color-B-bg: #343541;
 	--color-B-lightbg: #444654;
     --color-B-text-standard: #DDD;
