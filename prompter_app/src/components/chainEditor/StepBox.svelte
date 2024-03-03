@@ -15,6 +15,8 @@
   import Highlight, { HighlightAuto } from "svelte-highlight";
   import json from "svelte-highlight/languages/json";
   import a11yLight from "svelte-highlight/styles/a11y-light";
+	import { headersDict, type RenderedRestStep } from '$lib/chains/rest';
+	import { isEqual } from '$lib/util';
 
   // Model
   export let step: Step;
@@ -34,6 +36,14 @@
   $: if (promptStep && promptStep.results) {
     let rendered = $renderedSteps[step.resultKey] as RenderedPrompt;
     outdatedPrediction = promptStep.results[0].renderedPrompt != rendered.prompt.text;
+  } else if (restStep && restStep.results) {
+    let rendered = $renderedSteps[step.resultKey] as RenderedRestStep;
+    outdatedPrediction = ! isEqual(restStep.results[0].renderedRestStep, {
+      method: restStep.method,
+      url: rendered.url.text,
+      body: rendered.body.text,
+      headers: headersDict(restStep)
+    });
   }
 
   let thisComponent = get_current_component();
@@ -111,7 +121,11 @@
     {:else if restStep && restStep.results}
       <div class="stepResult">
         <div class="stepResultKeys">
-          <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span> ({restStep.results[0].status})</p>
+          <p><span class="icon"><Fa icon={faPlug} /></span> <span
+          class="resultKey"
+          class:active={selectedResultKey=="default"}>{step.resultKey}</span>
+          ({restStep.results[0].status}) {#if outdatedPrediction} <span
+          class="warning"><Fa icon={faWarning} /> This response was obtained from a different reqest</span>{/if}</p>
           <!-- <p><a href={null} on:click={() => selectedResultKey = "default"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span></a></p> -->
         </div>
         <div class="stepResultValue">

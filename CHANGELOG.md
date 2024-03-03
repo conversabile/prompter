@@ -4,6 +4,8 @@
 
 * Add multi-step editor UI 
 * Add REST Steps
+* Add corsyproxy.io support in REST step
+* Change example steps to adapt to context
 
 ## v0.0.6
 

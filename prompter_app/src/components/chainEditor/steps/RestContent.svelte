@@ -18,7 +18,7 @@
     function handleAddHeader() {
         if (! newHeaderKey || ! newHeaderValue) return;
 
-        restStep.header.push({
+        restStep.headers.push({
             key:newHeaderKey,
             value: newHeaderValue,
             disabled: false
@@ -55,7 +55,7 @@
 
     <h2>Headers</h2>
     <div class="reqHeaders">
-        {#each restStep.header as header}
+        {#each restStep.headers as header}
             <div class="row">
                 <span>{header.key}: {header.value}</span>
                 <Button icon={faMinus} size="small" onClick={() => handleRemoveHeader(header.key)} />

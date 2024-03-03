@@ -19,7 +19,7 @@ export function getDefaultRestStep(resultKey: string) : RestStep {
 
       method: RestStepMethods.GET,
       url: "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
-      header: [],
+      headers: [],
       body: null,
       proxied: false,
     }
@@ -29,14 +29,14 @@ export function getExampleRestStep(resultKey: string, promptChain: PromptChain, 
     return getDefaultRestStep(resultKey);
 }
 
-function headersDict(restStep: RestStep) : Record<string, string> {
+export function headersDict(restStep: RestStep) : Record<string, string> {
     let result: Record<string, string> = {};
-    restStep.header.forEach((h) => {result[h.key] = h.value;});
+    restStep.headers.forEach((h) => {result[h.key] = h.value;});
     return result;
 }
 
 export function removeHeader(restStep: RestStep, key: string) {
-    restStep.header = restStep.header.filter((h) => {return h.key != key});
+    restStep.headers = restStep.headers.filter((h) => {return h.key != key});
 }
 
 export async function runRestStep(restStep: RestStep, renderedRestStep: RenderedRestStep, userSettings: LocalUserSettings) {
@@ -48,9 +48,10 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
         url = 'https://corsproxy.io/?' + encodeURIComponent(renderedRestStep.url.text);
     }
 
+    let renderedHeaders = headersDict(restStep);
     let req: Record<string, any> = {
         method: restStep.method,
-        headers: headersDict(restStep)
+        headers: renderedHeaders
     }
     if (! METHODS_WITHOUT_BODY.has(restStep.method) && renderedRestStep.body.text) req["body"] = renderedRestStep.body.text;
     let res;
@@ -69,6 +70,12 @@ export async function runRestStep(restStep: RestStep, renderedRestStep: Rendered
         resultRaw: responseText,
         resultJson: responseJson,
         status: res.status,
+        renderedRestStep: {
+            method: restStep.method,
+            url: renderedRestStep.url.text,
+            body: renderedRestStep.body.text,
+            headers: renderedHeaders
+        }
     }];
 }
 

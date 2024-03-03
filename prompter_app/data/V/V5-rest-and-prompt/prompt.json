@@ -56,13 +56,19 @@
                         "q": "time travelling",
                         "offset": null
                     },
-                    "status": 200
+                    "status": 200,
+                    "renderedRestStep": {
+                        "method": "GET",
+                        "url":"https://openlibrary.org/search.json?q=time%20travelling&fields=title,person,place,author_name&limit=1",
+                        "body": "",
+                        "headers": {}
+                    }
                 }
             ],
             "minimized": false,
             "method": "GET",
             "url": "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
-            "header": [],
+            "headers": [],
             "body": null,
             "proxied": false
         },

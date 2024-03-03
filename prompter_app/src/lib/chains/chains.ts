@@ -80,7 +80,7 @@ export interface RestStepHeader {
 export interface RestStep extends Step {
   method: RestStepMethods,
   url: string,
-  header: RestStepHeader[],
+  headers: RestStepHeader[],
   body: string | null,
   proxied: boolean,
   results?: RestStepResult[] | null;
@@ -91,7 +91,15 @@ interface StepTypeData {
   icon: IconDefinition
 }
 
+export interface RenderedRequest {
+  method: RestStepMethods,
+  url: string,
+  body: string,
+  headers: Record<string,string>
+}
+
 export interface RestStepResult extends StepResult {
+  renderedRestStep: RenderedRequest,
   status: number
 }
 
@@ -295,7 +303,7 @@ export function stepParameterNameList(step: Step) : Array<string> {
       restStep.url,
     ];
     if (restStep.body) fieldsToMatch.push(restStep.body);
-    restStep.header.forEach((h) => {fieldsToMatch.push(h.value)});
+    restStep.headers.forEach((h) => {fieldsToMatch.push(h.value)});
   } else {
     throw Error("Unsupported step type");
   }
@@ -402,7 +410,7 @@ function arePromptsEquivalent(aPrompt: PromptStep, anotherPrompt: PromptStep) : 
 function areRestStepsEquivalent(aRestStep: RestStep, anotherRestStep: RestStep) : boolean {
   if (aRestStep.method != anotherRestStep.method) return false;
   if (aRestStep.url != anotherRestStep.url) return false;
-  if (! isEqual(aRestStep.header, anotherRestStep.header)) return false;
+  if (! isEqual(aRestStep.headers, anotherRestStep.headers)) return false;
   if (aRestStep.body != anotherRestStep.body) return false;
   if (aRestStep.proxied != anotherRestStep.proxied) return false;
   return true;
