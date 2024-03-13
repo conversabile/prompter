@@ -5,6 +5,7 @@ import { convert } from 'html-to-text';
 import { defaultPredictionSettings, PredictionService, type PredictionSettings } from '../services';
 import { isEqual } from '../util';
 import { faBook, faPlug, faRobot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import type { DocumentIndexStep } from './documentIndex';
 
 export const promptSchemaVersion: number = 5; /* 5: prompts -> steps */
                                               /* 4: camelCase; add predictionService, predictionSettings */
@@ -304,6 +305,8 @@ export function stepParameterNameList(step: Step) : Array<string> {
     ];
     if (restStep.body) fieldsToMatch.push(restStep.body);
     restStep.headers.forEach((h) => {fieldsToMatch.push(h.value)});
+  } else if (step.stepType == StepType.documentIndex) {
+    ;
   } else {
     throw Error("Unsupported step type");
   }
@@ -391,6 +394,8 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
       if (! arePromptsEquivalent(aStep as PromptStep, anotherStep as PromptStep)) return false;
     } else if (aStep.stepType == StepType.rest) {
       if (! areRestStepsEquivalent(aStep as RestStep, anotherStep as RestStep)) return false;
+    } else if (aStep.stepType == StepType.documentIndex) {
+      if (! areDocumentIndexStepsEquivalent(aStep as DocumentIndexStep, anotherStep as DocumentIndexStep)) return false;
     } else {
       throw Error("Unsupported step type");
     }
@@ -414,4 +419,8 @@ function areRestStepsEquivalent(aRestStep: RestStep, anotherRestStep: RestStep) 
   if (aRestStep.body != anotherRestStep.body) return false;
   if (aRestStep.proxied != anotherRestStep.proxied) return false;
   return true;
+}
+
+function areDocumentIndexStepsEquivalent(aDocIndexStep: DocumentIndexStep, anotherDocIndexStep: DocumentIndexStep) {
+  if (! isEqual(aDocIndexStep.documents, anotherDocIndexStep.documents)) return false;
 }

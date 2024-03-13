@@ -20,7 +20,7 @@
     "steps": [
         {
             "stepType": "rest",
-            "title": "Retrieve a dog fact\n\n",
+            "title": "Retrieve a random dog fact",
             "resultKey": "dogFact",
             "results": [
                 {
@@ -35,7 +35,7 @@
                     "status": 200,
                     "renderedRestStep": {
                         "method": "GET",
-                        "url":"http://dog-api.kinduff.com/api/facts?number=1",
+                        "url": "http://dog-api.kinduff.com/api/facts?number=1",
                         "body": "",
                         "headers": {}
                     }

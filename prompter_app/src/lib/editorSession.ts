@@ -3,7 +3,8 @@ import { StepType, type PromptChain, type PromptStep, parameterNameList, type St
 import { getDefaultPrompt, getExamplePrompt, renderPromptStep, type RenderedPrompt } from "./chains/prompts";
 import { getExampleRestStep, type RenderedRestStep } from "./chains/rest";
 import type { StepRunStatus } from "./prediction/chain";
-import { renderTemplate } from "./jinja";
+import { renderTemplate, type RenderedTemplate } from "./jinja";
+import { getDefaultDocumentIndexStep, type DocumentIndexStep, type RenderedDocumentIndex, type DocumentIndexQuery } from "./chains/documentIndex";
 
 // Session
 
@@ -13,7 +14,7 @@ export interface ChainEditorSession {
 }
 
 export const editorSession = writable<ChainEditorSession>({promptChain: getDefaultChain(), predictionStatus: {}});
-export const renderedSteps: Readable<Record<string,RenderedPrompt | RenderedRestStep>> = derived(
+export const renderedSteps: Readable<Record<string,RenderedPrompt | RenderedRestStep | RenderedDocumentIndex>> = derived(
     editorSession,
     ($editorSession) => {
         return Object.fromEntries($editorSession.promptChain.steps.map(step => {
@@ -42,7 +43,7 @@ function renderSessionTemplate(text: string) {
     )
 }
 
-function renderStep(step: Step) : RenderedPrompt | RenderedRestStep {
+function renderStep(step: Step) : RenderedPrompt | RenderedRestStep | RenderedDocumentIndex {
     if (step.stepType == StepType.prompt) {
         return {
             prompt: renderSessionTemplate((step as PromptStep).promptText)
@@ -51,6 +52,14 @@ function renderStep(step: Step) : RenderedPrompt | RenderedRestStep {
         return {
             url: renderSessionTemplate((step as RestStep).url),
             body: renderSessionTemplate((step as RestStep).body ?? ""),
+        };
+    } else if (step.stepType == StepType.documentIndex) {
+        let renderedQueries: Record<string, RenderedTemplate> = {};
+        (step as DocumentIndexStep).queries.forEach((q) => {
+            renderedQueries[q.key] = renderSessionTemplate(q.text)
+        });
+        return {
+            renderedQueries: renderedQueries
         };
     }
 
@@ -90,6 +99,8 @@ export function addChainStep(position: number, stepType: StepType) : void {
             newStep = getExamplePrompt(newStepResultKey, updater.promptChain, position);
         } else if (stepType == StepType.rest) {
             newStep = getExampleRestStep(newStepResultKey, updater.promptChain, position);
+        } else if (stepType == StepType.documentIndex) {
+            newStep = getDefaultDocumentIndexStep(newStepResultKey);
         } else {
             throw Error("Unsupported step type: " + stepType);
         }

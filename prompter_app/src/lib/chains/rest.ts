@@ -12,7 +12,7 @@ export interface RenderedRestStep {
 export function getDefaultRestStep(resultKey: string) : RestStep {
     return {
       stepType: StepType.rest,
-      title:  "Untitled Step",
+      title:  "Untitled API Call",
       resultKey: resultKey,
       results: null,
       minimized: false,

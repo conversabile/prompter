@@ -6,11 +6,11 @@
     export let handleCancel: () => void;
     export let handleConfirm: (stepType: StepType) => void;
 
-    const STEP_TYPES = [StepType.prompt, StepType.rest, /*StepType.documentIndex*/];
+    const STEP_TYPES = [StepType.prompt, StepType.rest, StepType.documentIndex];
     const STEP_DESCRIPTIONS: Record<StepType, string> = {
         [StepType.prompt]: "<strong>Prompt</strong> steps run natural language instructions on Large Language Models such as <strong>GPT</strong> or LLaMA. Just like ChatGPT, your prompts will produce a free-text answer, but you can also ask to generate JSON or code. <strong>Example</strong>: <em>Write a short story about {{ storyTopic }}</em>",
         [StepType.rest]: "<strong>API Call</strong> steps will run a request to a <strong>REST endpoint</strong>, and make the response available to other steps. <strong>Example</strong>: you can query the <a href='https://metmuseum.github.io/' target='_blank'>Metropolitan Museum API</a>, and then add a Prompt to answer questions on one of the museum's paintings.",
-        [StepType.documentIndex]: "tbd"
+        [StepType.documentIndex]: "WIP: this feature is under development"
     };
 
     let selectedStepType: StepType | null = null;
@@ -18,7 +18,6 @@
 
 <div class="addStep">
     <div class="stepTypeSelector">
-
         {#each STEP_TYPES as stepType}
             <Button
                 icon={STEP_TYPE_DATA[stepType].icon}

@@ -10,6 +10,7 @@
 	import PromptConfiguration from './steps/PromptConfiguration.svelte';
 	import RestConfiguration from './steps/RestConfiguration.svelte';
 	import RestContent from './steps/RestContent.svelte';
+	import DocumentIndexContent from './steps/DocumentIndexContent.svelte';
 	import type { RenderedPrompt } from '$lib/chains/prompts';
 	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep } from '$lib/chains/chains';
   import Highlight, { HighlightAuto } from "svelte-highlight";
@@ -17,6 +18,7 @@
   import a11yLight from "svelte-highlight/styles/a11y-light";
 	import { headersDict, type RenderedRestStep } from '$lib/chains/rest';
 	import { isEqual } from '$lib/util';
+	import type { DocumentIndexStep } from '$lib/chains/documentIndex';
 
   // Model
   export let step: Step;
@@ -31,6 +33,7 @@
   let promptStep: PromptStep | null;
   $: promptStep = (step.stepType == StepType.prompt) ? (step as PromptStep) : null;
   $: restStep = (step.stepType == StepType.rest) ? (step as RestStep) : null;
+  $: docIndexStep = (step.stepType == StepType.documentIndex) ? (step as DocumentIndexStep) : null;
 
   let outdatedPrediction = false;
   $: if (promptStep && promptStep.results) {
@@ -109,6 +112,12 @@
       <RestContent 
         bind:restStep
       />
+    {:else if (docIndexStep)}
+      <DocumentIndexContent 
+        bind:docIndexStep
+      />
+    {:else}
+      <em>Unsupported step in chain definition</em>
     {/if}
   </div>
 
