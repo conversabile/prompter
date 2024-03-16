@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type { PromptChain, PromptStep, StepResult } from "$lib/chains/chains";
+  import type { PromptChain, StepResult } from "$lib/chains/chains";
   import { faCheck, faClone } from "@fortawesome/free-solid-svg-icons";
   import '$lib/codemirror5/codemirror.css';
   import { copy } from "svelte-copy";
   import Fa from "svelte-fa";
   import CodeMirrorTextarea from "../../CodeMirrorTextarea.svelte";
 	import { editorSession, renderedSteps } from "$lib/editorSession";
-	import type { RenderedPrompt } from "$lib/chains/prompts";
+	import type { PromptStep, RenderedPrompt } from "$lib/chains/prompts";
 	import ComponentList from "../../ComponentList.svelte";
     
   export let prompt: PromptStep;

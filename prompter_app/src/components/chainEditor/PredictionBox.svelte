@@ -1,5 +1,5 @@
 <script lang="ts">
-import { parameterNameList, StepType, type PromptChain, type PromptStep, type RestStep } from "$lib/chains/chains";
+import { parameterNameList, StepType } from "$lib/chains/chains";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
@@ -17,9 +17,9 @@ import { Clock } from "svelte-loading-spinners";
 import { userSettings } from "$lib/userSettings";
 import { RunStatus, errorStatus, type StepRunStatus } from "$lib/prediction/chain";
 import { PromptStepPredictor, type LLMStreamedTokenData } from "$lib/prediction/promptStep";
-import { runRestStep, type RenderedRestStep } from "$lib/chains/rest";
+import { runRestStep, type RenderedRestStep, type RestStep } from "$lib/chains/rest";
 import { editorSession, renderedSteps } from "$lib/editorSession";
-	import type { RenderedPrompt } from "$lib/chains/prompts";
+	import type { PromptStep, RenderedPrompt } from "$lib/chains/prompts";
 
 let chainParameters: string[];
 $: chainParameters = parameterNameList($editorSession.promptChain);

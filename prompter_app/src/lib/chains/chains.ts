@@ -6,6 +6,8 @@ import { defaultPredictionSettings, PredictionService, type PredictionSettings }
 import { isEqual } from '../util';
 import { faBook, faPlug, faRobot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { DocumentIndexStep } from './documentIndex';
+import type { RestStep } from './rest';
+import type { PromptStep, PromptStepResult } from './prompts';
 
 export const promptSchemaVersion: number = 5; /* 5: prompts -> steps */
                                               /* 4: camelCase; add predictionService, predictionSettings */
@@ -50,58 +52,9 @@ export interface StepResult {
   resultJson: object | null
 }
 
-export interface PromptStep extends Step {
-  promptText: string;
-  results?: PromptStepResult[] | null;
-  predictionService: PredictionService,
-  predictionSettings: PredictionSettings;
-}
-
-export interface PromptStepResult extends StepResult {
-  renderedPrompt: string,
-  model: string
-}
-
-export enum RestStepMethods {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  PATCH = "PATCH",
-  DELETE = "DELETE",
-  HEAD = "HEAD",
-  OPTIONS = "OPTIONS",
-}
-
-export interface RestStepHeader {
-  key: string,
-  value: string,
-  disabled: boolean
-}
-
-export interface RestStep extends Step {
-  method: RestStepMethods,
-  url: string,
-  headers: RestStepHeader[],
-  body: string | null,
-  proxied: boolean,
-  results?: RestStepResult[] | null;
-}
-
 interface StepTypeData {
   label: string,
   icon: IconDefinition
-}
-
-export interface RenderedRequest {
-  method: RestStepMethods,
-  url: string,
-  body: string,
-  headers: Record<string,string>
-}
-
-export interface RestStepResult extends StepResult {
-  renderedRestStep: RenderedRequest,
-  status: number
 }
 
 export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {

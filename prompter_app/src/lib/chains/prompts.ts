@@ -1,11 +1,27 @@
-import { StepType, type PromptStep, type StepResult, type PromptChain } from "./chains";
-import { PredictionService, defaultPredictionSettings } from "../services";
+import { StepType, type StepResult, type PromptChain, type Step } from "./chains";
+import { PredictionService, defaultPredictionSettings, type PredictionSettings } from "../services";
 import { renderTemplate, type RenderedTemplate } from "$lib/jinja";
 import type { StepRunStatus } from "$lib/prediction/chain";
 
-export interface RenderedPrompt {
-  prompt: RenderedTemplate
+//
+// Interface
+//
+
+export interface PromptStep extends Step {
+  promptText: string;
+  results?: PromptStepResult[] | null;
+  predictionService: PredictionService,
+  predictionSettings: PredictionSettings;
 }
+
+export interface PromptStepResult extends StepResult {
+  renderedPrompt: string,
+  model: string
+}
+
+//
+// Util
+//
 
 export function getDefaultPrompt(resultKey: string): PromptStep {
   return {
@@ -35,6 +51,14 @@ export function getExamplePrompt(resultKey: string, promptChain: PromptChain, po
   }
 
   return result;
+}
+
+//
+// Execution
+//
+
+export interface RenderedPrompt {
+  prompt: RenderedTemplate
 }
 
 export function renderPromptStep (

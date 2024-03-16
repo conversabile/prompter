@@ -1,13 +1,53 @@
 import type { RenderedTemplate } from "$lib/jinja";
 import { RestProxyService, type LocalUserSettings } from "$lib/userSettings";
-import { StepType, type RestStep, RestStepMethods, type PromptChain, type StepResult, type RestStepResult } from "./chains";
+import { StepType, type PromptChain, type StepResult, type Step } from "./chains";
+
+//
+// Definition
+//
+
+export enum RestStepMethods {
+    GET = "GET",
+    POST = "POST",
+    PUT = "PUT",
+    PATCH = "PATCH",
+    DELETE = "DELETE",
+    HEAD = "HEAD",
+    OPTIONS = "OPTIONS",
+}
+  
+export interface RestStepHeader {
+    key: string,
+    value: string,
+    disabled: boolean
+}
+  
+export interface RestStep extends Step {
+    method: RestStepMethods,
+    url: string,
+    headers: RestStepHeader[],
+    body: string | null,
+    proxied: boolean,
+    results?: RestStepResult[] | null;
+}
+  
+export interface RenderedRequest {
+    method: RestStepMethods,
+    url: string,
+    body: string,
+    headers: Record<string,string>
+}
+  
+export interface RestStepResult extends StepResult {
+    renderedRestStep: RenderedRequest,
+    status: number
+}
 
 export const METHODS_WITHOUT_BODY = new Set([RestStepMethods.HEAD, RestStepMethods.GET]);
 
-export interface RenderedRestStep {
-    url: RenderedTemplate,
-    body: RenderedTemplate
-}
+//
+// Util
+//
 
 export function getDefaultRestStep(resultKey: string) : RestStep {
     return {
@@ -37,6 +77,15 @@ export function headersDict(restStep: RestStep) : Record<string, string> {
 
 export function removeHeader(restStep: RestStep, key: string) {
     restStep.headers = restStep.headers.filter((h) => {return h.key != key});
+}
+
+// 
+// Execution
+// 
+
+export interface RenderedRestStep {
+    url: RenderedTemplate,
+    body: RenderedTemplate
 }
 
 export async function runRestStep(restStep: RestStep, renderedRestStep: RenderedRestStep, userSettings: LocalUserSettings) {

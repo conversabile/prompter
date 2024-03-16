@@ -1,4 +1,5 @@
 import type { RenderedTemplate } from "$lib/jinja";
+import { PredictionService, type PredictionSettings, defaultEmbeddingSettings } from "$lib/services";
 import { StepType, type Step } from "./chains";
 
 export interface IndexedDocument {
@@ -16,6 +17,8 @@ export interface DocumentIndexQuery {
 export interface DocumentIndexStep extends Step {
   documents: IndexedDocument[],
   queries: DocumentIndexQuery[],
+  embeddingService: PredictionService,
+  embeddingSettings: PredictionSettings
 }
 
 export interface RenderedDocumentIndex {
@@ -38,6 +41,8 @@ export function getDefaultDocumentIndexStep(resultKey: string) : DocumentIndexSt
             segmentSeparator: '\n\n'
         }
       ],
-      queries: [{key: "query_0", text: "A character who is involved in {{ storyTopic }}"}]
+      queries: [{key: "query_0", text: "A character who is involved in {{ storyTopic }}"}],
+      embeddingService: PredictionService.openai,
+      embeddingSettings: defaultEmbeddingSettings()
     }
 }

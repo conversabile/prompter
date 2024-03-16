@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type RestStep, RestStepMethods } from "$lib/chains/chains";
+	import { type RestStep, RestStepMethods } from "$lib/chains/rest";
 	import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 	import Button from "../../Button.svelte";
 	import { METHODS_WITHOUT_BODY, removeHeader, type RenderedRestStep } from "$lib/chains/rest";

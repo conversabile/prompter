@@ -62,6 +62,7 @@
         <CodeMirrorPreviewedTextarea
             bind:content={docIndexStep.queries[0].text}
             bind:renderedContent={rendered.renderedQueries[docIndexStep.queries[0].key]}
+            textareaDefaultStyle="width: 100%; height:1.5em; padding:0.2em"
         />
 </div>
 
@@ -83,7 +84,7 @@ h2 {
 }
 
 .docContainer {
-    margin: 0 1em .5em 1em;
+    margin: 0 1em;
     display: flex;
     flex-direction: column;
     row-gap: .5em;

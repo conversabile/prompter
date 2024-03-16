@@ -11,14 +11,15 @@
 	import RestConfiguration from './steps/RestConfiguration.svelte';
 	import RestContent from './steps/RestContent.svelte';
 	import DocumentIndexContent from './steps/DocumentIndexContent.svelte';
-	import type { RenderedPrompt } from '$lib/chains/prompts';
-	import { StepType, type PromptChain, type PromptStep, type Step, type RestStep } from '$lib/chains/chains';
-  import Highlight, { HighlightAuto } from "svelte-highlight";
+	import type { PromptStep, RenderedPrompt } from '$lib/chains/prompts';
+	import { StepType, type PromptChain, type Step } from '$lib/chains/chains';
+  import Highlight from "svelte-highlight";
   import json from "svelte-highlight/languages/json";
   import a11yLight from "svelte-highlight/styles/a11y-light";
-	import { headersDict, type RenderedRestStep } from '$lib/chains/rest';
+	import { headersDict, type RenderedRestStep, type RestStep } from '$lib/chains/rest';
 	import { isEqual } from '$lib/util';
 	import type { DocumentIndexStep } from '$lib/chains/documentIndex';
+	import DocumentIndexConfiguration from './steps/DocumentIndexConfiguration.svelte';
 
   // Model
   export let step: Step;
@@ -92,6 +93,11 @@
         />
       {:else if restStep}
         <RestConfiguration bind:proxiedRequest={restStep.proxied} />
+      {:else if docIndexStep}
+        <DocumentIndexConfiguration 
+          bind:service={docIndexStep.embeddingService}
+          bind:settings={docIndexStep.embeddingSettings}
+        />
       {/if}
     </svelte:fragment>
     

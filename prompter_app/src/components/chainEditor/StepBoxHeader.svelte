@@ -1,10 +1,12 @@
 <script lang="ts">
   import { editorSession, moveChainStep } from '$lib/editorSession';
-  import { isValidParamName, StepType, type PromptChain, type PromptStep, type Step, STEP_TYPE_DATA, type RestStep } from '$lib/chains/chains';
+  import { isValidParamName, StepType, type PromptChain, type Step, STEP_TYPE_DATA } from '$lib/chains/chains';
   import { RunStatus, type StepRunStatus } from '$lib/prediction/chain';
   import { LLM_SERVICE_NAMES } from '$lib/services';
   import { faAngleDown, faAngleUp, faArrowDown, faArrowUp, faCircleExclamation, faDownLeftAndUpRightToCenter, faHourglass, faKey, faRobot, faSpinner, faTrashCan, faUpRightAndDownLeftFromCenter, faXmark, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
   import Fa from 'svelte-fa';
+	import type { PromptStep } from '$lib/chains/prompts';
+	import type { RestStep } from '$lib/chains/rest';
 
   export let step: Step;
   export let promptChain: PromptChain;
