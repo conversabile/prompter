@@ -63,7 +63,7 @@ export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {
       icon: faRobot,
   },
   [StepType.rest]: {
-      label: "API Call (beta)",
+      label: "API Call",
       icon: faPlug,
   },
   [StepType.documentIndex]: {
@@ -259,7 +259,8 @@ export function stepParameterNameList(step: Step) : Array<string> {
     if (restStep.body) fieldsToMatch.push(restStep.body);
     restStep.headers.forEach((h) => {fieldsToMatch.push(h.value)});
   } else if (step.stepType == StepType.documentIndex) {
-    ;
+    const docIndexStep = (step as DocumentIndexStep);
+    docIndexStep.queries.forEach((q) => {fieldsToMatch.push(q.text)});
   } else {
     throw Error("Unsupported step type");
   }
@@ -343,6 +344,7 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
     if (aStep.minimized != anotherStep.minimized) return false;
     if (! isEqual(aStep.results, anotherStep.results)) return false;
 
+
     if (aStep.stepType == StepType.prompt) {
       if (! arePromptsEquivalent(aStep as PromptStep, anotherStep as PromptStep)) return false;
     } else if (aStep.stepType == StepType.rest) {
@@ -354,7 +356,6 @@ export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptCha
     }
   }
   
-
   return true;
 }
 
@@ -376,4 +377,8 @@ function areRestStepsEquivalent(aRestStep: RestStep, anotherRestStep: RestStep) 
 
 function areDocumentIndexStepsEquivalent(aDocIndexStep: DocumentIndexStep, anotherDocIndexStep: DocumentIndexStep) {
   if (! isEqual(aDocIndexStep.documents, anotherDocIndexStep.documents)) return false;
+  if (! isEqual(aDocIndexStep.embeddingService, anotherDocIndexStep.embeddingService)) return false;
+  if (! isEqual(aDocIndexStep.embeddingSettings, anotherDocIndexStep.embeddingSettings)) return false;
+  if (! isEqual(aDocIndexStep.queries, anotherDocIndexStep.queries)) return false;
+  return true;
 }

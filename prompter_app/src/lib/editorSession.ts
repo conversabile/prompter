@@ -1,10 +1,10 @@
 import { derived, writable, type Readable, get } from "svelte/store";
-import { StepType, type PromptChain, type PromptStep, parameterNameList, type Step, type RestStep } from "./chains/chains";
-import { getDefaultPrompt, getExamplePrompt, renderPromptStep, type RenderedPrompt } from "./chains/prompts";
-import { getExampleRestStep, type RenderedRestStep } from "./chains/rest";
+import { StepType, type PromptChain, parameterNameList, type Step } from "./chains/chains";
+import { getDefaultPrompt, getExamplePrompt, type PromptStep, type PromptStepResult, type RenderedPrompt } from "./chains/prompts";
+import { getExampleRestStep, type RenderedRestStep, type RestStep, type RestStepResult } from "./chains/rest";
 import type { StepRunStatus } from "./prediction/chain";
 import { renderTemplate, type RenderedTemplate } from "./jinja";
-import { getDefaultDocumentIndexStep, type DocumentIndexStep, type RenderedDocumentIndex, type DocumentIndexQuery } from "./chains/documentIndex";
+import { getDefaultDocumentIndexStep, type DocumentIndexStep, type RenderedDocumentIndex, getExportedDocIndexResults } from "./chains/documentIndex";
 
 // Session
 
@@ -22,23 +22,44 @@ export const renderedSteps: Readable<Record<string,RenderedPrompt | RenderedRest
         }));
     }
 )
-export const stepResults = derived(
+
+export const exportedStepResults: Readable<Record<string, Record<string, any>>> = derived(
     editorSession,
     ($editorSession) => {
-        return Object.fromEntries($editorSession.promptChain.steps.map(step => {
-            const stepResult = step.results ? step.results[0] : null;
-            return [step.resultKey, stepResult];
-        }));
+        let result: Record<string, Record<string, any>> = {};
+        $editorSession.promptChain.steps.forEach(step => {
+            let exportedResults: Record<string, any> = {};
+            if (!step.results) return exportedResults;
+            if (step.stepType == StepType.prompt) {
+                exportedResults[step.resultKey] = (step.results[0] as PromptStepResult).resultRaw;
+            } else if (step.stepType == StepType.rest) {
+                exportedResults[step.resultKey] = (step.results[0] as RestStepResult).resultJson;
+            } else if (step.stepType == StepType.documentIndex) {
+                exportedResults = getExportedDocIndexResults((step as DocumentIndexStep))
+            }
+            result[step.resultKey] = exportedResults;
+        })
+        return result;
     }
 )
 
 // Render prompts
 
+function allExportedResults() : Record<string, any> {
+    let result: Record<string, any> = {};
+    Object.values(get(exportedStepResults)).forEach(v => {
+        for (const exportedKey in v) {
+            result[exportedKey] = v[exportedKey];
+        }
+    })
+    return result;
+}
+
 function renderSessionTemplate(text: string) {
     return renderTemplate(
         text,
         get(editorSession).promptChain.parametersDict,
-        get(stepResults),
+        allExportedResults(),
         get(editorSession).predictionStatus
     )
 }

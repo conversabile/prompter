@@ -3,9 +3,10 @@
 ## v0.0.7 (in development)
 
 * Add multi-step editor UI 
-* Add REST Steps
+* Add API Call step type
 * Add corsyproxy.io support in REST step
 * Change example steps to adapt to context
+* Add Document Index step type
 
 ## v0.0.6
 

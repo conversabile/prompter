@@ -21,6 +21,7 @@
 		"@types/cookie": "^0.5.1",
 		"@types/html-to-text": "^9.0.1",
 		"@types/node": "^20.2.3",
+		"@types/nunjucks": "^3.2.6",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
 		"eslint": "^8.28.0",
@@ -41,6 +42,7 @@
 	"dependencies": {
 		"@fortawesome/free-brands-svg-icons": "^6.5.1",
 		"@fortawesome/free-solid-svg-icons": "^6.4.0",
+		"closevector-web": "^0.1.6",
 		"codemirror": "^5.65.13",
 		"html-to-text": "^9.0.5",
 		"nanoid": "^5.0.4",

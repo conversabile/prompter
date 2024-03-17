@@ -1,0 +1,179 @@
+{
+    "version": 5,
+    "title": "Untitled Chain",
+    "parametersDict": {
+        "storyTopic": "time travelling",
+        "maxWords": "100",
+        "anotherTopic": "",
+        "result_2": "",
+        "result_2_": "",
+        "result_2__": "",
+        "result_2__d": "",
+        "result_2__de": "",
+        "result_2__det": "",
+        "result_2__deta": "",
+        "result_2__detai": "",
+        "result_2__detail": "",
+        "result_2__details": "",
+        "result_0": "",
+        "b": "",
+        "bn": "",
+        "bno": "",
+        "bnoo": "",
+        "bnook": "",
+        "bo": "",
+        "boo": "",
+        "book": "",
+        "c": "",
+        "ch": "",
+        "cha": "",
+        "char": "",
+        "chara": "",
+        "charac": "",
+        "charact": "",
+        "characte": "",
+        "character": "",
+        "characters": ""
+    },
+    "steps": [
+        {
+            "stepType": "documentIndex",
+            "title": "Untitled Document Index",
+            "resultKey": "characters",
+            "results": [
+                {
+                    "datetime": "2024-03-17T10:19:09.652Z",
+                    "segments": {
+                        "query_0": [
+                            {
+                                "docId": "fake-document.pdf",
+                                "text": "Professor Pat Pending (voiced by Don Messick), an inventor who drives the Convert-a-Car (3); he can transform his car into pretty much anything that moves.",
+                                "score": 0.5985675378993943
+                            },
+                            {
+                                "docId": "fake-document.pdf",
+                                "text": "Peter Perfect (voiced by Daws Butler), a gentlemanly racer in the Turbo Terrific (9); Peter is extremely strong, but also very vain, and he often boasts about the virtues of his high-tech race car – which regularly falls to pieces seconds after he praises it. He is fond of Penelope and often helps her out.",
+                                "score": 0.5889502256232702
+                            },
+                            {
+                                "docId": "fake-document.pdf",
+                                "text": "The Red Max (voiced by Daws Butler), a Manfred von Richthofen-styled aviator who speaks with a German accent that drives car/airplane hybrid called the Crimson Haybaler (4); his vehicle is able to fly, although only for short distances in ground effect.",
+                                "score": 0.5836896385029112
+                            },
+                            {
+                                "docId": "fake-document.pdf",
+                                "text": "Penelope Pitstop (voiced by Janet Waldo), the lone female driver, in a 1930s racing costume that drives the Compact Pussycat (5); a Southern belle, Penelope seems more concerned with her looks than with racing and often gets herself into trouble. Nevertheless, she is a skilled racer.",
+                                "score": 0.5782562989729595
+                            }
+                        ]
+                    },
+                    "resultRaw": "",
+                    "resultJson": null
+                }
+            ],
+            "minimized": false,
+            "documents": [
+                {
+                    "id": "fake-document.pdf",
+                    "text": "The Slag Brothers, Rock and Gravel (vocal effects provided by Daws Butler and Don Messick), two cavemen that drive the Boulder Mobile (1); their car is made out of rock and the brothers (who talk in caveman-like gibberish but with occasional intelligible words) power it up by hitting it on both sides with their clubs and are also able to re-build it from bare rock, always using their clubs. Rock and Gravel have long body hair that covers their body except for their noses, arms, and legs.\n\nThe Gruesome Twosome, Tiny \"Big Gruesome\" (voiced by Daws Butler) and Bela \"Little Gruesome\" (voiced by Don Messick), who are monsters that drive the Creepy Coupe (2); their horror-themed car includes a small bell tower inhabited by a fire-breathing dragon, bats, ghosts, and other creatures. The Creepy Coupe's special booster is \"dragon power,\" with the dragon acting as a RATO unit.\n\nProfessor Pat Pending (voiced by Don Messick), an inventor who drives the Convert-a-Car (3); he can transform his car into pretty much anything that moves.\n\nThe Red Max (voiced by Daws Butler), a Manfred von Richthofen-styled aviator who speaks with a German accent that drives car/airplane hybrid called the Crimson Haybaler (4); his vehicle is able to fly, although only for short distances in ground effect.\n\nPenelope Pitstop (voiced by Janet Waldo), the lone female driver, in a 1930s racing costume that drives the Compact Pussycat (5); a Southern belle, Penelope seems more concerned with her looks than with racing and often gets herself into trouble. Nevertheless, she is a skilled racer.\n\nSergeant Blast (voiced by Daws Butler) and Private Meekly (voiced by Paul Winchell), two soldiers in an armored car/tank hybrid called the Army Surplus Special (6); the Sergeant uses \"fire power\" (i.e. shooting cannonballs from his turret) to temporarily boost power in the car.\n\nThe Ant Hill Mob, a group of dwarf gangsters led by Clyde (voiced by Paul Winchell) and is composed of him, Ring-A-Ding (voiced by Don Messick), Rug Bug Benny, Mac, Danny, Kirby and Willy, in the Bulletproof Bomb (7); they are sometimes preoccupied with getting caught by the police and are able to use \"getaway power\", which involves all the gangsters (except for Clyde) extending their legs through the bottom of the car and running.\n\nLazy Luke (voiced by John Stephenson), a barefoot hillbilly, and Blubber Bear (vocal effects provided by John Stephenson), a timid, cry-baby brown bear, in the Arkansas Chuggabug (8); Luke maneuvers the steering wheel with his feet and his car is steam-powered from an old rickety boiler. Blubber has been known to blow up a balloon and use it as an air jet for briefly increased speed.\n\nPeter Perfect (voiced by Daws Butler), a gentlemanly racer in the Turbo Terrific (9); Peter is extremely strong, but also very vain, and he often boasts about the virtues of his high-tech race car – which regularly falls to pieces seconds after he praises it. He is fond of Penelope and often helps her out.\n\nRufus Ruffcut (voiced by Daws Butler), a lumberjack and his beaver companion Sawtooth (vocal effects provided by Don Messick) in the Buzz Wagon (10); their car, entirely made of wood, features four circular saw blades as wheels and Sawtooth is able to cut through obstacles (such as trees and other objects) at super-high speed.\n\nDick Dastardly (voiced by Paul Winchell), an archetypal mustache-twirling villain and his wheezily snickering dog Muttley (voiced by Don Messick) in the Mean Machine (00); their sinister vehicle is a purple, rocket-powered car with an abundance of concealed weapons and the ability to fly. Dastardly's usual race strategy revolves around using the Mean Machine's great speed to get ahead of the other racers and then setting a trap to stop them and maintain the lead, but most of his plans backfire, causing him to fall back into last place. As a result, Dastardly is the only racer who not only never wins, but never even finishes in the top three in any race. In the opening title sequence, Dastardly attempts to stall the racers by chaining their cars to a pole, but then he accidentally shifts his car into reverse, bumps into and breaks the pole and frees the others as the race begins. In the closing credits after the narrator stops the other racers in the middle of a race upon remembering that it starts the following week, Dastardly plots to cheat by starting before the next race, only for the words \"The End\" to appear in rock form above his car, fall, and crush it. As Dastardly cries out \"Drat! Drat! And double drat!\" (which he often says after most of his schemes have backfired), Muttley snickers over what just happened (during reruns on syndicated TV, the dialogue during the closing credits is muted while the ending theme and sound effects remain intact). The only times Dick Dastardly came close to winning in one episode was when it was discovered that the front tip of his car stretched out and they made the second place holder Penelope Pitstop the winner of the race. The other in 'Seesaw to Arkansas' involved a photo finish between four cars, including the Mean Machine, only for Dastardly to stop to have his picture taken before crossing the finishing line, ending the race 4th overall.\n",
+                    "segmentSize": 5,
+                    "segmentSeparator": "\n\n"
+                }
+            ],
+            "queries": [
+                {
+                    "key": "query_0",
+                    "text": "A character who could be involved in {{ storyTopic }}"
+                }
+            ],
+            "embeddingService": "openai",
+            "embeddingSettings": {
+                "openai": {
+                    "modelName": "text-embedding-3-small"
+                },
+                "ollama": {
+                    "modelName": "nomic-embed-text"
+                }
+            }
+        },
+        {
+            "stepType": "rest",
+            "title": "Untitled API Call",
+            "resultKey": "book",
+            "results": [
+                {
+                    "datetime": "2024-03-17T10:19:11.486Z",
+                    "resultRaw": "{\n    \"numFound\": 15486,\n    \"start\": 0,\n    \"numFoundExact\": true,\n    \"docs\": [\n        {\n            \"title\": \"Time Traveler's Wife\",\n            \"author_name\": [\n                \"Audrey Niffenegger\",\n                \"William Hope\",\n                \"Laurel Lefkow\"\n            ],\n            \"person\": [\n                \"Clare Anne Abshire\",\n                \"Henry DeTamble\",\n                \"Dr. Kendrick\",\n                \"Alba DeTamble\"\n            ],\n            \"place\": [\n                \"Newberry Library\",\n                \"Chicago\",\n                \"South Haven\",\n                \"Michigan\"\n            ]\n        }\n    ],\n    \"num_found\": 15486,\n    \"q\": \"time travelling\",\n    \"offset\": null\n}",
+                    "resultJson": {
+                        "numFound": 15486,
+                        "start": 0,
+                        "numFoundExact": true,
+                        "docs": [
+                            {
+                                "title": "Time Traveler's Wife",
+                                "author_name": [
+                                    "Audrey Niffenegger",
+                                    "William Hope",
+                                    "Laurel Lefkow"
+                                ],
+                                "person": [
+                                    "Clare Anne Abshire",
+                                    "Henry DeTamble",
+                                    "Dr. Kendrick",
+                                    "Alba DeTamble"
+                                ],
+                                "place": [
+                                    "Newberry Library",
+                                    "Chicago",
+                                    "South Haven",
+                                    "Michigan"
+                                ]
+                            }
+                        ],
+                        "num_found": 15486,
+                        "q": "time travelling",
+                        "offset": null
+                    },
+                    "status": 200,
+                    "renderedRestStep": {
+                        "method": "GET",
+                        "url": "https://openlibrary.org/search.json?q=time%20travelling&fields=title,person,place,author_name&limit=1",
+                        "body": "",
+                        "headers": {}
+                    }
+                }
+            ],
+            "minimized": false,
+            "method": "GET",
+            "url": "https://openlibrary.org/search.json?q={{ storyTopic | urlencode }}&fields=title,person,place,author_name&limit=1",
+            "headers": [],
+            "body": null,
+            "proxied": false
+        },
+        {
+            "stepType": "prompt",
+            "promptText": "{# This is an example additional step: you can use previous result keys here! #}\n\nWrite a short story  (max {{maxWords}} words) about {{ storyTopic }} using the following characters as they were extracted from a text database:\n\n{{ characters }}\n\nThe story should be set in the following locations from the book \"{{ book.docs[0].title }}\": {{ book.docs[0].place }}",
+            "title": "Untitled Prompt",
+            "resultKey": "result_0",
+            "results": [
+                {
+                    "datetime": "2024-03-17T10:19:12.491Z",
+                    "renderedPrompt": "Write a short story  (max 100 words) about time travelling using the following characters as they were extracted from a text database:\n\n{\"query_0\":[\"Professor Pat Pending (voiced by Don Messick), an inventor who drives the Convert-a-Car (3); he can transform his car into pretty much anything that moves.\",\"Peter Perfect (voiced by Daws Butler), a gentlemanly racer in the Turbo Terrific (9); Peter is extremely strong, but also very vain, and he often boasts about the virtues of his high-tech race car – which regularly falls to pieces seconds after he praises it. He is fond of Penelope and often helps her out.\",\"The Red Max (voiced by Daws Butler), a Manfred von Richthofen-styled aviator who speaks with a German accent that drives car/airplane hybrid called the Crimson Haybaler (4); his vehicle is able to fly, although only for short distances in ground effect.\",\"Penelope Pitstop (voiced by Janet Waldo), the lone female driver, in a 1930s racing costume that drives the Compact Pussycat (5); a Southern belle, Penelope seems more concerned with her looks than with racing and often gets herself into trouble. Nevertheless, she is a skilled racer.\"]}\n\nThe story should be set in the following locations from the book \"Time Traveler's Wife\": Newberry Library,Chicago,South Haven,Michigan",
+                    "resultRaw": "As Professor Pat Pending tinkered with his latest invention in the Newberry Library, a mysterious portal suddenly appeared. Peter Perfect, eager for adventure, revved up his Turbo Terrific, followed closely by Penelope Pitstop in her Compact Pussycat.\n\nThe Red Max, always up for a challenge, soared in with his Crimson Haybaler. Together, the four travelers were whisked through time, landing in South Haven, Michigan, in the 1930s. Penelope's eyes lit up at the vintage cars racing by, and Peter flexed his muscles in excitement.\n\nAs they explored the past, they realized that time travel wasn't just about changing history, but about experiencing it firsthand.",
+                    "resultJson": null,
+                    "model": "openai-gpt-3.5-turbo"
+                }
+            ],
+            "minimized": false,
+            "predictionService": "openai",
+            "predictionSettings": {
+                "openai": {
+                    "modelName": "gpt-3.5-turbo"
+                },
+                "ollama": {
+                    "modelName": "llama2"
+                }
+            }
+        }
+    ]
+}

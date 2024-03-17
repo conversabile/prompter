@@ -3,7 +3,7 @@ import { RunStatus, type StepRunStatus } from "./prediction/chain";
 import { escapeHtml } from "./util";
 
 import nunjucks from 'nunjucks';
-import type { PromptStep, RestStepResult, StepResult } from "./chains/chains";
+import type { StepResult } from "./chains/chains";
 import PromptBoxRenderedPromptSpinner from "../components/chainEditor/PromptBoxRenderedPromptSpinner.svelte";
 nunjucks.configure({autoescape: false, trimBlocks: true});
 nunjucks.installJinjaCompat();
@@ -117,21 +117,12 @@ export function renderTemplate(
         // TODO: move sanitization at dict level
         let renderedParamDict: Record<string, string | object> = {};
         for (const paramName in paramDict) {
-        renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
+            renderedParamDict[paramName] = escapeHtml(paramDict[paramName] ?? '');
         }
         for (const resultKey in previousResults) {
             let previousResult = previousResults[resultKey];
             if (previousResult != null) {
-                if (previousResult.resultJson) {
-                    renderedParamDict[resultKey] = makeRenderableThing(previousResult.resultJson);
-                    // renderedParamDict[resultKey + "__raw"] = previousResult.resultRaw;
-                } else {
-                    renderedParamDict[resultKey] = previousResult.resultRaw
-                }
-
-                // if ("status" in previousResult) {
-                //     renderedParamDict[resultKey + "__status"] = (previousResult as RestStepResult).status.toString();
-                // }
+                renderedParamDict[resultKey] = makeRenderableThing(previousResult)
             }
         }
         resultText = renderString(text, renderedParamDict);

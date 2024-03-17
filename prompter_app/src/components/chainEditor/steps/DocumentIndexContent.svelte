@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { DocumentIndexStep, IndexedDocument, RenderedDocumentIndex } from "$lib/chains/documentIndex";
+	import { getSegments, type DocumentIndexStep, type IndexedDocument, type RenderedDocumentIndex } from "$lib/chains/documentIndex";
 	import { faPlusCircle, faTrash } from "@fortawesome/free-solid-svg-icons";
 	import { nanoid } from "nanoid";
 	import Fa from "svelte-fa";
@@ -19,7 +19,7 @@
 
     // Rebuild fulltext from segments
     let documentSegments: Record<string, string[]> = {}; // docId -> list of segments
-    $: docIndexStep.documents.forEach((doc: IndexedDocument) => {documentSegments[doc.id] = doc.text.split(doc.segmentSeparator);})
+    $: documentSegments = getSegments(docIndexStep);
 
     function handleAddDocument() {
         docIndexStep.documents.push({id: nanoid(11), text: "", segmentSize: globalSegmentSize, segmentSeparator: "\n\n"});

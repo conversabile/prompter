@@ -3,15 +3,6 @@ import { parameterNameList, StepType } from "$lib/chains/chains";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 // import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 
-/* 
-* TODO:
-*  - DONE persist predictions in saved prompts
-*  - DONE persist api key in local storage
-*  - syntax highlighting
-*  - DONE prediction box is hidden initially
-*  - DONE handle openapi errors
-*  - DONE sanitize uuid params in /p/<UUID>
-*/
 import Fa from "svelte-fa";
 import { Clock } from "svelte-loading-spinners";
 import { userSettings } from "$lib/userSettings";
@@ -20,6 +11,7 @@ import { PromptStepPredictor, type LLMStreamedTokenData } from "$lib/prediction/
 import { runRestStep, type RenderedRestStep, type RestStep } from "$lib/chains/rest";
 import { editorSession, renderedSteps } from "$lib/editorSession";
 	import type { PromptStep, RenderedPrompt } from "$lib/chains/prompts";
+	import { runDocumentIndexStep, type DocumentIndexStep, type RenderedDocumentIndex } from "$lib/chains/documentIndex";
 
 let chainParameters: string[];
 $: chainParameters = parameterNameList($editorSession.promptChain);
@@ -60,6 +52,8 @@ async function handlePredict() {
           
         } else if (step.stepType == StepType.rest) {
           await runRestStep(step as RestStep, $renderedSteps[step.resultKey] as RenderedRestStep, $userSettings);
+        } else if (step.stepType == StepType.documentIndex) {
+          await runDocumentIndexStep((step as DocumentIndexStep), ($renderedSteps[step.resultKey] as RenderedDocumentIndex), $userSettings);
         } else {
           throw Error("Not implemented");
         }

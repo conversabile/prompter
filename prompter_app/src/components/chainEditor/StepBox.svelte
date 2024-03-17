@@ -5,20 +5,20 @@
   import Fa from 'svelte-fa';
 	import { faCircleExclamation, faGear, faPlug, faRobot, faWarning} from '@fortawesome/free-solid-svg-icons';
 	import { get_current_component } from 'svelte/internal';
-	import { deleteChainStep, editorSession, renderedSteps } from '$lib/editorSession';
+	import { deleteChainStep, editorSession, exportedStepResults, renderedSteps } from '$lib/editorSession';
 	import PromptContent from './steps/PromptContent.svelte';
 	import PromptConfiguration from './steps/PromptConfiguration.svelte';
 	import RestConfiguration from './steps/RestConfiguration.svelte';
 	import RestContent from './steps/RestContent.svelte';
-	import DocumentIndexContent from './steps/DocumentIndexContent.svelte';
 	import type { PromptStep, RenderedPrompt } from '$lib/chains/prompts';
-	import { StepType, type PromptChain, type Step } from '$lib/chains/chains';
+	import { StepType, type PromptChain, type Step, STEP_TYPE_DATA } from '$lib/chains/chains';
   import Highlight from "svelte-highlight";
   import json from "svelte-highlight/languages/json";
   import a11yLight from "svelte-highlight/styles/a11y-light";
 	import { headersDict, type RenderedRestStep, type RestStep } from '$lib/chains/rest';
 	import { isEqual } from '$lib/util';
 	import type { DocumentIndexStep } from '$lib/chains/documentIndex';
+	import DocumentIndexContent from './steps/DocumentIndexContent.svelte';
 	import DocumentIndexConfiguration from './steps/DocumentIndexConfiguration.svelte';
 
   // Model
@@ -131,16 +131,17 @@
   <footer>
     {#if promptStep && promptStep.results}
       <div class="stepResult">
-        <p><span class="icon"><Fa icon={faRobot} /></span> <span class="resultKey">{step.resultKey}</span> {#if outdatedPrediction} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
+        <p><span class="icon"><Fa icon={STEP_TYPE_DATA[StepType.prompt].icon} /></span> <span class="resultKey">{step.resultKey}</span> {#if outdatedPrediction} <span class="warning"><Fa icon={faWarning} /> This prediction was made with a different version of the prompt</span>{/if}</p><p>{promptStep.results[0].resultRaw}</p>
       </div>
     {:else if restStep && restStep.results}
       <div class="stepResult">
         <div class="stepResultKeys">
-          <p><span class="icon"><Fa icon={faPlug} /></span> <span
-          class="resultKey"
-          class:active={selectedResultKey=="default"}>{step.resultKey}</span>
-          ({restStep.results[0].status}) {#if outdatedPrediction} <span
-          class="warning"><Fa icon={faWarning} /> This response was obtained from a different reqest</span>{/if}</p>
+          <p><span class="icon"><Fa icon={STEP_TYPE_DATA[StepType.rest].icon} /></span> <span
+            class="resultKey"
+            class:active={selectedResultKey=="default"}>{step.resultKey}</span>
+            ({restStep.results[0].status}) {#if outdatedPrediction} <span
+            class="warning"><Fa icon={faWarning}
+          /> This response was obtained from a different reqest</span>{/if}</p>
           <!-- <p><a href={null} on:click={() => selectedResultKey = "default"}><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey" class:active={selectedResultKey=="default"}>{step.resultKey}</span></a></p> -->
         </div>
         <div class="stepResultValue">
@@ -157,6 +158,17 @@
           {/if}
         </div>
       </div>
+    {:else if docIndexStep && docIndexStep.results}
+    <div class="stepResult">
+      <div class="stepResultKeys">
+        <p><span class="icon"><Fa icon={STEP_TYPE_DATA[StepType.documentIndex].icon} /></span> <span
+          class="resultKey"
+          class:active={selectedResultKey=="default"}>{step.resultKey}</span>
+      </div>
+      <div class="stepResultValue">
+        <Highlight language={json} code={JSON.stringify($exportedStepResults[step.resultKey][step.resultKey], null, '  ')} />
+      </div>
+    </div>
     {:else if step && step.results}
       <div class="stepResult">
         <p><span class="icon"><Fa icon={faPlug} /></span> <span class="resultKey">{step.resultKey}</span></p> <p>{step.results[0].resultRaw}</p>
