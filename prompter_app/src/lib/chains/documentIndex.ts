@@ -4,6 +4,9 @@ import OpenAI from "openai";
 import { StepType, type Step, type StepResult } from "./chains";
 import type { LocalUserSettings } from "$lib/userSettings";
 import { CloseVectorEmbeddingsWeb, CloseVectorHNSWWeb } from "closevector-web";
+import xxhash, { type XXHashAPI } from "xxhash-wasm";
+import { get } from "svelte/store";
+import { editorSession } from "$lib/editorSession";
 
 export type DocumentId = string
 export type QueryKey = string;
@@ -18,6 +21,7 @@ export interface IndexedDocument {
 export interface DocumentIndexQuery {
   key: QueryKey,
   text: string,
+  maxResults: number
 }
 
 export interface DocumentIndexResultSegment {
@@ -58,7 +62,7 @@ export function getDefaultDocumentIndexStep(resultKey: string) : DocumentIndexSt
             segmentSeparator: '\n\n'
         }
       ],
-      queries: [{key: "query_0", text: "A character who could be involved in {{ storyTopic }}"}],
+      queries: [{key: "query_0", text: "A character who could be involved in {{ storyTopic }}", maxResults: 5}],
       embeddingService: PredictionService.openai,
       embeddingSettings: defaultEmbeddingSettings()
     }
@@ -74,6 +78,15 @@ export function getSegments(docIndexStep: DocumentIndexStep) : Record<string, st
   let result: Record<string, string[]> = {};
   docIndexStep.documents.forEach((doc: IndexedDocument) => {result[doc.id] = doc.text.split(doc.segmentSeparator);});
   return result;
+}
+
+export function getEmbeddingModelName(docIndexStep: DocumentIndexStep) : string {
+  return docIndexStep.embeddingSettings[docIndexStep.embeddingService].modelName
+}
+
+export function getEmbeddingModelSpecString(docIndexStep: DocumentIndexStep) : string {
+  // ollama|gemma:7b
+  return docIndexStep.embeddingService + '|' + getEmbeddingModelName(docIndexStep);
 }
 
 //
@@ -98,16 +111,15 @@ export function getExportedDocIndexResults(docIndexStep: DocumentIndexStep) : Re
   return result;
 }
 
-export async function runDocumentIndexStep(docIndexStep: DocumentIndexStep, renderedStep: RenderedDocumentIndex, userSettings: LocalUserSettings) : Promise<DocumentIndexResult> {
+export async function runDocumentIndexStep(
+  docIndexStep: DocumentIndexStep,
+  renderedStep: RenderedDocumentIndex,
+  userSettings: LocalUserSettings,
+) : Promise<DocumentIndexResult> {
   let allSegments = getSegments(docIndexStep);
 
   // Configure Embedding Class
-  let cvEmbeddings: CloseVectorEmbeddingsWeb;
-  if (docIndexStep.embeddingService == PredictionService.openai) {
-    cvEmbeddings = new CloseVectorOpenaiEmbeddings(userSettings, docIndexStep.embeddingSettings.openai.modelName)
-  } else {
-    throw Error("Not Implemented");
-  }
+  let cvEmbeddings: CloseVectorEmbeddingsWeb = new CloseVectorCustomEmbeddings(docIndexStep, userSettings);
 
   // Populate Vector Database
   let cvTexts: string[] = [];
@@ -139,7 +151,7 @@ export async function runDocumentIndexStep(docIndexStep: DocumentIndexStep, rend
     result.segments[queryKey] = resultSegments;
   }
 
-  console.log(result);
+  // console.log("document index result: ", result);
   docIndexStep.results = [result];
 
   return result;
@@ -158,24 +170,140 @@ async function embedSegmentsOpenai(segments: string[], modelName: string, userSe
   return embedding.data.map((item) => {return item.embedding});
 }
 
-class CloseVectorOpenaiEmbeddings extends CloseVectorEmbeddingsWeb {
+async function embedSegmentsOllama(segments: string[], modelName: string, userSettings: LocalUserSettings) : Promise<Array<number[]>> {
+  let result: Array<number[]> = [];
+  await Promise.all(segments.map((s, index) => {
+    return fetch(`${userSettings.predictionService.ollama.server.replace(/\/+$/, '')}/api/embeddings`, {
+          method: 'POST',
+          body: JSON.stringify({
+            "model": modelName,
+            "prompt": s
+          })
+    }).then(async response => {
+      if (response.ok) return response.json();
+      throw new DocumentIndexExecutionError(await response.text());
+    }).then(async responseJson => {
+      let embedding: number[] = responseJson['embedding'];
+      result[index] = embedding;
+      // console.log("embedding result", index, embedding);
+    })
+  }));
+  // console.log("done embedding");
+  return result;
+}
+
+
+let xxhashLoaded = xxhash();
+
+/**
+ * Centralizes the segment hash function to ensure consistent cache access
+ */
+export class CacheDocumentHasher {
+  loadedXxhash: XXHashAPI
+
+  constructor(loadedXxhash: XXHashAPI) {
+    this.loadedXxhash = loadedXxhash;
+  }
+
+  hash(text: string) : string {
+    return this.loadedXxhash.h32ToString(text);
+  }
+}
+
+/**
+ * We use xxhash-wasm for cache, which is fast but require async load of the WASM module.
+ * This function returns a document hasher class that recycles the xxhash instance that
+ * is loaded at module level.
+ * 
+ * This way hashing 100K "Mary had a little lamb" strings took 78ms, comparable with loading
+ * xxhash directly (84ms). A baseline wrapper hashString function that 1) awaits xxhash 2) hashes
+ * a single string input goes out of memory. A modified hashString that awaits on documentIndex.xxhashLoaded
+ * took 1464ms to hash the 100K strings.
+ * 
+ * @returns A CacheDocumentHasher instance
+ */
+export async function getCacheDocumentHasher() : Promise<CacheDocumentHasher> {
+  let hasher = await xxhashLoaded;
+  return new CacheDocumentHasher(hasher);
+}
+
+class CloseVectorCustomEmbeddings extends CloseVectorEmbeddingsWeb {
+  docIndexStep: DocumentIndexStep
   userSettings: LocalUserSettings;
   modelName: string;
 
-  constructor(userSettings: LocalUserSettings, modelName: string) {
+  _embeddingFunction: CallableFunction;
+
+  constructor(docIndexStep: DocumentIndexStep, userSettings: LocalUserSettings) {
     super({key: "fake-key", secret: "fake-secret"});
 
     this.userSettings = userSettings;
-    this.modelName = modelName;
+    this.docIndexStep = docIndexStep;
+    this.modelName = docIndexStep.embeddingSettings[docIndexStep.embeddingService].modelName
+
+    if (docIndexStep.embeddingService == PredictionService.openai) this._embeddingFunction = embedSegmentsOpenai;
+    else if (docIndexStep.embeddingService == PredictionService.ollama) this._embeddingFunction = embedSegmentsOllama;
+    else throw Error("Not implemented");
+
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
     if (texts.length == 0) return [];
-    return embedSegmentsOpenai(texts, this.modelName, this.userSettings);
+
+    let chainCache = get(editorSession).promptChain.embeddingCache;
+    const modelSpec = getEmbeddingModelSpecString(this.docIndexStep);
+    if (! chainCache[modelSpec]) chainCache[modelSpec] = {}
+    let cache: Record<string, number[]> = chainCache[modelSpec];
+
+    let hasher = await getCacheDocumentHasher();
+    let result = Array(texts.length);
+
+    // Read existing embeddings from cache
+    let textsToEmbed: {text: string, originalPosition: number, hash: string}[] = [];
+    texts.forEach((t, index) => {
+      const hash = hasher.hash(t);
+      if (hash in cache) {
+        result[index] = cache[hash];
+      } else {
+        textsToEmbed.push({
+          text: t,
+          originalPosition: index,
+          hash: hash
+        });
+      }
+    });
+    // console.log("Embedding cache hit: ", texts.length - textsToEmbed.length, "/", texts.length);
+
+    // Make request for not-in-cache embeddings
+    let newEmbeddings: Array<number[]> = [];
+    
+    if (textsToEmbed.length > 0) {
+      newEmbeddings = await this._embeddingFunction(
+        textsToEmbed.map(r => {return r.text}),
+        this.modelName,
+        this.userSettings
+      );
+    }
+    
+    // Merge results and update cache
+    if (newEmbeddings.length != textsToEmbed.length) throw Error("Retrieved embeddings mismatch, please report this bug at https://github.com/conversabile/prompter");
+    newEmbeddings.forEach((emb, index) => {
+      const textsToEmbedRecord = textsToEmbed[index];
+      result[textsToEmbedRecord.originalPosition] = emb;
+      cache[textsToEmbedRecord.hash] = emb;
+    });
+
+    // Notify editor session subscribers
+    editorSession.update((updater) => {
+      updater.promptChain.embeddingCache[modelSpec] = cache;
+      return updater;
+     })
+
+    return result;
   }
 
   async embedQuery(text: string): Promise<number[]> {
-    return (await embedSegmentsOpenai([text], this.modelName, this.userSettings))[0];
+    return (await this.embedDocuments([text]))[0]
   }
 
   async embeddingWithRetry(textList: string[]): Promise<any> {
@@ -183,3 +311,5 @@ class CloseVectorOpenaiEmbeddings extends CloseVectorEmbeddingsWeb {
     return this.embedDocuments(textList);
   }
 }
+
+class DocumentIndexExecutionError extends Error {};

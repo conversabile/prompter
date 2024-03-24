@@ -1,6 +1,7 @@
 <script lang="ts">
 import { page } from "$app/stores";
 import type { PromptChain } from "$lib/chains/chains";
+	import { pruneChain } from "$lib/chains/util";
 	import { editorSession } from "$lib/editorSession";
 import { faClone, faSave, faShare } from "@fortawesome/free-solid-svg-icons";
 import Fa from "svelte-fa";
@@ -26,46 +27,66 @@ $: sharedUrlUser = isSharedEditable ? sharedUrlEditable : sharedUrlReadOnly;
 async function handleShare() {
     isSharing = true;
     error = "";
-    const res = await fetch(`/api/chain`, {
-			method: 'POST',
-			body: JSON.stringify($editorSession.promptChain)
-		});
 
-		const responseJson = await res.json()
-    console.log("Saved prompt chain with id: " + responseJson.chainId);
-    chainId = responseJson.chainId;
-    editKey = responseJson.editKey;
-    lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
-    let newSharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
-    let newSharedUrlEditable = newSharedUrlReadOnly + '?editKey=' + responseJson.editKey;
+    try {
+      $editorSession.promptChain = await pruneChain($editorSession.promptChain);
+      const res = await fetch(`/api/chain`, {
+        method: 'POST',
+        body: JSON.stringify($editorSession.promptChain)
+      });
 
-    // isSharing = false;
-    // isShared = true;
+      if (! res.ok) {
+        throw Error(await res.text());
+      }
 
-    window.location.href = newSharedUrlEditable + '&isShared=true';
-    // goto(newSharedUrlEditable + '&isShared=true');
-    // ^ this messes up the state (+page.server.ts is skipped)
+      const responseJson = await res.json()
+      console.log("Saved prompt chain with id: " + responseJson.chainId);
+      chainId = responseJson.chainId;
+      editKey = responseJson.editKey;
+      lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
+      let newSharedUrlReadOnly = $page.url.protocol + '//' + $page.url.host + '/p/' + responseJson.chainId;
+      let newSharedUrlEditable = newSharedUrlReadOnly + '?editKey=' + responseJson.editKey;
+
+      // isSharing = false;
+      // isShared = true;
+
+      window.location.href = newSharedUrlEditable + '&isShared=true';
+      // goto(newSharedUrlEditable + '&isShared=true');
+      // ^ this messes up the state (+page.server.ts is skipped)
+    } catch (err: any) {
+      error = err;
+      isSharing = false;
+    }
+    
 }
 
 async function handleUpdate() {
     isSharing = true;
     error = "";
-    const res = await fetch(`/api/chain/${chainId}?editKey=${editKey}`, {
-			method: 'POST',
-			body: JSON.stringify($editorSession.promptChain)
-		})
-    .then(async function(response) {
-      if (!response.ok){
-        console.error("Failed updating prompt chain: ", response);
-        let responseText = await response.text();
-        error = response.status + " " + response.statusText + ": " + responseText;
-      } else {
-        console.log(`Updated prompt chain with id: ${chainId}`);
-        lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
-        isShared = true;
-      }
+
+    try {
+      $editorSession.promptChain = await pruneChain($editorSession.promptChain);
+      const res = await fetch(`/api/chain/${chainId}?editKey=${editKey}`, {
+        method: 'POST',
+        body: JSON.stringify($editorSession.promptChain)
+      })
+      .then(async function(response) {
+        if (!response.ok){
+          console.error("Failed updating prompt chain: ", response);
+          let responseText = await response.text();
+          throw Error(response.status + " " + response.statusText + ": " + responseText);
+        } else {
+          console.log(`Updated prompt chain with id: ${chainId}`);
+          lastSavedPromptChain = JSON.parse(JSON.stringify($editorSession.promptChain));
+          isShared = true;
+        }
+        isSharing = false;
+      });
+    } catch (err: any) {
+      error = err;
       isSharing = false;
-    });
+    }
+    
 }
 
 function dismissError() {

@@ -83,7 +83,8 @@
             "queries": [
                 {
                     "key": "query_0",
-                    "text": "A character who could be involved in {{ storyTopic }}"
+                    "text": "A character who could be involved in {{ storyTopic }}",
+                    "maxResults": 4
                 }
             ],
             "embeddingService": "openai",

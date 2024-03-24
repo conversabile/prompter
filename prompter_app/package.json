@@ -48,6 +48,7 @@
 		"nanoid": "^5.0.4",
 		"nunjucks": "^3.2.4",
 		"openai": "^4.24.1",
-		"svelte-fa": "^3.0.4"
+		"svelte-fa": "^3.0.4",
+		"xxhash-wasm": "^1.0.2"
 	}
 }

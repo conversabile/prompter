@@ -107,7 +107,7 @@ export class PromptStepPredictor {
               "model": this.prompt.predictionSettings.ollama.modelName,
               "prompt": this.renderedPrompt
             })
-              })
+          });
       
           if (response.body) {
             // Init prediction object

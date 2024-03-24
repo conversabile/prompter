@@ -96,7 +96,8 @@ export function getDefaultChain(): PromptChain {
         parametersDict: {storyTopic: "time travelling", maxWords: "50"},
         steps: [
             getDefaultPrompt("result_0"),
-        ]
+        ],
+        embeddingCache: {}
     }
 }
 

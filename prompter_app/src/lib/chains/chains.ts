@@ -2,7 +2,7 @@ import fs from 'fs';
 import util from 'util';
 
 import { convert } from 'html-to-text';
-import { defaultPredictionSettings, PredictionService, type PredictionSettings } from '../services';
+import { defaultPredictionSettings } from '../services';
 import { isEqual } from '../util';
 import { faBook, faPlug, faRobot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { DocumentIndexStep } from './documentIndex';
@@ -36,6 +36,7 @@ export interface PromptChain {
   title: string;
   steps: Step[];
   parametersDict: Record<string, string>;
+  embeddingCache: EmbeddingCache;
 }
 
 export interface Step {
@@ -56,6 +57,10 @@ interface StepTypeData {
   label: string,
   icon: IconDefinition
 }
+
+//                           modelSpec -> (segmentHash -> embedding)
+export type EmbeddingCache = Record<string, Record<string, number[]>>
+// export type EmbeddingCache = {[embeddingService in PredictionService]?: Record<string, Record<string, number[]>> }
 
 export const STEP_TYPE_DATA: Record<StepType, StepTypeData> = {
   [StepType.prompt]: {
@@ -218,6 +223,9 @@ function upgradeChain(chain: any): PromptChain {
       }))
     }
   }
+
+  if (! chain.embeddingCache) chain.embeddingCache = {};
+
   // console.log("Loading chain", chain as PromptChain);
   return chain;
 }
@@ -328,6 +336,10 @@ export function piledParameterDict(promptChain: PromptChain) : Record<string, st
   
   return result;
 }
+
+/*
+ * Comparison
+ */
 
 export function areChainsEquivalent(aChain: PromptChain, anotherChain: PromptChain): boolean {
   // console.log(aChain, anotherChain);
